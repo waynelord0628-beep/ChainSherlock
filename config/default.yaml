@@ -1,0 +1,22 @@
+providers:
+  ethereum:
+    primary: etherscan
+    fallback: [blockscout]
+  tron:
+    primary: trongrid
+  bitcoin:
+    primary: blockstream
+analysis:
+  top_counterparties: 20
+  graph_max_nodes: 50
+  default_depth: 1
+  timezone: UTC
+cache:
+  enabled: true
+  ttl_seconds: 86400
+output:
+  directory: output
+  include_raw: true
+logging:
+  level: INFO
+

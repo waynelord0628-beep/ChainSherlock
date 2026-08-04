@@ -1,0 +1,9 @@
+labels:
+  - chain: ethereum
+    address: "0x0000000000000000000000000000000000000000"
+    label: "Example Exchange"
+    category: exchange
+    source: manual
+    confidence: 0.95
+    notes: "Sample only"
+
