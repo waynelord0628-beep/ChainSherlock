@@ -497,7 +497,12 @@ def test_counterparty_report_remains_horizontal(analysis, result):
 
 def test_report_evidence_index_includes_investigation_refs(analysis, result):
     report = ReportComposer().compose(analysis, investigation=result)
-    assert "IF0" in {item.evidence_id for item in report.evidence}
+    artifact = next(
+        item
+        for item in report.evidence
+        if item.evidence_id == "INVESTIGATION_ARTIFACT"
+    )
+    assert "IF0" in artifact.metadata["record_ids"]
 
 
 @pytest.mark.parametrize("fact_code", [

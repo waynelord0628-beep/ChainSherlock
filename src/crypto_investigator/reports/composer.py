@@ -6,7 +6,14 @@ from dataclasses import replace
 
 from crypto_investigator.analyzers.export import AnalysisExporter
 from crypto_investigator.reports.citations import build_citations
-from crypto_investigator.reports.formatting import format_value, redact
+from crypto_investigator.reports.formatting import (
+    format_amount,
+    format_datetime,
+    format_percent,
+    format_value,
+    redact,
+)
+from crypto_investigator.reports.materiality import classify_assets
 from crypto_investigator.reports.models import (
     ReportConclusion,
     ReportDocument,
@@ -41,6 +48,9 @@ class ReportComposer:
         language: str = "zh-TW",
         timezone: str = "UTC",
         output_directory: str = ".",
+        materiality_thresholds: Mapping[str, Decimal] | None = None,
+        include_assets: frozenset[str] = frozenset(),
+        exclude_assets: frozenset[str] = frozenset(),
     ) -> ReportDocument:
         data = AnalysisExporter.to_primitive(analysis)
         graph_data = AnalysisExporter.to_primitive(graph) if graph else None
@@ -54,32 +64,47 @@ class ReportComposer:
         if investigation_data is not None and not isinstance(investigation_data, Mapping):
             investigation_data = self._namespace_to_mapping(investigation_data)
         if investigation_data:
-            evidence = evidence + tuple(
-                ReportEvidence(
-                    evidence_id=str(item.get("evidence_id")),
-                    evidence_type=str(item.get("feature", "investigation")),
-                    source="investigation_evidence.json",
-                    source_reference=str(
-                        item.get("source_reference", "AnalysisResult.flow")
-                    ),
-                    description=str(item.get("calculation", "")),
-                    collected_at=item.get("created_at"),
-                    tx_hash=(
-                        item.get("tx_hashes", [None])[0]
-                        if item.get("tx_hashes") else None
-                    ),
-                    address=(
-                        item.get("addresses", [None])[0]
-                        if item.get("addresses") else None
-                    ),
-                    metadata={
-                        "transaction_hashes": item.get("tx_hashes", []),
-                        "addresses": item.get("addresses", []),
-                        "parameters": item.get("parameters", {}),
-                    },
-                )
+            record_ids = tuple(
+                str(item.get("evidence_id"))
                 for item in investigation_data.get("evidence_refs", [])
+                if item.get("evidence_id")
             )
+            artifact_index = next(
+                (
+                    index
+                    for index, item in enumerate(evidence)
+                    if item.source == "investigation_evidence.json"
+                ),
+                None,
+            )
+            if artifact_index is None:
+                evidence = evidence + (
+                    ReportEvidence(
+                        evidence_id="INVESTIGATION_ARTIFACT",
+                        evidence_type="investigation_artifact",
+                        source="investigation_evidence.json",
+                        source_reference="investigation_evidence.json",
+                        description=(
+                            "Deterministic investigation fact and observation records"
+                        ),
+                        hash=None,
+                        metadata={"record_ids": record_ids},
+                    ),
+                )
+            else:
+                artifact = evidence[artifact_index]
+                evidence = tuple(
+                    replace(
+                        item,
+                        metadata={**item.metadata, "record_ids": record_ids},
+                    )
+                    if item.source == "investigation_evidence.json"
+                    else item
+                    for index, item in enumerate(evidence)
+                )
+        evidence = tuple(
+            dict((item.evidence_id, item) for item in evidence).values()
+        )
         evidence = tuple(
             replace(
                 item,
@@ -91,6 +116,26 @@ class ReportComposer:
         )
         metadata_source = data.get("metadata", {})
         completeness = str(metadata_source.get("completeness", "complete"))
+        scope = metadata_source.get("analysis_scope") or {}
+        time_scope = metadata_source.get("time_scope") or {}
+        scope_type = str(scope.get("scope_type", "unavailable"))
+        full_history_complete = bool(
+            time_scope.get("full_history_complete", False)
+        )
+        graph_metadata = graph_data.get("metadata", {}) if graph_data else {}
+        investigation_metadata = (
+            investigation_data.get("structured_metadata", {})
+            if investigation_data
+            else {}
+        )
+        asset_presentations = classify_assets(
+            data.get("statistics", {}).get("incoming_amount", {}),
+            data.get("statistics", {}).get("outgoing_amount", {}),
+            data.get("statistics", {}).get("asset_breakdown", {}),
+            materiality_thresholds=materiality_thresholds,
+            include_assets=include_assets,
+            exclude_assets=exclude_assets,
+        )
         rejected_count = len(rejected_records) or int(
             metadata_source.get("rejected_record_count", 0)
         )
@@ -101,6 +146,13 @@ class ReportComposer:
         limitations = self._limitations(
             data, graph_data, completeness, provider_errors, rejected_count
         )
+        if any(item.hash is None for item in evidence):
+            limitations += (
+                ReportLimitation(
+                    "evidence_hash_unavailable",
+                    "部分 Evidence artifact 無法取得 SHA-256；已保留限制且未標示為 verified。",
+                ),
+            )
         sections = self._sections(
             data,
             graph_data,
@@ -113,12 +165,17 @@ class ReportComposer:
             target_address,
             chain,
             investigation_data,
+            scope,
+            time_scope,
+            asset_presentations,
         )
         if narrative is not None:
-            sections = tuple(sorted(
-                (*sections, *self._narrative_sections(narrative)),
-                key=lambda item: (item.order, item.section_id),
-            ))
+            sections = tuple(
+                sorted(
+                    (*sections, *self._narrative_sections(narrative)),
+                    key=lambda item: (item.order, item.section_id),
+                )
+            )
         conclusion = self._conclusion(
             completeness, len(provider_errors), rejected_count, investigation_data
         )
@@ -150,6 +207,65 @@ class ReportComposer:
             timezone=timezone,
             language=language if language in {"zh-TW", "en-US"} else "zh-TW",
             output_directory=Path(output_directory).name or ".",
+            scope_type=scope_type,
+            requested_date_from=scope.get("date_from"),
+            requested_date_to=scope.get("date_to"),
+            full_history_complete=full_history_complete,
+            provider_raw_record_count=int(
+                metadata_source.get(
+                    "provider_raw_record_count",
+                    data.get("summary", {}).get("transaction_count", 0),
+                )
+            ),
+            normalized_record_count=int(
+                metadata_source.get(
+                    "normalized_record_count",
+                    data.get("summary", {}).get("transaction_count", 0),
+                )
+            ),
+            analysis_record_count=int(
+                metadata_source.get(
+                    "analysis_record_count",
+                    data.get("summary", {}).get("transaction_count", 0),
+                )
+            ),
+            investigation_edge_count=int(
+                investigation_metadata.get("source_transaction_count", 0)
+            ),
+            graph_node_count=int(
+                graph_metadata.get(
+                    "included_node_count", len(graph_data.get("nodes", []))
+                )
+                if graph_data
+                else 0
+            ),
+            graph_edge_count=int(
+                graph_metadata.get(
+                    "included_edge_count", len(graph_data.get("edges", []))
+                )
+                if graph_data
+                else 0
+            ),
+            rejected_count=rejected_count,
+            deduplicated_count=int(
+                metadata_source.get("deduplicated_record_count", 0)
+            ),
+            failed_count=int(
+                (investigation_data or {})
+                .get("direction_reconciliation", {})
+                .get("failed_transaction_count", 0)
+            ),
+            unclassified_count=int(
+                (investigation_data or {})
+                .get("direction_reconciliation", {})
+                .get("unclassified_direction_count", 0)
+            ),
+            excluded_by_scope=int(
+                metadata_source.get(
+                    "excluded_by_scope",
+                    time_scope.get("excluded_by_scope", 0),
+                )
+            ),
         )
         citations = build_citations(evidence, "evidence_index")
         return ReportDocument(
@@ -235,42 +351,87 @@ class ReportComposer:
         target_address,
         chain,
         investigation,
+        scope,
+        time_scope,
+        asset_presentations,
     ):
         summary = data.get("summary", {})
         statistics = data.get("statistics", {})
         counterparties = data.get("counterparties", [])[:20]
         timeline = data.get("timeline", {})
+        scope_type = str(scope.get("scope_type", "unavailable"))
+        full_history_complete = bool(
+            time_scope.get("full_history_complete", False)
+        )
+        if scope_type == "custom_date_range":
+            scope_description = (
+                "指定分析期間："
+                f"{format_datetime(scope.get('date_from'), scope.get('timezone', 'UTC'))}"
+                " 至 "
+                f"{format_datetime(scope.get('date_to'), scope.get('timezone', 'UTC'))}"
+                f"（{scope.get('timezone', 'UTC')}）"
+            )
+            first_label, last_label = "期間內最早交易時間", "期間內最晚交易時間"
+        elif scope_type == "full_history" and full_history_complete:
+            scope_description = "依已完整取得之歷史資料。"
+            first_label, last_label = "地址首次交易時間", "地址最後交易時間"
+        elif scope_type == "full_history":
+            scope_description = (
+                "依目前已取得之部分歷史資料；不得解讀為地址完整生命週期。"
+            )
+            first_label, last_label = "目前資料最早時間", "目前資料最晚時間"
+        elif scope_type == "quick_preview":
+            scope_description = (
+                "Quick Preview 僅為受限預覽，不代表完整歷史或完整總額。"
+            )
+            first_label, last_label = "預覽資料最早時間", "預覽資料最晚時間"
+        else:
+            scope_description = "分析範圍 metadata unavailable；時間語意僅限目前資料。"
+            first_label, last_label = "目前資料最早時間", "目前資料最晚時間"
+        pipeline = self._pipeline_counts(data, graph, investigation, time_scope)
+        material_assets = tuple(item for item in asset_presentations if item.material)
+        appendix_assets = tuple(item for item in asset_presentations if not item.material)
         sections = [
-            ReportSection("cover", "封面", 1, ("ChainSherlock",)),
+            ReportSection(
+                "cover",
+                "封面",
+                1,
+                ("ChainSherlock", f"全篇時間顯示時區：{scope.get('timezone', 'UTC')}"),
+            ),
             ReportSection(
                 "executive_summary",
                 "執行摘要",
                 2,
                 (
-                    f"共分析 {summary.get('transaction_count', 0)} 筆交易。",
+                    scope_description,
+                    f"Analysis 使用 {summary.get('transaction_count', 0)} 筆正規化交易。",
                     f"資料完整度：{completeness}。",
                 ),
             ),
             ReportSection(
-                "data_sources",
-                "資料來源",
-                3,
-                (f"證據檔案數：{len(evidence)}。",),
-                evidence_refs=tuple(item.evidence_id for item in evidence),
-            ),
-            ReportSection(
                 "target",
-                "分析標的",
+                "調查標的與分析範圍",
                 3,
                 (
                     f"標的：{redact(target_address or '—')}",
                     f"鏈別：{redact(chain or '—')}",
+                    scope_description,
                 ),
+            ),
+            ReportSection(
+                "data_sources",
+                "資料來源、Provider 與完整度",
+                4,
+                (
+                    f"證據 artifact：{len(evidence)} 個。",
+                    f"Provider 錯誤：{len(errors)}；被拒絕資料：{len(rejected)}。",
+                ),
+                evidence_refs=tuple(item.evidence_id for item in evidence),
             ),
             ReportSection(
                 "completeness",
                 "資料完整度",
-                3,
+                4,
                 (
                     f"分析完整度：{completeness}。",
                     f"Provider 錯誤：{len(errors)} 筆。",
@@ -278,26 +439,43 @@ class ReportComposer:
                 ),
             ),
             ReportSection(
+                "data_pipeline",
+                "資料流程計數與排除",
+                5,
+                (
+                    "各階段可能因範圍過濾、去重、正規化拒絕及 Graph 安全上限而使用不同母體。",
+                ),
+                tables=(pipeline,),
+            ),
+            ReportSection(
                 "analysis_summary",
                 "分析摘要",
-                4,
+                6,
                 tables=(
                     self._mapping_table(
                         "summary",
                         "摘要指標",
                         {
-                            key: summary.get(key)
-                            for key in (
-                                "first_seen",
-                                "last_seen",
-                                "transaction_count",
-                                "incoming_count",
-                                "outgoing_count",
-                                "unique_counterparties",
-                                "active_days",
-                                "unconfirmed_count",
-                                "missing_timestamp_count",
-                            )
+                            first_label: (
+                                "無法確認（歷史資料不完整）"
+                                if scope_type == "full_history"
+                                and not full_history_complete
+                                else format_datetime(
+                                    summary.get("first_seen"),
+                                    scope.get("timezone", "UTC"),
+                                )
+                            ),
+                            last_label: format_datetime(
+                                summary.get("last_seen"),
+                                scope.get("timezone", "UTC"),
+                            ),
+                            "Analysis 交易數": summary.get("transaction_count"),
+                            "流入筆數": summary.get("incoming_count"),
+                            "流出筆數": summary.get("outgoing_count"),
+                            "唯一交易對手": summary.get("unique_counterparties"),
+                            "活躍日": summary.get("active_days"),
+                            "未確認交易": summary.get("unconfirmed_count"),
+                            "缺少時間戳": summary.get("missing_timestamp_count"),
                         },
                     ),
                 ),
@@ -305,15 +483,55 @@ class ReportComposer:
             ReportSection(
                 "asset_flows",
                 "資產流向",
-                5,
+                7,
+                (
+                    "金額依資產分開列示，不跨資產加總。"
+                    + (
+                        " 下列為目前部分資料中的金額，不代表完整歷史總額。"
+                        if completeness != "complete"
+                        else ""
+                    ),
+                ),
                 tables=(
-                    self._asset_table(
-                        statistics.get("incoming_amount", {}),
-                        statistics.get("outgoing_amount", {}),
+                    self._asset_presentation_table(material_assets),
+                ),
+            ),
+            ReportSection(
+                "confirmed_facts",
+                "已確認資料事實",
+                18,
+                (
+                    "本節只列結構化資料直接支持的交易數、範圍、資產與 Provider 狀態；不含角色或目的推論。",
+                ),
+                tables=(
+                    self._mapping_table(
+                        "confirmed_data_facts",
+                        "Confirmed Data Facts",
+                        {
+                            "Analysis 交易數": summary.get("transaction_count", 0),
+                            "分析鏈別": chain or "unavailable",
+                            "分析範圍": scope_type,
+                            "完整度": completeness,
+                            "重要資產": tuple(
+                                item.asset for item in material_assets
+                            ),
+                        },
                     ),
                 ),
             ),
         ]
+        if appendix_assets:
+            sections.append(
+                ReportSection(
+                    "non_material_assets",
+                    "非重要資產附錄",
+                    29,
+                    (
+                        "依使用者門檻標示 dust／spam candidate；此分類不構成資產或發行方定性。",
+                    ),
+                    tables=(self._asset_presentation_table(appendix_assets),),
+                )
+            )
         if counterparties:
             sections.append(
                 ReportSection(
@@ -360,13 +578,17 @@ class ReportComposer:
                     "provider_status",
                     "Provider 狀態",
                     9,
-                    tables=(self._records_table("providers", "Provider 狀態", statuses[:100]),),
+                    tables=(self._provider_table(statuses[:100]),),
                 )
             )
         if investigation:
             sections.extend(
                 self._investigation_sections(
-                    investigation, data, completeness
+                    investigation,
+                    data,
+                    completeness,
+                    graph,
+                    statuses,
                 )
             )
         if errors:
@@ -392,12 +614,49 @@ class ReportComposer:
             )
         sections.extend(
             (
-                ReportSection("observations", "客觀觀察", 12, ("本節僅描述資料中的可驗證模式，不進行犯罪、風險或身分推論。",)),
-                ReportSection("limitations", "資料限制", 13, tuple(item.description for item in limitations), limitations=limitations),
+                ReportSection(
+                    "observations",
+                    "規則式觀察",
+                    20,
+                    (
+                        "本節僅描述資料中的可驗證模式，不進行犯罪、風險或身分推論。",
+                    ),
+                ),
+                ReportSection(
+                    "candidate_interpretations",
+                    "候選解釋",
+                    21,
+                    (
+                        "所有未由可信 Local Label 支持的角色均為 Candidate，不是 Confirmed。",
+                    ),
+                ),
+                ReportSection(
+                    "unresolved_questions",
+                    "尚待查證",
+                    22,
+                    (
+                        "交易目的、地址實際控制人及鏈下背景仍需外部證據查證。",
+                    ),
+                ),
+                ReportSection(
+                    "recommended_follow_up",
+                    "後續調查建議",
+                    23,
+                    (
+                        "建議優先核對高頻交易對手、Provider 缺漏、Local Label 來源及 Evidence 完整性。",
+                    ),
+                ),
+                ReportSection(
+                    "limitations",
+                    "資料限制",
+                    24,
+                    tuple(item.description for item in limitations),
+                    limitations=limitations,
+                ),
                 ReportSection(
                     "conclusion",
-                    "結論",
-                    30,
+                    "綜合研判",
+                    25,
                     (
                         self._conclusion(
                             completeness, len(errors), len(rejected), investigation
@@ -407,9 +666,14 @@ class ReportComposer:
                 ReportSection(
                     "evidence_index",
                     "Evidence Index",
-                    31,
+                    26,
                     tuple(
-                        f"[{item.evidence_id}] {item.source} — {item.hash or 'hash unavailable'}"
+                        f"[{item.evidence_id}] {item.source} — "
+                        + (
+                            f"SHA-256 {item.hash}"
+                            if item.hash
+                            else "hash unavailable（來源 artifact 未提供可驗證檔案）"
+                        )
                         for item in evidence
                     )
                     or ("沒有可用的證據檔案。",),
@@ -417,9 +681,11 @@ class ReportComposer:
                 ),
                 ReportSection(
                     "appendix",
-                    "附錄",
-                    32,
-                    ("完整結構化資料請參閱 report_data.json。",),
+                    "技術附錄",
+                    30,
+                    (
+                        "完整 metadata、record-level mapping 與原始精度請參閱 report_data.json 及案件 artifacts。",
+                    ),
                 ),
             )
         )
@@ -484,7 +750,14 @@ class ReportComposer:
         return ReportConclusion(completeness, text)
 
     @classmethod
-    def _investigation_sections(cls, investigation, data, completeness):
+    def _investigation_sections(
+        cls,
+        investigation,
+        data,
+        completeness,
+        graph=None,
+        statuses=(),
+    ):
         reconciliation = investigation.get("direction_reconciliation") or {}
         funding = investigation.get("funding") or {}
         distribution = investigation.get("distribution_analysis") or {}
@@ -507,13 +780,21 @@ class ReportComposer:
                     (
                         str(rank), asset, address,
                         format_value(item.get("amounts_by_asset", {}).get(asset, 0)),
-                        format_value(item.get("share_by_asset", {}).get(asset, 0)),
+                        format_percent(
+                            item.get("share_by_asset", {}).get(asset, 0)
+                        ),
                         format_value(item.get("first_funding")),
                         format_value(item.get("last_funding")),
                     )
                 )
         counterparty_rows = []
-        service_map = {item.get("address"): item.get("service_type") for item in services}
+        service_map = {
+            item.get("address"): cls._neutral_candidate_role(
+                item.get("service_type"),
+                bool(item.get("label")),
+            )
+            for item in services
+        }
         counterparties = data.get("counterparties", [])
         outgoing_assets = sorted({
             asset
@@ -548,7 +829,7 @@ class ReportComposer:
                         "outgoing", str(item.get("interaction_count", 0)), asset,
                         format_value(incoming.get(asset, 0)),
                         format_value(outgoing.get(asset, 0)),
-                        format_value(
+                        format_percent(
                             Decimal(str(outgoing.get(asset, 0))) / total
                             if total else 0
                         ),
@@ -599,9 +880,24 @@ class ReportComposer:
             )
             for item in observations
         )
+        graph_truncated = bool(
+            (graph or {}).get("metadata", {}).get("truncated", False)
+        )
+        provider_truncated = any(
+            bool(item.get("truncated")) for item in statuses
+        )
+        canonical_fact_values = {
+            "graph_truncated": graph_truncated,
+            "provider_truncated": provider_truncated,
+        }
         fact_rows = tuple(
             (
-                item.get("fact_code", ""), format_value(item.get("value")),
+                item.get("fact_code", ""),
+                format_value(
+                    canonical_fact_values.get(
+                        item.get("fact_code"), item.get("value")
+                    )
+                ),
                 format_value(item.get("unit")), item.get("confidence", "medium"),
                 format_value(item.get("reason_codes", [])),
                 format_value(item.get("evidence_refs", [])),
@@ -658,8 +954,12 @@ class ReportComposer:
             ReportSection(
                 "dormancy", "休眠與重新啟用", 15,
                 (
-                    "partial 資料可能影響交易間隔；本報告不把資料邊界本身視為休眠證據。",
-                    f"目前偵測區間數：{len(dormant)}。",
+                    (
+                        "目前已取得資料中未偵測到休眠；因資料不完整，無法排除範圍外休眠區間。"
+                        if not dormant and completeness != "complete"
+                        else f"目前範圍偵測區間數：{len(dormant)}。"
+                    ),
+                    "本報告不把資料邊界本身視為休眠證據。",
                 ),
                 tables=(cls._records_table("dormancy", "休眠區間", dormant),) if dormant else (),
             ),
@@ -675,7 +975,14 @@ class ReportComposer:
             ),
             ReportSection(
                 "transfer_patterns", "轉帳模式", 17,
-                ("門檻來自 settings snapshot；dust TRX 不列為重要固定金額模式。",),
+                (
+                    "門檻來自 settings snapshot；dust／spam candidate 不列為重要固定金額模式。",
+                    (
+                        "目前資料未偵測到的模式不代表完整歷史中不存在。"
+                        if completeness != "complete"
+                        else "判定僅限目前完整取得的分析範圍。"
+                    ),
+                ),
                 tables=(cls._mapping_table("transfer_patterns", "模式摘要", patterns),),
             ),
             ReportSection(
@@ -693,6 +1000,145 @@ class ReportComposer:
                     ("Fact", "值", "單位", "可信度", "原因", "Evidence", "限制"),
                     fact_rows,
                 ),),
+            ),
+        )
+
+    @staticmethod
+    def _neutral_candidate_role(value, label_confirmed=False):
+        role = str(value or "unknown_candidate")
+        if label_confirmed and role in {"payment", "exchange", "otc", "service"}:
+            return role
+        return {
+            "possible_payment": "high_frequency_outgoing_counterparty",
+            "possible_service": "service_candidate",
+            "payment": "recurrent_destination_candidate",
+            "otc": "intermediary_candidate",
+            "service": "service_candidate",
+            "exchange": "exchange_candidate",
+            "unknown": "unknown_candidate",
+        }.get(role, role if role.endswith("_candidate") else f"{role}_candidate")
+
+    @staticmethod
+    def _pipeline_counts(data, graph, investigation, time_scope):
+        metadata = data.get("metadata", {})
+        summary = data.get("summary", {})
+        reconciliation = (investigation or {}).get("direction_reconciliation", {})
+        graph_metadata = (graph or {}).get("metadata", {})
+        scope_type = (
+            (metadata.get("analysis_scope") or {}).get("scope_type")
+            or time_scope.get("scope_type")
+            or "unavailable"
+        )
+        rows = (
+            (
+                "Provider 原始取得",
+                str(metadata.get("provider_raw_record_count", summary.get("transaction_count", 0))),
+                format_value(time_scope.get("overall_first_seen")),
+                format_value(time_scope.get("overall_last_seen")),
+                scope_type,
+                "—",
+            ),
+            (
+                "正規化後",
+                str(metadata.get("normalized_record_count", summary.get("transaction_count", 0))),
+                format_value(summary.get("first_seen")),
+                format_value(summary.get("last_seen")),
+                scope_type,
+                f"rejected={metadata.get('rejected_record_count', 0)}；deduplicated={metadata.get('deduplicated_record_count', 0)}",
+            ),
+            (
+                "Analysis 使用",
+                str(metadata.get("analysis_record_count", summary.get("transaction_count", 0))),
+                format_value(summary.get("first_seen")),
+                format_value(summary.get("last_seen")),
+                scope_type,
+                f"excluded_by_scope={metadata.get('excluded_by_scope', time_scope.get('excluded_by_scope', 0))}",
+            ),
+            (
+                "Investigation 使用交易邊",
+                str(
+                    (investigation or {})
+                    .get("structured_metadata", {})
+                    .get("source_transaction_count", 0)
+                ),
+                format_value(
+                    (investigation or {})
+                    .get("structured_metadata", {})
+                    .get("source_date_from")
+                ),
+                format_value(
+                    (investigation or {})
+                    .get("structured_metadata", {})
+                    .get("source_date_to")
+                ),
+                scope_type,
+                f"failed={reconciliation.get('failed_transaction_count', 0)}；unclassified={reconciliation.get('unclassified_direction_count', 0)}",
+            ),
+            (
+                "Graph 使用",
+                str(graph_metadata.get("included_edge_count", len((graph or {}).get("edges", [])))),
+                "—",
+                "—",
+                scope_type,
+                f"nodes={graph_metadata.get('included_node_count', len((graph or {}).get('nodes', [])))}；graph_truncated={graph_metadata.get('truncated', False)}",
+            ),
+        )
+        return ReportTable(
+            "data_pipeline_counts",
+            "各階段資料母體",
+            ("階段", "紀錄／邊", "最早", "最晚", "範圍", "排除／限制"),
+            rows,
+        )
+
+    @staticmethod
+    def _provider_table(records):
+        columns = (
+            "鏈別",
+            "Capability",
+            "Provider",
+            "取得筆數",
+            "完整度",
+            "截斷",
+            "截斷原因",
+            "警告",
+        )
+        rows = tuple(
+            (
+                format_value(item.get("chain")),
+                format_value(item.get("capability")),
+                format_value(item.get("provider")),
+                format_value(item.get("fetched_records")),
+                format_value(item.get("completeness")),
+                format_value(item.get("truncated", False)),
+                format_value(item.get("truncation_reason")),
+                format_value(item.get("warnings", ())),
+            )
+            for item in records
+        )
+        return ReportTable("providers", "Provider 狀態", columns, rows)
+
+    @staticmethod
+    def _asset_presentation_table(records):
+        return ReportTable(
+            "asset_flows",
+            "依資產分離之流入／流出",
+            ("資產", "流入", "流出", "交易數", "分類", "原因"),
+            tuple(
+                (
+                    item.asset,
+                    format_amount(item.incoming),
+                    format_amount(item.outgoing),
+                    str(item.transaction_count),
+                    (
+                        "spam candidate"
+                        if item.spam_candidate
+                        else "dust"
+                        if item.dust
+                        else "material"
+                    ),
+                    item.reason,
+                )
+                for item in records
             ),
         )
 

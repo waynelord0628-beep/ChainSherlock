@@ -32,10 +32,10 @@ def detect_services(counterparties, labels=()) -> tuple[ServiceDetection, ...]:
             service_type = label.category
             matched.append("local_label")
         elif item.interaction_count >= 20 and item.incoming_count and item.outgoing_count:
-            service_type = "possible_service"
+            service_type = "service_candidate"
             matched.append("high_frequency_bidirectional")
         elif item.interaction_count >= 10 and item.outgoing_count >= item.incoming_count * 3:
-            service_type = "possible_payment"
+            service_type = "high_frequency_outgoing_counterparty"
             matched.append("high_outgoing_frequency")
         if matched:
             results.append(

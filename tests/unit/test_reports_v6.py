@@ -271,7 +271,7 @@ def test_public_analysis_json_mapping_preserves_summary_and_assets(analysis):
     document = ReportComposer().compose(value, target_address=TARGET, chain="ethereum")
     summary = next(item for item in document.sections if item.section_id == "analysis_summary")
     assets = next(item for item in document.sections if item.section_id == "asset_flows")
-    assert ("transaction_count", "2") in summary.tables[0].rows
+    assert ("Analysis 交易數", "2") in summary.tables[0].rows
     assert {row[0] for row in assets.tables[0].rows} == {"ETH", "USDT"}
 
 
@@ -300,7 +300,7 @@ def test_formula_like_text_is_neutralized():
 
 def test_markdown_table_rows_have_line_breaks(document, tmp_path):
     content = MarkdownReportExporter().write(document, tmp_path / "report.md").read_text(encoding="utf-8")
-    assert "| transaction_count | 2 |" in content
+    assert "| Analysis 交易數 | 2 |" in content
 
 
 def test_docx_contains_font_and_page_number_settings(document, tmp_path):

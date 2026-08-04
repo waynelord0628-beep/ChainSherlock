@@ -95,6 +95,21 @@ class ReportMetadata:
     timezone: str = "UTC"
     language: str = "zh-TW"
     output_directory: str = "."
+    scope_type: str = "unavailable"
+    requested_date_from: str | None = None
+    requested_date_to: str | None = None
+    full_history_complete: bool = False
+    provider_raw_record_count: int = 0
+    normalized_record_count: int = 0
+    analysis_record_count: int = 0
+    investigation_edge_count: int = 0
+    graph_node_count: int = 0
+    graph_edge_count: int = 0
+    rejected_count: int = 0
+    deduplicated_count: int = 0
+    failed_count: int = 0
+    unclassified_count: int = 0
+    excluded_by_scope: int = 0
 
 
 @dataclass(frozen=True, slots=True)

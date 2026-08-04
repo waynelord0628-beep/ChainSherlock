@@ -12,6 +12,7 @@ from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer, Table, Tabl
 from reportlab.lib import colors
 
 from crypto_investigator.reports.errors import PdfExportError
+from crypto_investigator.reports.formatting import abbreviate_identifier
 from crypto_investigator.reports.models import ReportDocument
 
 
@@ -49,6 +50,13 @@ def pdf_font_status() -> dict[str, str | bool | None]:
 
 
 class PdfReportExporter:
+    @staticmethod
+    def _pdf_cell(value: str, column: str) -> str:
+        key = column.casefold()
+        if any(marker in key for marker in ("address", "地址", "tx hash", "tx_hash")):
+            return abbreviate_identifier(str(value))
+        return str(value)
+
     def _page_number(self, canvas, doc) -> None:
         canvas.saveState()
         canvas.setFont(self._latin_font_name, 9)
@@ -127,7 +135,16 @@ class PdfReportExporter:
                         )
                     )
                 for table in section.tables:
-                    data = [list(table.columns), *[list(row) for row in table.rows]]
+                    data = [
+                        list(table.columns),
+                        *[
+                            [
+                                self._pdf_cell(value, table.columns[index])
+                                for index, value in enumerate(row)
+                            ]
+                            for row in table.rows
+                        ],
+                    ]
                     available_width = 252 if len(table.columns) > 5 else 165
                     widths = tuple(
                         available_width * mm / len(table.columns)
