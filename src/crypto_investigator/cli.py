@@ -930,6 +930,11 @@ def narrate_investigation(
             )
         elif isinstance(artifact, NarrativeResult):
             narrative = artifact
+            sibling_input = investigation_json.with_name(
+                "narrative_input.json"
+            )
+            if sibling_input.is_file():
+                public_input = NarrativeExporter().read_input(sibling_input)
             NarrativeExporter().write(narrative, output / "narrative.json")
         else:
             raise typer.BadParameter("Unsupported public investigation artifact")
@@ -1077,6 +1082,7 @@ def validate_ai(
         max_input_characters=settings.max_input_characters,
         privacy_mode=privacy_mode,
         max_retries=max_retries,
+        reasoning_effort=settings.reasoning_effort,
     )
     investigation = InvestigationExporter().read(investigation_json)
     records = []

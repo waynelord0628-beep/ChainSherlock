@@ -14,10 +14,38 @@ def _object(properties):
     }
 
 
-def narrative_response_schema():
+def _reference_item(values):
+    result = {"type": "string"}
+    if values:
+        result["enum"] = sorted(set(values))
+    return result
+
+
+def narrative_response_schema(source=None):
+    evidence_ids = tuple(
+        str(item.get("evidence_id"))
+        for item in getattr(source, "evidence_index", ())
+        if item.get("evidence_id")
+    )
+    fact_codes = tuple(
+        str(item.get("fact_code"))
+        for item in getattr(source, "conclusion_facts", ())
+        if item.get("fact_code")
+    )
+    observation_ids = tuple(
+        str(item.get("code"))
+        for item in getattr(source, "observations", ())
+        if item.get("code")
+    )
+    section_ids = tuple(getattr(source, "requested_sections", ()))
     paragraph = _object({
         "text": {"type": "string", "maxLength": 350},
-        "citation_ids": {"type": "array", "items": {"type": "string"}, "maxItems": 5},
+        "citation_ids": {
+            "type": "array",
+            "items": _reference_item(evidence_ids),
+            "minItems": 1,
+            "maxItems": 5,
+        },
     })
     section = _object({
         "section_id": {"type": "string"},
@@ -36,20 +64,20 @@ def narrative_response_schema():
     })
     claim = _object({
         "claim_id": {"type": "string"},
-        "section": {"type": "string"},
+        "section": _reference_item(section_ids),
         "statement": {"type": "string", "maxLength": 280},
         "claim_type": {"type": "string"},
-        "fact_codes": {"type": "array", "items": {"type": "string"}, "maxItems": 5},
-        "observation_ids": {"type": "array", "items": {"type": "string"}, "maxItems": 5},
-        "evidence_ids": {"type": "array", "items": {"type": "string"}, "maxItems": 5},
+        "fact_codes": {"type": "array", "items": _reference_item(fact_codes), "maxItems": 5},
+        "observation_ids": {"type": "array", "items": _reference_item(observation_ids), "maxItems": 5},
+        "evidence_ids": {"type": "array", "items": _reference_item(evidence_ids), "maxItems": 5},
         "numeric_values": {"type": "array", "items": {"type": "string"}, "maxItems": 5},
         "confidence": {"type": "string"},
         "limitations": {"type": "array", "items": {"type": "string"}, "maxItems": 3},
     })
     citation = _object({
-        "citation_id": {"type": "string"},
-        "evidence_id": {"type": "string"},
-        "section": {"type": "string"},
+        "citation_id": _reference_item(evidence_ids),
+        "evidence_id": _reference_item(evidence_ids),
+        "section": _reference_item(section_ids),
     })
     warning = _object({"code": {"type": "string"}, "message": {"type": "string"}})
     validation = _object({
@@ -72,7 +100,12 @@ def narrative_response_schema():
         "citations": {"type": "array", "items": citation},
         "warnings": {"type": "array", "items": warning},
         "validation": validation,
-        "review_status": {"type": "string"},
+        "review_status": {
+            "type": "string",
+            "enum": [
+                "not_reviewed", "reviewed", "accepted", "edited", "rejected"
+            ],
+        },
         "reviewed_by": _nullable({"type": "string"}),
         "reviewed_at": _nullable({"type": "string"}),
         "review_notes": _nullable({"type": "string"}),

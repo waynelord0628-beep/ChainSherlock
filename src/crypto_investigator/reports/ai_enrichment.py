@@ -41,6 +41,12 @@ AI_SECTION_NAMES = (
     "conclusion",
 )
 
+IDENTIFIER_PATTERN = (
+    r"(?:\b0x[a-fA-F0-9]{40,64}\b|"
+    r"\bT[1-9A-HJ-NP-Za-km-z]{33}\b|"
+    r"(?<![A-Za-z0-9.])(?:bc1|[13])[a-zA-HJ-NP-Z0-9]{20,70}\b)"
+)
+
 
 class AIReportIntegrator:
     """Add validated narrative sections without replacing the base report."""
@@ -233,17 +239,9 @@ class AIReportIntegrator:
             if not set(claim.numeric_values).issubset(allowed_numbers):
                 return f"unknown numeric value: {claim.claim_id}"
         known_identifiers = set(
-            re.findall(
-                r"\b(?:0x[a-fA-F0-9]{40,64}|T[1-9A-HJ-NP-Za-km-z]{33}|"
-                r"(?:bc1|[13])[a-zA-HJ-NP-Z0-9]{20,70})\b",
-                self._base_text(base),
-            )
+            re.findall(IDENTIFIER_PATTERN, self._base_text(base))
         )
-        for identifier in re.findall(
-            r"\b(?:0x[a-fA-F0-9]{40,64}|T[1-9A-HJ-NP-Za-km-z]{33}|"
-            r"(?:bc1|[13])[a-zA-HJ-NP-Z0-9]{20,70})\b",
-            narrative_text,
-        ):
+        for identifier in re.findall(IDENTIFIER_PATTERN, narrative_text):
             if identifier not in known_identifiers:
                 return "AI introduced unknown address or transaction identifier"
         return None

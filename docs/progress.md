@@ -317,9 +317,21 @@ V3 contains no Provider, blockchain API, graph rendering, report, Word/PDF, AI, 
 - Compact input 改為每資產 Top 5、transitions/stages Top 10、observations 20、
   facts 30、limitations 15、Evidence IDs 50，並逐集合記錄 omitted count。
 - Structured output 加入 section、paragraph、claim 與 refs 的硬性上限。
-- Completion policy 依內容估算，minimum 4,000、default 5,000、hard max 8,000。
+- Completion policy 依內容估算，minimum 3,000、default 3,500、hard max 8,000。
 - `length`、截斷 JSON、schema、grounding 或必要章節失敗均不採用 AI 半成品；
   不自動進行第二次呼叫，完整 deterministic report 保留。
-- Targeted：358 passed, 1 skipped；完整離線：1338 passed, 1 skipped；
+- Targeted：258 passed, 1 skipped；完整離線：1344 passed, 1 skipped；
   `pip check` 無損壞相依。
 - V9 與 Windows 打包未開始。
+
+### Live tuning result
+
+- 共 6 次真實 `gpt-5-mini` 呼叫；成功後停止，未使用額外 9 次機會。
+- 累計 input 56,316、output 18,464、total 74,780 tokens。
+- Baseline：16,744 input／5,000 output，`length` fallback。
+- 成功配置：10,105 input／2,727 output，finish `stop`；schema、grounding、
+  Narrative validation 與 Report Quality Gates 全部通過。
+- 相較 baseline：input 減少 39.6%，actual output 減少 45.5%，total 減少 41.0%。
+- 最終報告保留 fixture 既有 26 deterministic sections、13 tables、
+  Provider/completeness/Evidence Index，新增 12 AI sections；四格式 complete。
+- Fixture 是舊版 partial artifact，實際基礎章節為 26，不宣稱不存在的 32 sections。

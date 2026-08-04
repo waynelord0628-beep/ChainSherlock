@@ -10,8 +10,9 @@ class AISettings:
     api_key: str | None = None
     base_url: str = "https://api.openai.com/v1"
     timeout_seconds: int = 120
-    max_output_tokens: int = 5000
+    max_output_tokens: int = 3500
     temperature: float = 0
+    reasoning_effort: str | None = "minimal"
     max_retries: int = 1
     max_input_characters: int = 100_000
     require_structured_output: bool = True
@@ -33,6 +34,8 @@ class AISettings:
             raise ValueError("max_retries must be between 0 and 3")
         if self.temperature != 0:
             raise ValueError("V7 requires temperature=0")
+        if self.reasoning_effort not in {None, "minimal", "low"}:
+            raise ValueError("reasoning_effort must be minimal, low, or omitted")
         if self.privacy_mode not in {"strict", "standard", "off"}:
             raise ValueError("Unsupported privacy mode")
 
@@ -53,9 +56,13 @@ class AISettings:
                 os.getenv("CHAINSHERLOCK_AI_TIMEOUT_SECONDS", "120")
             ),
             max_output_tokens=int(
-                os.getenv("CHAINSHERLOCK_AI_MAX_TOKENS", "5000")
+                os.getenv("CHAINSHERLOCK_AI_MAX_TOKENS", "3500")
             ),
             temperature=float(
                 os.getenv("CHAINSHERLOCK_AI_TEMPERATURE", "0")
+            ),
+            reasoning_effort=(
+                os.getenv("CHAINSHERLOCK_AI_REASONING_EFFORT", "minimal")
+                or None
             ),
         )

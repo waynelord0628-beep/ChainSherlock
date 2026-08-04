@@ -484,7 +484,7 @@ incoming transaction are not address-analysis records.
 
 Professional AI enrichment receives only deterministically bounded structured
 facts. Output is bounded at schema and validation layers. The completion budget is
-content-aware with a 4,000 minimum, 5,000 default and 8,000 hard maximum. One report
+content-aware with a 3,000 minimum, 3,500 default and 8,000 hard maximum. One report
 permits one model request; only timeout may receive the separately bounded retry.
 Length termination or incomplete structured output is never partially published.
 
@@ -494,3 +494,16 @@ Reports may retain provider/model, input tokens, requested output limit, actual
 output tokens, finish reason, validation and fallback reason. They never retain the
 API key, Authorization header, complete prompt, request body, raw evidence or local
 absolute paths.
+
+## ADR-046: Model-facing grounding uses public IDs directly
+
+The strict schema dynamically enumerates the current compact input's Evidence,
+Fact and Observation IDs. Paragraph citation IDs are Evidence IDs; local code
+deterministically builds citation objects. This removes an unstable three-way
+model-generated cross-reference without weakening validation.
+
+## ADR-047: Legacy scope migration is explicitly partial
+
+Pre-scope public artifacts may be labelled `legacy_partial_period` only when they
+retain explicit from/to values. This never implies Full History and adds a visible
+warning. Missing periods remain unavailable.

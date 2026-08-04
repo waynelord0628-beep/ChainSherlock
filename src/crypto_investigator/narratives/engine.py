@@ -123,14 +123,18 @@ class NarrativeEngine:
                     for attempt in range(settings.max_retries + 1):
                         try:
                             response = provider.generate(
-                                prompt, schema=narrative_response_schema()
+                                prompt, schema=narrative_response_schema(source)
                             )
                             usage = response.usage
                             response_metadata = dict(response.raw_metadata)
                             parser = ResponseParser()
-                            candidate = decode_public_result(
-                                decode(parser.parse(response.content))
-                            )
+                            parsed = parser.parse(response.content)
+                            tagged_artifact = "__type__" in parsed
+                            candidate = decode_public_result(decode(parsed))
+                            if not tagged_artifact:
+                                candidate = self._normalize_citations(
+                                    candidate, source
+                                )
                             response_metadata["parser_warnings"] = tuple(parser.warnings)
                             response_metadata["parser_diagnostics"] = parser.diagnostics
                             candidate = replace(
@@ -262,6 +266,7 @@ class NarrativeEngine:
                 "configured_max_output_tokens": settings.max_output_tokens,
                 "completion_hard_cap": budget.hard_cap_tokens,
                 "privacy_mode": settings.privacy_mode,
+                "reasoning_effort": settings.reasoning_effort,
             },
             "input_sha256": input_hash, "schema_version": source.schema_version,
             "section_list": list(source.requested_sections),
@@ -306,3 +311,31 @@ class NarrativeEngine:
         if "schema" in error_type:
             return "schema_validation_failed"
         return "ai_validation_failed"
+
+    @staticmethod
+    def _normalize_citations(result, source):
+        """Make public Evidence IDs the single model-facing citation namespace."""
+        from crypto_investigator.narratives.models import NarrativeCitation
+
+        known = {
+            str(item.get("evidence_id"))
+            for item in source.evidence_index
+            if item.get("evidence_id")
+        }
+        citations = {}
+        for name in source.requested_sections:
+            section = getattr(result, name, None)
+            if section is None:
+                continue
+            for paragraph in section.paragraphs:
+                for evidence_id in paragraph.citation_ids:
+                    if evidence_id in known:
+                        citations[(evidence_id, name)] = NarrativeCitation(
+                            evidence_id, evidence_id, name
+                        )
+        return replace(
+            result,
+            citations=tuple(
+                citations[key] for key in sorted(citations)
+            ),
+        )

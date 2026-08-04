@@ -50,6 +50,8 @@ class OpenAICompatibleProvider:
         }
         if not self.model_name.casefold().startswith("gpt-5"):
             payload["temperature"] = self.settings.temperature
+        elif self.settings.reasoning_effort:
+            payload["reasoning_effort"] = self.settings.reasoning_effort
         if schema:
             normalized_schema = self._normalize_schema(schema)
             payload["response_format"] = {

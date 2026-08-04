@@ -1,3 +1,4 @@
+from dataclasses import replace
 from pathlib import Path
 from uuid import uuid4
 
@@ -29,6 +30,9 @@ class OfflineReportComposer:
         output_directory=".",
     ):
         if base_report is not None:
+            base_report = self._migrate_legacy_scope(
+                base_report, narrative_input
+            )
             return AIReportIntegrator().integrate(base_report, narrative)
         source = narrative_input
         chain = self._recover_chain(source)
@@ -138,3 +142,31 @@ class OfflineReportComposer:
             return detect_identifier(source.target_address).chain.value
         except Exception:
             return None
+
+    @staticmethod
+    def _migrate_legacy_scope(base_report, source):
+        """Disclose, rather than guess, scope for pre-scope public artifacts."""
+        if base_report.metadata.scope_type != "unavailable" or source is None:
+            return base_report
+        date_from = source.analysis_period.get("from")
+        date_to = source.analysis_period.get("to")
+        if not (date_from or date_to):
+            return base_report
+        return replace(
+            base_report,
+            metadata=replace(
+                base_report.metadata,
+                scope_type="legacy_partial_period",
+                requested_date_from=str(date_from) if date_from else None,
+                requested_date_to=str(date_to) if date_to else None,
+                full_history_complete=False,
+            ),
+            warnings=(
+                *base_report.warnings,
+                ReportWarning(
+                    "legacy_scope_migrated",
+                    "舊版 artifact 未保存原始 scope 類型；僅以已保存期間標記 legacy partial period，"
+                    "不宣稱完整歷史。",
+                ),
+            ),
+        )

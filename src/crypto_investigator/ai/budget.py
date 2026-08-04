@@ -3,8 +3,8 @@ from dataclasses import dataclass
 from crypto_investigator.narratives.models import NarrativeInput
 
 
-MIN_COMPLETION_TOKENS = 4_000
-DEFAULT_COMPLETION_TOKENS = 5_000
+MIN_COMPLETION_TOKENS = 3_000
+DEFAULT_COMPLETION_TOKENS = 3_500
 HARD_MAX_COMPLETION_TOKENS = 8_000
 
 
@@ -26,9 +26,12 @@ def completion_budget(
     observations = len(source.observations)
     evidence = len(source.evidence_index)
     language_allowance = 350 if source.language.casefold().startswith("zh") else 0
+    # Strict JSON repeats structural keys even for concise prose. The recorded
+    # 13-section fixture exhausted 5,000 completion tokens, so structure receives
+    # a conservative per-section allowance while remaining hard-capped.
     estimated = (
-        2_800
-        + sections * 125
+        3_500
+        + sections * 250
         + facts * 12
         + observations * 10
         + min(evidence, 50) * 4

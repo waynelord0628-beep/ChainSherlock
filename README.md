@@ -5,11 +5,14 @@
 AI 報告仍預設停用，且只在使用者明確啟用時呼叫一次。送出內容是經 deterministic
 排序與上限控制的 structured facts，不含 raw transactions、完整 Evidence Index、
 Provider response、request body、完整 prompt 或秘密。Completion budget 依 facts、
-observations 與章節數估算，預設 5,000、硬上限 8,000 tokens。
+observations 與章節數估算。真實驗收後的安全預設為 3,500、最低 3,000、
+硬上限 8,000 tokens，GPT-5 使用 minimal reasoning。
 
 若模型以 `finish_reason=length` 結束、JSON／schema／grounding／必要章節驗證失敗，
 系統不採用半成品、不自動重試，並保留完整 deterministic 報告及安全 fallback metadata。
 AI 成功時只附加受字數、claims 與 refs 上限控制的專業綜合章節，不複製既有表格。
+Grounding schema 會依案件動態列舉可用 Evidence、Fact 與 Observation IDs，
+paragraph 直接引用 Evidence ID，再由本機 deterministic 建立 citation objects。
 
 ## V8 Real Provider Execution Integration（Milestone 8）
 

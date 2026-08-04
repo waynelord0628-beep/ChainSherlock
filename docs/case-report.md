@@ -33,6 +33,10 @@ AI input uses bounded top funding/destination, stage, observation, fact, limitat
 and Evidence-ID collections with explicit omitted counts. Each output section is
 limited to two paragraphs and five claims; claim refs are limited to five per
 category. Completion size is estimated from the compact facts and bounded to
-4,000–8,000 tokens. `finish_reason=length`, invalid/truncated JSON, missing required
+3,000–8,000 tokens，預設 3,500。`finish_reason=length`, invalid/truncated JSON, missing required
 sections or failed grounding produce a deterministic fallback without a hidden
 second call. Report UI shows only safe runtime metadata.
+
+開發驗收可依明確假設進行有限診斷呼叫；正式案件仍維持一次呼叫、失敗即
+fallback。動態 strict schema 只允許模型選用 compact input 中已存在的
+Evidence／Fact／Observation IDs，citation objects 由本機建立。

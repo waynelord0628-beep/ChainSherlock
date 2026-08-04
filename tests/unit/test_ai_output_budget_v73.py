@@ -129,6 +129,8 @@ def test_completion_budget_grows_with_grounding_content():
         (("properties", "claims", "items", "properties", "fact_codes", "maxItems"), 5),
         (("properties", "claims", "items", "properties", "evidence_ids", "maxItems"), 5),
         (("properties", "claims", "items", "properties", "statement", "maxLength"), 280),
+        (("properties", "executive_summary", "anyOf", 0, "properties", "paragraphs", "items", "properties", "citation_ids", "minItems"), 1),
+        (("properties", "review_status", "enum"), ["not_reviewed", "reviewed", "accepted", "edited", "rejected"]),
     ),
 )
 def test_schema_contains_bounded_output_contract(path, expected):
@@ -143,10 +145,28 @@ def test_schema_does_not_duplicate_section_level_grounding_arrays():
     assert not {"fact_refs", "observation_refs", "evidence_refs"} & set(section["properties"])
 
 
+def test_dynamic_schema_enumerates_only_available_grounding_ids():
+    value = source(
+        evidence_index=({"evidence_id": "E1"},),
+        observations=({"code": "O1"},),
+        conclusion_facts=({"fact_code": "F1", "value": 1},),
+    )
+    schema = narrative_response_schema(value)
+    claim = schema["properties"]["claims"]["items"]["properties"]
+    paragraph = schema["properties"]["executive_summary"]["anyOf"][0][
+        "properties"
+    ]["paragraphs"]["items"]["properties"]
+    assert paragraph["citation_ids"]["items"]["enum"] == ["E1"]
+    assert claim["evidence_ids"]["items"]["enum"] == ["E1"]
+    assert claim["observation_ids"]["items"]["enum"] == ["O1"]
+    assert claim["fact_codes"]["items"]["enum"] == ["F1"]
+
+
 def test_prompt_declares_no_table_duplication_and_section_budget():
     prompt = PromptBuilder().build(source())
     assert "Do not reproduce tables" in prompt
     assert "at most 350 Chinese characters" in prompt
+    assert "copied exactly from STRUCTURED_FACTS" in prompt
 
 
 def test_compact_snapshot_has_no_secret_or_local_path_fields():
@@ -157,6 +177,29 @@ def test_compact_snapshot_has_no_secret_or_local_path_fields():
     assert "api_key" not in payload
     assert "authorization" not in payload
     assert "c:\\\\" not in payload
+
+
+def test_compact_evidence_keeps_ids_without_address_collections():
+    compact = InputCompactor().compact(
+        source(
+            evidence_index=(
+                {
+                    "evidence_id": "E1",
+                    "feature": "funding",
+                    "source_type": "transaction",
+                    "addresses": tuple(f"T{index:034}" for index in range(100)),
+                },
+            )
+        ),
+        mode="compact",
+    )
+    assert compact.evidence_index == (
+        {
+            "evidence_id": "E1",
+            "feature": "funding",
+            "source_type": "transaction",
+        },
+    )
 
 
 def test_untagged_strict_schema_result_decodes_to_domain_model():

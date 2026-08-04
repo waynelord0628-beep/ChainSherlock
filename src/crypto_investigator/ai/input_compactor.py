@@ -83,7 +83,9 @@ class InputCompactor:
             "code", "occurred_at", "factual_statement", "metrics", "confidence",
             "limitations", "evidence_refs",
         )
-        evidence_fields = ("evidence_id", "feature", "source_type", "addresses")
+        # The model grounds by public ID. Address collections are already represented
+        # by bounded funding/destination facts and made this field dominate the prompt.
+        evidence_fields = ("evidence_id", "feature", "source_type")
         return replace(
             value,
             report_metadata={

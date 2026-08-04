@@ -230,9 +230,13 @@
 ## V7.3 bounded AI output
 
 - Bounded compact facts, output paragraphs, claims and grounding references.
-- Replaced the legacy 1,800/2,000-token assumption with a content-aware
-  4,000–8,000 completion policy and 5,000 default.
+- Replaced the legacy 1,800/2,000-token assumption with a live-validated
+  3,000–8,000 completion policy and 3,500 default.
 - Added explicit truncation/fallback metadata without storing prompts, request
   bodies, credentials or local absolute paths.
 - Added Report UI metadata for provider/model, token counts, finish reason,
   validation and fallback.
+- Reduced repeated Evidence address payloads and enabled minimal GPT-5 reasoning.
+- Added dynamic grounding enums and deterministic citation reconstruction.
+- Fixed long decimal tails being misclassified as Bitcoin addresses.
+- Added explicit partial migration for legacy artifacts with saved periods.

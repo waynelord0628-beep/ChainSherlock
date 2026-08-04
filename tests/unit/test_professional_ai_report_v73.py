@@ -26,6 +26,7 @@ from crypto_investigator.reports.models import (
     ReportTable,
 )
 from crypto_investigator.reports.export import ReportExportCoordinator
+from crypto_investigator.reports.offline import OfflineReportComposer
 
 
 def base_report():
@@ -358,6 +359,25 @@ def test_unknown_address_is_rejected():
     assert "unknown address" in result.metadata.fallback_reason
 
 
+def test_long_decimal_tail_is_not_misclassified_as_bitcoin_address():
+    narrative = ai_narrative()
+    section = narrative.executive_summary
+    narrative = replace(
+        narrative,
+        executive_summary=replace(
+            section,
+            paragraphs=(
+                NarrativeParagraph(
+                    "有效交易對手計數為 61.10670160988393859977536524。" * 8,
+                    ("C1",),
+                ),
+            ),
+        ),
+    )
+    result = AIReportIntegrator().integrate(base_report(), narrative)
+    assert result.metadata.fallback is False
+
+
 def test_ai_section_keeps_structured_grounding_metadata():
     result = AIReportIntegrator().integrate(base_report(), ai_narrative())
     section = next(
@@ -384,3 +404,20 @@ def test_ai_assisted_full_report_exports_four_formats(tmp_path, monkeypatch):
         "report.docx",
         "report.pdf",
     }.issubset({item.name for item in tmp_path.iterdir()})
+
+
+def test_legacy_public_period_is_migrated_without_claiming_full_history():
+    base = base_report()
+    base = replace(
+        base,
+        metadata=replace(base.metadata, scope_type="unavailable"),
+    )
+    result = OfflineReportComposer().compose(
+        ai_narrative(), narrative_source(), base_report=base
+    )
+    assert result.metadata.report_type == "ai_assisted"
+    assert result.metadata.scope_type == "legacy_partial_period"
+    assert result.metadata.full_history_complete is False
+    assert any(
+        item.code == "legacy_scope_migrated" for item in result.warnings
+    )

@@ -69,7 +69,19 @@ class NarrativeValidator:
                 continue
             if section and section_name != "limitations":
                 cited = {cid for para in section.paragraphs for cid in para.citation_ids}
-                if not cited or not cited.issubset(citation_ids):
+                grounded_claim = any(
+                    claim.section in {section_name, section.section_id}
+                    and (
+                        claim.fact_codes
+                        or claim.observation_ids
+                        or claim.evidence_ids
+                    )
+                    for claim in result.claims
+                )
+                if (
+                    (not cited or not cited.issubset(citation_ids))
+                    and not grounded_claim
+                ):
                     errors.append(f"section_citation:{section_name}")
         if source.completeness.lower() != "complete" and re.search(r"\bcomplete data\b|完整資料", text, re.I):
             errors.append("partial_promoted")
@@ -137,6 +149,8 @@ class NarrativeValidator:
             result.add(Decimal(str(value)))
         elif isinstance(value, str) and re.fullmatch(r"-?\d[\d,]*(?:\.\d+)?%?", value):
             result.add(Decimal(value.replace(",", "").replace("%", "")))
+        elif isinstance(value, str):
+            result.update(cls._numbers(value))
         elif isinstance(value, dict):
             for item in value.values():
                 result.update(cls._numeric_values(item))

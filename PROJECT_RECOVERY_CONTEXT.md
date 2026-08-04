@@ -657,12 +657,24 @@ Windows packaging。不得直接開始 V9。
   complete Evidence Index, Provider responses, local paths and credentials are
   excluded.
 - Output schema and validator bound narrative size, paragraphs, claims and refs.
-- Completion policy is content-aware: minimum 4,000, default 5,000, hard maximum
+- Completion policy is content-aware: minimum 3,000, default 3,500, hard maximum
   8,000; AI remains disabled until explicitly enabled.
 - Length, JSON, schema, required-section and grounding failures retain the full
   deterministic report and safe failure metadata. No partial AI text is published.
 - Report metadata/UI may show provider/model, token counts, finish reason,
   validation and fallback only.
-- Offline validation: targeted `358 passed, 1 skipped`; full `1338 passed,
+- Offline validation: targeted `258 passed, 1 skipped`; full `1344 passed,
   1 skipped`; `pip check` clean.
 - V9 and Windows packaging remain out of scope.
+
+### Live AI tuning completion
+
+- Six bounded `gpt-5-mini` calls used 56,316 input and 18,464 output tokens.
+- Attempts isolated output truncation, exact-number grounding, citation
+  cross-reference, review-status enum and a decimal/address regex false positive.
+- The successful request used prompt `7.3.5`, compact facts, minimal reasoning,
+  dynamic grounding enums and a 3,500-token limit. It returned `stop`, passed
+  schema/grounding/Quality Gates and did not use fallback.
+- The final legacy fixture report retains its actual 26 deterministic sections,
+  13 tables and 257 Evidence entries, adds 12 AI sections, remains explicitly
+  partial, and exports MD/HTML/DOCX/PDF successfully.
