@@ -1,11 +1,14 @@
 # ChainSherlock
 
-ChainSherlock is a local-first blockchain transaction investigation toolkit.
+ChainSherlock 是一套本機優先（local-first）的區塊鏈交易與幣流調查工具。
 
-**Current milestone:** V4 Blockchain Provider Engine
-**Package version:** 0.1.2
+**目前里程碑：** V4.2 Provider Reliability Fixes
 
-## Installation
+**套件版本：** 0.1.2
+
+## 安裝
+
+建議使用 Python 3.12 建立虛擬環境：
 
 ```powershell
 py -3.12 -m venv .venv
@@ -13,14 +16,14 @@ py -3.12 -m venv .venv
 pip install -e .
 ```
 
-For the exact V2 validated environment:
+若要重現已驗證的完整相依環境：
 
 ```powershell
 pip install -r requirements.lock
 pip install -e .
 ```
 
-## Quick start
+## 快速開始
 
 ```powershell
 python -m crypto_investigator --help
@@ -32,62 +35,69 @@ python -m crypto_investigator analyze-tx <TX_HASH> --chain ethereum
 pytest
 ```
 
-V2 adds a reusable Data Pipeline. It imports transaction files, validates every row, normalizes chain-specific representation into Domain Transactions, and exports normalized data. It does not perform transaction analysis.
+目前版本包含：
 
-V3 adds a Domain-only Analysis Engine. It does not connect to blockchain providers, draw graphs, generate reports, use AI, or perform cross-chain analysis.
+- V2 Data Pipeline：匯入交易檔案、逐筆驗證、依鏈別正規化為 Domain Transaction，並輸出標準化資料。
+- V3 Analysis Engine：只接受 Domain Transaction，提供摘要、統計、交易對手、時間軸與 Flow 資料分析。
+- V4 Blockchain Provider Engine：透過 Etherscan、Blockscout、TronGrid 與 Blockstream Esplora 取得鏈上資料。
+- V4.2 Reliability Fixes：強化 fallback、分頁硬限制、Bitcoin 未確認交易與部分資料處理。
 
-V4 adds asynchronous Etherscan, Blockscout, TronGrid, and Blockstream Esplora adapters. Provider records always enter the existing V2 Pipeline before the existing V3 Analysis Engine. Configure secrets only through environment variables copied from `.env.example`.
+Provider 資料不能直接進入 Analyzer，必須依序通過：
 
-V4.2 hardens real-provider reliability: incomplete capabilities can fall back without losing primary data, pagination enforces a hard per-capability record limit, unconfirmed Bitcoin transactions retain a null timestamp, and invalid Provider records are reported without discarding valid records.
+`Provider -> Raw Record -> Validation -> Normalization -> Domain Transaction -> Analysis Engine`
 
-## Blockchain Providers
+## 區塊鏈 Provider
 
-- Ethereum: Etherscan primary, Blockscout fallback.
-- TRON: TronGrid.
-- Bitcoin: Blockstream Esplora.
-- Capabilities, bounded pagination, retries, partial failures, source-aware deduplication, and file cache primitives are explicit contracts.
-- Outputs add `provider_status.json`, `provider_errors.json`, and sanitized files under `raw/`.
-- Partial Provider batches also emit `rejected_records.json`; analysis metadata records `complete`, `partial`, or `failed`.
+- Ethereum：Etherscan 為 primary，Blockscout 為 fallback。
+- TRON：TronGrid。
+- Bitcoin：Blockstream Esplora。
+- 支援 capability 宣告、健康檢查、非同步 HTTP、重試、rate limit、分頁限制與部分失敗。
+- 使用來源感知的 deduplication，避免同一筆 transfer 被重複計算。
+- 使用 `.env.example` 所列的環境變數設定 API Key；密鑰不會寫入 log、cache key 或輸出檔。
+
+地址分析範例：
+
+```powershell
+python -m crypto_investigator analyze-address <ADDRESS> `
+  --chain ethereum `
+  --max-pages 10 `
+  --max-records 1000 `
+  --output output\investigation
+```
+
+單筆交易分析：
+
+```powershell
+python -m crypto_investigator analyze-tx <TX_HASH> --chain bitcoin
+```
+
+Provider 工作流會額外輸出：
+
+- `provider_status.json`
+- `provider_errors.json`
+- `rejected_records.json`
+- `raw/`
+
+`analysis.json` metadata 會以 `complete`、`partial` 或 `failed` 表示資料完整度。
 
 ## Data Pipeline
 
-Every supported source follows one direction:
+所有支援的資料來源都遵循同一方向：
 
 `Raw Data -> Importer -> Validation -> Normalizer -> Domain Transaction -> Export`
 
-The pipeline rejects an invalid batch before Domain conversion or export. Importers never select chain-specific behavior; `NormalizerFactory` owns that decision.
+檔案型 V2 Pipeline 採嚴格整批驗證：任何一筆資料不合法，整批會在 Domain conversion 與輸出之前停止。Provider 工作流則採逐筆驗證，保留有效資料並將無效資料寫入 `rejected_records.json`。
 
-## Importers
+Importer 不負責決定鏈別行為；鏈別正規化由 `NormalizerFactory` 統一選擇。
 
-- CSV uses pandas with charset detection.
-- XLS uses pandas with xlrd.
-- XLSX uses openpyxl and pandas so formula values remain visible to validation.
-- Exact aliases are mapped to canonical fields.
-- Ambiguous fields are reported as candidates and require an explicit CLI column option.
+## Importer 與支援格式
 
-## Validation
+- `.csv`：使用 pandas，並支援字元編碼偵測。
+- `.xls`：使用 pandas 與 xlrd。
+- `.xlsx`：使用 openpyxl 與 pandas，保留公式內容供安全驗證。
+- 欄位只使用明確 alias 對應；有歧義時要求使用 CLI 選項指定來源欄位。
 
-V2 validates required values, timestamps, decimal amounts, blockchain address formats, duplicate transaction hashes, and CSV/Excel formula injection. A failed batch produces no output files.
-
-## Normalizers
-
-- Ethereum addresses and asset contracts are lowercased.
-- TRON Base58 addresses preserve their input form.
-- Bitcoin addresses preserve their input form.
-- All normalizers produce the same framework-independent Domain Transaction.
-
-## Supported formats
-
-- `.csv`
-- `.xls`
-- `.xlsx`
-
-The current exports are limited to:
-
-- `transactions_normalized.csv`
-- `summary.json`
-
-Column overrides:
+欄位覆寫範例：
 
 ```powershell
 python -m crypto_investigator analyze-file transactions.csv `
@@ -99,13 +109,38 @@ python -m crypto_investigator analyze-file transactions.csv `
   --tx-column txid
 ```
 
+標準化輸出：
+
+- `transactions_normalized.csv`
+- `summary.json`
+
+## Validation
+
+V2 會驗證：
+
+- 必填欄位
+- timestamp
+- 十進位金額
+- Ethereum、TRON 與 Bitcoin 地址格式
+- 重複交易
+- CSV／Excel formula injection
+
+Bitcoin 未確認交易只有在來源 metadata 明確標記 `confirmed = false` 時，才允許 `timestamp = null`。系統不會製造 `1970-01-01` 或目前時間作為替代值。
+
+## Normalizer
+
+- Ethereum 地址與 token contract 統一轉為小寫。
+- TRON Base58 地址保留原始表示。
+- Bitcoin 地址保留原始表示。
+- 所有 Normalizer 都產生相同且不依賴框架的 Domain Transaction。
+
 ## Analysis Engine
 
-Every Analyzer accepts only canonical Domain Transactions:
+所有 Analyzer 只接受標準 Domain Transaction：
 
-`Domain Transaction -> Analyzer Factory -> Analyzer -> AnalysisResult -> data export`
+`Domain Transaction -> Analyzer Factory -> Analyzer -> AnalysisResult -> Data Export`
 
-Available Analyzer names:
+可用 Analyzer：
 
 - `summary`
 - `statistics`
@@ -113,7 +148,22 @@ Available Analyzer names:
 - `timeline`
 - `flow`
 
-The complete engine writes:
+執行全部分析：
+
+```powershell
+python -m crypto_investigator analyze-all transactions.csv `
+  --address 0x0000000000000000000000000000000000000000
+```
+
+分別執行：
+
+```powershell
+python -m crypto_investigator analyze-summary transactions.csv --address <ADDRESS>
+python -m crypto_investigator analyze-counterparty transactions.csv --address <ADDRESS>
+python -m crypto_investigator analyze-timeline transactions.csv
+```
+
+完整輸出：
 
 - `analysis.json`
 - `summary.json`
@@ -122,63 +172,64 @@ The complete engine writes:
 - `timeline.csv`
 - `flow.json`
 
-Run all analyzers:
+### Summary 與 Statistics
 
-```powershell
-python -m crypto_investigator analyze-all transactions.csv `
-  --address 0x0000000000000000000000000000000000000000
-```
-
-Run individual analyzers:
-
-```powershell
-python -m crypto_investigator analyze-summary transactions.csv --address <ADDRESS>
-python -m crypto_investigator analyze-counterparty transactions.csv --address <ADDRESS>
-python -m crypto_investigator analyze-timeline transactions.csv
-```
-
-### Summary and statistics
-
-Summary covers observation range, transaction and direction counts, active days, assets, counterparties, and daily frequency. Statistics keep incoming, outgoing, average, median, maximum, and minimum amounts separated by asset.
+Summary 包含觀察期間、交易數、方向統計、活躍天數、資產、交易對手與每日頻率。Statistics 依資產分開計算流入、流出、平均、中位數、最大值及最小值，不會將不同資產的金額相加。
 
 ### Counterparty
 
-Counterparty aggregation is relative to the optional target address. Counts, first/last interaction, relationship direction, and incoming/outgoing amount maps are emitted without combining different assets.
+Counterparty 以選填的目標地址為基準，統計互動次數、首次／最後互動時間、關係方向，以及依資產分開的流入與流出金額。
 
 ### Timeline
 
-Timeline data includes daily and monthly buckets plus hourly and weekday distributions. V3 emits JSON and CSV data only.
+Timeline 提供每日、每月、每小時與星期分布。缺少 timestamp 的未確認 Bitcoin 交易不會進入 Timeline，但仍保留在 Summary、Statistics、Counterparty 與 Flow。
 
 ### Flow
 
-Flow contains address nodes and transaction edges with direction, weight, asset, and timestamp. It is a data model only: V3 includes no NetworkX, PyVis, Mermaid, HTML, or graph rendering.
+Flow 包含地址節點與交易邊，記錄方向、權重、資產及 timestamp。目前只輸出資料模型，不包含 NetworkX、PyVis、Mermaid、HTML 或圖形渲染。
 
-## Architecture
+## 架構
 
-- `core`: application composition, runtime context, and settings.
-- `core/pipeline.py`: reusable pipeline orchestration.
-- `core/export.py`: normalized CSV and JSON summary export.
-- `domain`: framework-independent addresses, assets, transactions, counterparties, and cases.
-- `importers`: file readers, field mapping, and validation.
-- `normalizers`: chain-specific normalization selected through a factory.
-- `analyzers`: Domain-only analyzers, result models, factory, engine, and data exporters.
-- `providers`: async contracts, registry, factory, selection/fallback, adapters, and collection.
-- `cache`: TTL file cache with safe keys, atomic writes, and corrupt-entry recovery.
-- `plugins`: extension Protocol, Registry, and explicit Loader.
-- `tools`: future tool Protocol and Registry; no tools are implemented in V1.1.
-- `models` and `detection`: existing V1 domain models and identifier detection.
-- `shared`: reserved for domain-neutral shared code.
-- `constants`: stable application-wide constants.
-- `docs`: progress, decisions, planned work, and changelog.
+- `core`：應用程式組裝、執行環境與設定。
+- `core/pipeline.py`：可重用的 Data Pipeline。
+- `core/export.py`：標準化 CSV 與 JSON 輸出。
+- `domain`：不依賴框架的地址、資產、交易、交易對手與案件實體。
+- `importers`：檔案讀取、欄位映射與驗證。
+- `normalizers`：由 Factory 選擇的鏈別正規化。
+- `analyzers`：Domain-only Analyzer、結果模型、Factory、Engine 與資料輸出。
+- `providers`：非同步 Provider contract、Registry、Factory、fallback 與鏈別 adapter。
+- `cache`：具有安全 key、TTL、atomic write 與損毀恢復的檔案快取。
+- `plugins`：Plugin Protocol、Registry 與明確 Loader。
+- `tools`：預留的 Tool Protocol 與 Registry，目前沒有實作 Tool。
+- `shared`：預留給不依賴 Domain 的共用程式。
+- `constants`：全域穩定常數。
+- `docs`：開發進度、架構決策、待辦與變更紀錄。
+
+核心依賴方向：
+
+```text
+Blockchain API / CSV / Excel
+            |
+            v
+Importer -> Validation -> Normalizer
+            |
+            v
+     Domain Transaction
+            |
+            v
+      Analysis Engine
+```
+
+Domain Layer 不依賴 Provider、HTTP client、Importer、Analyzer、圖形套件或 AI。
 
 ## Roadmap
 
-- V1.1: extensible architecture foundation without new business features.
-- V1.2: framework-independent Domain Layer.
-- V2: Data Pipeline delivering CSV/XLS/XLSX import, validation, normalization, Domain Transactions, and CSV/JSON export.
-- V3: Domain-only Summary, Statistics, Counterparty, Timeline, and Flow analysis.
-- V4: Blockchain Provider Engine feeding V2 Pipeline and V3 Analysis.
-- V4.2: Provider fallback, hard pagination limits, Bitcoin mempool timestamps, and partial-data reliability.
-- V5 and later: delivered as separately approved milestones.
+- V1.1：可擴充架構基礎，不新增業務功能。
+- V1.2：不依賴框架的 Domain Layer。
+- V2：CSV／XLS／XLSX Data Pipeline、驗證、正規化與標準輸出。
+- V3：Domain-only Summary、Statistics、Counterparty、Timeline 與 Flow 分析。
+- V4：Blockchain Provider Engine，串接既有 V2 Pipeline 與 V3 Analysis。
+- V4.2：Provider fallback、分頁硬限制、Bitcoin mempool timestamp 與部分資料可靠性。
+- V5 之後：依核准的獨立 milestone 逐步開發。
 
-Graph rendering, reports, AI, risk, bridges, and cross-chain features remain outside V4 scope.
+目前不包含圖形渲染、報告產生、AI、Risk／AML 評分、Bridge、Cross-chain、OSINT 或錢包操作。
