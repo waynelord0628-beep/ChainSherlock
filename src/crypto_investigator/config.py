@@ -38,7 +38,7 @@ class LoggingConfig(BaseModel):
     level: str = "INFO"
 
 
-class AppConfig(BaseModel):
+class Settings(BaseModel):
     providers: ProvidersConfig
     analysis: AnalysisConfig = Field(default_factory=AnalysisConfig)
     cache: CacheConfig = Field(default_factory=CacheConfig)
@@ -46,11 +46,13 @@ class AppConfig(BaseModel):
     logging: LoggingConfig = Field(default_factory=LoggingConfig)
 
 
-def load_config(path: Path | str = Path("config/default.yaml")) -> AppConfig:
+AppConfig = Settings
+
+
+def load_config(path: Path | str = Path("config/default.yaml")) -> Settings:
     config_path = Path(path)
     try:
         with config_path.open(encoding="utf-8") as config_file:
-            return AppConfig.model_validate(yaml.safe_load(config_file))
+            return Settings.model_validate(yaml.safe_load(config_file))
     except (OSError, yaml.YAMLError, ValueError) as error:
         raise ConfigurationError(f"Unable to load configuration: {config_path}") from error
-

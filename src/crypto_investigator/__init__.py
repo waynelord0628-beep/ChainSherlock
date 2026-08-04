@@ -1,3 +1,5 @@
 """ChainSherlock — local-first blockchain analysis."""
 
-__version__ = "0.1.0"
+from crypto_investigator.constants import VERSION
+
+__version__ = VERSION
