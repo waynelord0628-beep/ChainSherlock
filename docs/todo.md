@@ -1,13 +1,15 @@
 # Planned Work
 
-## V2 approved scope
+## V2 completed scope
 
 - CSV Importer.
+- XLS and XLSX Importers.
+- batch Validator.
 - Transaction Normalizer.
 - Canonical Domain Transaction output.
-- JSON Exporter.
+- normalized CSV and JSON summary Export.
 
-Target flow: `CSV -> Importer -> Normalizer -> Domain Transaction -> JSON Export`.
+Implemented flow: `Raw Data -> Importer -> Validation -> Normalizer -> Domain Transaction -> Export`.
 
 ## Explicitly deferred
 

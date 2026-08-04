@@ -2,7 +2,7 @@
 
 ## Current version
 
-V1.2 — framework-independent Domain Layer.
+V2 — Data Pipeline Engine.
 
 ## Completed
 
@@ -15,6 +15,14 @@ V1.2 — framework-independent Domain Layer.
 - Reserved `shared` and `constants` packages.
 - Domain entities for addresses, transactions, assets, counterparties, and cases.
 - Shared chain, direction, and transaction-type enums owned by the Domain Layer.
+- V2 dependency environment frozen in `requirements.lock` with Python 3.12.13.
+- CSV, XLS, and XLSX Importers.
+- deterministic column Mapping with explicit ambiguity candidates and overrides.
+- validation for empty values, timestamps, amounts, addresses, duplicates, and formula injection.
+- Ethereum, TRON, and Bitcoin Normalizers selected through a Factory.
+- reusable `Raw -> Import -> Validate -> Normalize -> Domain -> Export` pipeline.
+- `transactions_normalized.csv` and `summary.json` exports.
+- `analyze-file` CLI with six column override options.
 
 ## Validation
 
@@ -24,4 +32,4 @@ V1.2 — framework-independent Domain Layer.
 
 ## Scope guard
 
-V1.2 adds no CSV import, providers, transaction analysis, reporting, or other business functionality. V2 is limited to `CSV -> Importer -> Normalizer -> Domain Transaction -> JSON Export`.
+V2 contains no Provider, Graph, Timeline, Counterparty analysis, Report, AI, Risk, Cross-chain, Bridge, or on-chain API implementation.

@@ -9,12 +9,17 @@ description = "ChainSherlock: a local-first blockchain transaction investigation
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
+  "charset-normalizer>=3.3",
   "loguru>=0.7,<1",
+  "openpyxl>=3.1",
+  "pandas>=2.2",
   "pydantic>=2.0,<3",
   "pydantic-settings>=2.0,<3",
+  "python-dateutil>=2.9",
   "PyYAML>=6.0,<7",
   "pytest>=8,<9",
   "typer>=0.12,<1",
+  "xlrd>=2.0",
 ]
 
 [project.scripts]

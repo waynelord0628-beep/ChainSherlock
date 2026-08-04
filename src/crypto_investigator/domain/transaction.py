@@ -2,7 +2,7 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from decimal import Decimal
 from enum import StrEnum
-from typing import Any, Mapping
+from crypto_investigator.domain.metadata import Metadata
 
 
 class Chain(StrEnum):
@@ -39,12 +39,14 @@ class Transaction:
     from_address: str | None = None
     to_address: str | None = None
     asset_symbol: str | None = None
+    asset_contract: str | None = None
     amount: Decimal | None = None
+    decimals: int | None = None
     timestamp: datetime | None = None
     block_number: int | None = None
     fee: Decimal | None = None
     success: bool | None = None
     transaction_type: TransactionType = TransactionType.UNKNOWN
     direction: Direction = Direction.UNKNOWN
-    metadata: Mapping[str, Any] = field(default_factory=dict)
+    metadata: Metadata = field(default_factory=Metadata)
 

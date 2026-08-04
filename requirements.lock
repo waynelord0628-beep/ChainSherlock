@@ -1,0 +1,37 @@
+# ChainSherlock V2 dependency freeze
+# Python: 3.12.13
+# Generated from: python -m pip freeze --all
+# Install with: python -m pip install -r requirements.lock
+
+annotated-doc==0.0.5
+annotated-types==0.8.0
+charset-normalizer==3.4.9
+colorama==0.4.6
+et_xmlfile==2.0.0
+iniconfig==2.3.0
+loguru==0.7.3
+markdown-it-py==4.2.0
+mdurl==0.1.2
+numpy==2.5.1
+openpyxl==3.1.5
+packaging==26.2
+pandas==3.0.5
+pip==25.0.1
+pluggy==1.6.0
+pydantic==2.13.4
+pydantic-settings==2.14.2
+pydantic_core==2.46.4
+Pygments==2.20.0
+pytest==8.4.2
+python-dateutil==2.9.0.post0
+python-dotenv==1.2.2
+PyYAML==6.0.3
+rich==15.0.0
+shellingham==1.5.4
+six==1.17.0
+typer==0.27.1
+typing-inspection==0.4.2
+typing_extensions==4.16.0
+tzdata==2026.3
+win32_setctime==1.2.0
+xlrd==2.0.2

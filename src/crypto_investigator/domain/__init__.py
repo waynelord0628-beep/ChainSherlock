@@ -4,6 +4,7 @@ from crypto_investigator.domain.address import Address
 from crypto_investigator.domain.asset import Asset
 from crypto_investigator.domain.case import InvestigationCase
 from crypto_investigator.domain.counterparty import Counterparty
+from crypto_investigator.domain.metadata import Metadata
 from crypto_investigator.domain.transaction import (
     Chain,
     Direction,
@@ -18,6 +19,7 @@ __all__ = [
     "Counterparty",
     "Direction",
     "InvestigationCase",
+    "Metadata",
     "Transaction",
     "TransactionType",
 ]
