@@ -53,13 +53,13 @@ class ReportExportCoordinator:
             writer = csv.writer(stream)
             writer.writerow(
                 (
-                    "Address ID",
-                    "Chain",
-                    "Full Address",
-                    "Label",
-                    "Candidate Role",
-                    "Evidence／Source",
-                    "Notes",
+                    "地址編號",
+                    "鏈別",
+                    "完整地址",
+                    "標籤",
+                    "候選角色",
+                    "Evidence／來源",
+                    "備註",
                 )
             )
             writer.writerows(address_registry_rows(document))

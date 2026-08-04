@@ -6,7 +6,7 @@ from docx.enum.table import WD_CELL_VERTICAL_ALIGNMENT, WD_TABLE_ALIGNMENT
 from docx.enum.text import WD_ALIGN_PARAGRAPH
 from docx.oxml.ns import qn
 from docx.oxml import OxmlElement
-from docx.shared import Mm, Pt
+from docx.shared import Mm, Pt, RGBColor
 
 from crypto_investigator.reports.errors import DocxExportError
 from crypto_investigator.reports.models import ReportDocument
@@ -30,10 +30,16 @@ class DocxReportExporter:
     def _column_weights(columns):
         values = []
         for column in columns:
-            if column in {"排名", "信心", "方向", "資產", "完整度", "截斷"}:
+            if column in {"Address ID", "地址編號"}:
+                values.append(1.05)
+            elif column == "完整地址":
+                values.append(3.2)
+            elif column in {"排名", "信心", "方向", "資產", "完整度", "截斷"}:
                 values.append(0.7)
             elif any(item in column for item in ("時間", "首次", "最後", "開始", "結束")):
                 values.append(1.6)
+            elif any(item in column for item in ("金額", "流入", "流出")):
+                values.append(1.4)
             elif any(item in column.casefold() for item in ("地址", "來源", "去向", "sha-256")):
                 values.append(1.8)
             elif any(item in column for item in ("限制", "原因", "警告", "備註", "觀察", "事實")):
@@ -110,10 +116,41 @@ class DocxReportExporter:
                     )
                     run.font.size = Pt(15)
                     self._set_run_font(run)
-                    output.add_paragraph()
+                    watermark = output.add_paragraph()
+                    watermark.alignment = WD_ALIGN_PARAGRAPH.CENTER
+                    run = watermark.add_run("₿")
+                    run.font.name = "Segoe UI Symbol"
+                    run.font.size = Pt(72)
+                    run.font.color.rgb = RGBColor(231, 235, 240)
                     for block in report_section.content_blocks:
                         paragraph = output.add_paragraph(block)
                         paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER
+                    output.add_page_break()
+                    continue
+                if report_section.section_id == "table_of_contents":
+                    title = output.add_paragraph()
+                    title.alignment = WD_ALIGN_PARAGRAPH.CENTER
+                    run = title.add_run("目錄")
+                    run.bold = True
+                    run.font.size = Pt(24)
+                    self._set_run_font(run)
+                    subtitle = output.add_paragraph()
+                    subtitle.alignment = WD_ALIGN_PARAGRAPH.CENTER
+                    run = subtitle.add_run("CONTENTS")
+                    run.font.size = Pt(11)
+                    self._set_run_font(run)
+                    midpoint = (len(report_section.content_blocks) + 1) // 2
+                    left = report_section.content_blocks[:midpoint]
+                    right = report_section.content_blocks[midpoint:]
+                    toc = output.add_table(
+                        rows=max(len(left), len(right)), cols=2
+                    )
+                    toc.autofit = False
+                    for index, row in enumerate(toc.rows):
+                        for column, values in enumerate((left, right)):
+                            row.cells[column].width = Mm(80)
+                            if index < len(values):
+                                row.cells[column].text = values[index]
                     output.add_page_break()
                     continue
                 if report_section.section_id.startswith("asset_analysis_"):

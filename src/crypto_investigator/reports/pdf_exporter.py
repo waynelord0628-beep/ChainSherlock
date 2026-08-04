@@ -17,6 +17,7 @@ from reportlab.platypus import (
     TableStyle,
 )
 from reportlab.lib import colors
+from reportlab.graphics.shapes import Circle, Drawing, Line, Rect, String
 
 from crypto_investigator.reports.errors import PdfExportError
 from crypto_investigator.reports.formatting import abbreviate_identifier
@@ -81,10 +82,16 @@ class PdfReportExporter:
                 weight = 1.5
             elif column in {"備註"}:
                 weight = 1.6
+            elif column in {"Address ID", "地址編號"}:
+                weight = 1.05
+            elif column == "完整地址":
+                weight = 3.2
             elif column in {"排名", "信心", "方向", "資產", "完整度", "截斷"}:
                 weight = 0.7
             elif any(item in key for item in ("時間", "首次", "最後", "開始", "結束")):
                 weight = 1.65
+            elif any(item in column for item in ("金額", "流入", "流出")):
+                weight = 1.4
             elif any(item in key for item in ("地址", "來源", "去向", "sha-256")):
                 weight = 1.8
             elif any(item in key for item in ("限制", "原因", "警告", "備註", "觀察", "事實")):
@@ -157,7 +164,24 @@ class PdfReportExporter:
             story = []
             for section in document.sections:
                 if section.section_id == "cover":
-                    story.append(Spacer(1, 45 * mm))
+                    story.append(Spacer(1, 24 * mm))
+                    cover_header = Drawing(430, 34)
+                    navy = colors.HexColor("#16213E")
+                    teal = colors.HexColor("#138A84")
+                    cover_header.add(Rect(0, 29, 430, 3, fillColor=navy, strokeColor=None))
+                    cover_header.add(Rect(0, 24, 116, 3, fillColor=teal, strokeColor=None))
+                    cover_header.add(
+                        String(
+                            0,
+                            5,
+                            "FORENSIC ANALYSIS DOSSIER",
+                            fontName=self._latin_font_name,
+                            fontSize=8,
+                            fillColor=colors.HexColor("#64748B"),
+                        )
+                    )
+                    story.append(cover_header)
+                    story.append(Spacer(1, 13 * mm))
                     story.append(
                         Paragraph(
                             self._styled_text(
@@ -176,15 +200,118 @@ class PdfReportExporter:
                             styles["Heading2"],
                         )
                     )
-                    story.append(Spacer(1, 20 * mm))
+                    cover_mark = Drawing(170, 118)
+                    pale = colors.HexColor("#E7EBF0")
+                    cover_mark.add(
+                        Circle(
+                            85,
+                            59,
+                            43,
+                            strokeColor=pale,
+                            strokeWidth=2.5,
+                            fillColor=colors.HexColor("#FAFBFC"),
+                        )
+                    )
+                    cover_mark.add(
+                        String(
+                            67,
+                            30,
+                            "B",
+                            fontName=self._latin_font_name,
+                            fontSize=70,
+                            fillColor=pale,
+                        )
+                    )
+                    cover_mark.add(Line(69, 21, 69, 97, strokeColor=pale, strokeWidth=3))
+                    cover_mark.add(Line(79, 19, 79, 99, strokeColor=pale, strokeWidth=3))
+                    story.append(cover_mark)
+                    story.append(Spacer(1, 8 * mm))
+                    cover_metadata = []
                     for block in section.content_blocks:
-                        story.append(
+                        cover_metadata.append(
                             Paragraph(
                                 self._styled_text(block, self._latin_font_name),
                                 styles["BodyText"],
                             )
                         )
-                        story.append(Spacer(1, 2 * mm))
+                        cover_metadata.append(Spacer(1, 2 * mm))
+                    metadata_card = Table(
+                        [[cover_metadata]],
+                        colWidths=[136 * mm],
+                        hAlign="CENTER",
+                    )
+                    metadata_card.setStyle(
+                        TableStyle(
+                            [
+                                ("BACKGROUND", (0, 0), (-1, -1), colors.HexColor("#F6F8FA")),
+                                ("BOX", (0, 0), (-1, -1), 0.6, colors.HexColor("#D9DEE7")),
+                                ("LINEBEFORE", (0, 0), (0, -1), 3, teal),
+                                ("LEFTPADDING", (0, 0), (-1, -1), 14),
+                                ("RIGHTPADDING", (0, 0), (-1, -1), 14),
+                                ("TOPPADDING", (0, 0), (-1, -1), 12),
+                                ("BOTTOMPADDING", (0, 0), (-1, -1), 10),
+                            ]
+                        )
+                    )
+                    story.append(metadata_card)
+                    story.append(PageBreak())
+                    continue
+                if section.section_id == "table_of_contents":
+                    pale = colors.HexColor("#D9DEE7")
+                    toc_title = styles["Title"].clone("BookletContentsTitle")
+                    toc_title.alignment = 1
+                    story.append(Spacer(1, 10 * mm))
+                    story.append(Paragraph("目錄", toc_title))
+                    toc_subtitle = styles["Heading2"].clone(
+                        "BookletContentsSubtitle"
+                    )
+                    toc_subtitle.alignment = 1
+                    story.append(
+                        Paragraph(
+                            f'<font name="{self._latin_font_name}">CONTENTS</font>',
+                            toc_subtitle,
+                        )
+                    )
+                    story.append(Spacer(1, 12 * mm))
+                    midpoint = (len(section.content_blocks) + 1) // 2
+                    left = section.content_blocks[:midpoint]
+                    right = section.content_blocks[midpoint:]
+                    rows = [
+                        (
+                            left[index] if index < len(left) else "",
+                            right[index] if index < len(right) else "",
+                        )
+                        for index in range(max(len(left), len(right)))
+                    ]
+                    toc_style = styles["BodyText"].clone("BookletContentsItem")
+                    toc_style.fontSize = 10
+                    toc_style.leading = 16
+                    toc = Table(
+                        [
+                            [
+                                Paragraph(
+                                    self._styled_text(value, self._latin_font_name),
+                                    toc_style,
+                                )
+                                for value in row
+                            ]
+                            for row in rows
+                        ],
+                        colWidths=(80 * mm, 80 * mm),
+                    )
+                    toc.setStyle(
+                        TableStyle(
+                            [
+                                ("VALIGN", (0, 0), (-1, -1), "TOP"),
+                                ("LEFTPADDING", (0, 0), (-1, -1), 5),
+                                ("RIGHTPADDING", (0, 0), (-1, -1), 5),
+                                ("TOPPADDING", (0, 0), (-1, -1), 3),
+                                ("BOTTOMPADDING", (0, 0), (-1, -1), 3),
+                                ("LINEABOVE", (0, 0), (-1, 0), 0.5, pale),
+                            ]
+                        )
+                    )
+                    story.append(toc)
                     story.append(PageBreak())
                     continue
                 if section.section_id.startswith("asset_analysis_"):

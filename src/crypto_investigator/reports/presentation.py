@@ -1,6 +1,6 @@
 import ast
 from dataclasses import replace
-from decimal import Decimal, InvalidOperation
+from decimal import Decimal, InvalidOperation, ROUND_HALF_UP
 import re
 from zoneinfo import ZoneInfo
 
@@ -121,7 +121,7 @@ def _apply_address_registry(table, registry):
         index = table.columns.index("地址")
         columns = list(table.columns)
         columns[index] = "完整地址"
-        columns.insert(index, "Address ID")
+        columns.insert(index, "地址編號")
         rows = []
         for row in table.rows:
             values = list(row)
@@ -170,11 +170,10 @@ def _format_numeric_table(table):
                 except InvalidOperation:
                     pass
                 else:
-                    decimals = 8 if asset in {"BTC", "ETH"} else 6
                     if number and abs(number) < Decimal("0.00000001"):
                         text = f"{number:.2E}"
                     else:
-                        text = format_amount(number, maximum_decimals=decimals)
+                        text = _display_amount_2(number)
             elif any(marker in column for marker in ("筆數", "交易數", "事件數")):
                 try:
                     text = f"{int(text.replace(',', '')):,}"
@@ -201,14 +200,14 @@ def _address_registry_tables(addresses, registry, chain):
     return (
         ReportTable(
             "address_registry_identity",
-            "Address Registry（身分資料）",
-            ("Address ID", "鏈別", "完整地址", "人工 Label"),
+            "地址對照表（身分資料）",
+            ("地址編號", "鏈別", "完整地址", "人工 Label"),
             tuple((row[0], row[1], row[2], row[3]) for row in rows),
         ),
         ReportTable(
             "address_registry_context",
-            "Address Registry（調查脈絡）",
-            ("Address ID", "Candidate Role", "Evidence／來源", "備註"),
+            "地址對照表（調查脈絡）",
+            ("地址編號", "Candidate Role", "Evidence／來源", "備註"),
             tuple((row[0], row[4], row[5], row[6]) for row in rows),
         ),
     )
@@ -216,7 +215,7 @@ def _address_registry_tables(addresses, registry, chain):
 
 def address_registry_rows(document):
     """Return the stable, complete address registry used by every exporter."""
-    addresses = sorted({
+    all_addresses = {
         match.group(0)
         for section in document.sections
         for value in (
@@ -229,14 +228,99 @@ def address_registry_rows(document):
             ),
         )
         for match in IDENTIFIER.finditer(str(value))
-    })
+    }
     target = document.metadata.target_address
-    if target in addresses:
-        addresses.remove(target)
-        addresses.insert(0, target)
+    ordered = []
+
+    def add(address):
+        if address in all_addresses and address not in ordered:
+            ordered.append(address)
+
+    add(target)
+    assets = list(_material_assets(document))
+    assets = [item for item in ("USDT", "TRX") if item in assets] + [
+        item for item in assets if item not in {"USDT", "TRX"}
+    ]
+    funding = next(
+        (
+            table
+            for section in document.sections
+            for table in section.tables
+            if table.table_id == "funding_sources"
+        ),
+        None,
+    )
+    counterparty_summary = next(
+        (
+            table
+            for section in document.sections
+            for table in section.tables
+            if table.table_id == "counterparty_summary"
+        ),
+        None,
+    )
+    counterparties = counterparty_summary or next(
+        (
+            table
+            for section in document.sections
+            for table in section.tables
+            if table.table_id == "counterparties"
+        ),
+        None,
+    )
+    ranked_groups = []
+    for asset in assets:
+        sources = [
+            row for row in (funding.rows if funding else ())
+            if len(row) >= 7 and str(row[1]) == asset
+        ]
+        sources.sort(
+            key=lambda row: (
+                -_number(row[3]),
+                -_number(row[4]),
+                str(row[5]),
+                str(row[2]),
+            )
+        )
+        peers = [
+            row for row in (counterparties.rows if counterparties else ())
+            if len(row) >= 10 and str(row[4]) == asset
+        ]
+        outgoing = sorted(
+            (row for row in peers if str(row[2]) == "流出"),
+            key=lambda row: (
+                -_number(row[6]),
+                -_number(row[3]),
+                str(row[7]),
+                str(row[1]),
+            ),
+        )
+        frequent = sorted(
+            peers,
+            key=lambda row: (
+                -_number(row[3]),
+                -max(_number(row[5]), _number(row[6])),
+                str(row[7]),
+                str(row[1]),
+            ),
+        )
+        ranked_groups.append((sources, outgoing, frequent))
+    for sources, outgoing, frequent in ranked_groups:
+        if sources:
+            add(str(sources[0][2]))
+        if outgoing:
+            add(str(outgoing[0][1]))
+        if frequent:
+            add(str(frequent[0][1]))
+    for sources, outgoing, frequent in ranked_groups:
+        for row in sources[1:10]:
+            add(str(row[2]))
+        for row in (*outgoing[:10], *frequent[:10]):
+            add(str(row[1]))
+    ordered.extend(sorted(all_addresses - set(ordered)))
     return tuple(
         (
-            f"ADDR-{index:03d}",
+            f"地址-{index:03d}",
             document.metadata.chain or "unavailable",
             address,
             "調查標的" if address == target else "未標記",
@@ -244,7 +328,7 @@ def address_registry_rows(document):
             "ReportDocument",
             "完整值供查核與複製",
         )
-        for index, address in enumerate(addresses, 1)
+        for index, address in enumerate(ordered, 1)
     )
 
 
@@ -253,6 +337,16 @@ def _number(value) -> Decimal:
         return Decimal(str(value).replace(",", "").replace("%", ""))
     except InvalidOperation:
         return Decimal(0)
+
+
+def _display_amount_2(value) -> str:
+    """Format booklet amounts compactly without changing stored precision."""
+    try:
+        number = Decimal(str(value).replace(",", ""))
+    except InvalidOperation:
+        return str(value)
+    rounded = number.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+    return f"{rounded:,.2f}"
 
 
 def _find_table(document, table_id):
@@ -280,15 +374,26 @@ def _asset_first_sections(document, registry, material_assets):
         if asset not in assets
     )
 
-    def address_cells(address):
-        return registry.get(address, "—"), abbreviate_identifier(address)
+    def address_id(address):
+        return registry.get(address, "—")
+
+    def key_address_cells(address):
+        return address_id(address), address
 
     key_rows = []
+    main_address_roles = {}
+
+    def add_main_role(address, role):
+        roles = main_address_roles.setdefault(address, [])
+        if role not in roles:
+            roles.append(role)
+
     target = document.metadata.target_address
     if target:
         key_rows.append(
-            ("調查標的", *address_cells(target), "本案主地址")
+            ("調查標的", *key_address_cells(target), "本案主地址")
         )
+        add_main_role(target, "調查標的")
     sections = []
     all_ranking_rows = []
     path_rows = []
@@ -303,8 +408,8 @@ def _asset_first_sections(document, registry, material_assets):
         summary_rows = (
             (
                 asset,
-                str(asset_row[1]),
-                str(asset_row[2]),
+                _display_amount_2(asset_row[1]),
+                _display_amount_2(asset_row[2]),
                 str(asset_row[3]),
                 "主要分析資產",
             ),
@@ -325,14 +430,16 @@ def _asset_first_sections(document, registry, material_assets):
         source_table_rows = tuple(
             (
                 str(rank),
-                *address_cells(str(row[2])),
-                str(row[3]),
+                address_id(str(row[2])),
+                _display_amount_2(row[3]),
                 str(row[4]),
                 str(row[5]),
                 str(row[6]),
             )
             for rank, row in enumerate(source_rows[:10], 1)
         )
+        for rank, row in enumerate(source_rows[:10], 1):
+            add_main_role(str(row[2]), f"{asset} 主要資金來源第 {rank} 名")
 
         asset_counterparties = [
             row for row in (counterparties.rows if counterparties else ())
@@ -361,10 +468,10 @@ def _asset_first_sections(document, registry, material_assets):
             return tuple(
                 (
                     str(rank),
-                    *address_cells(str(row[1])),
+                    address_id(str(row[1])),
                     str(row[2]),
                     str(row[3]),
-                    str(row[amount_index]),
+                    _display_amount_2(row[amount_index]),
                     str(row[7]),
                     str(row[8]),
                 )
@@ -373,20 +480,24 @@ def _asset_first_sections(document, registry, material_assets):
 
         outgoing_rows = counterparty_rows(outgoing, 6)
         frequent_rows = counterparty_rows(frequent, 6)
+        for rank, row in enumerate(outgoing[:10], 1):
+            add_main_role(str(row[1]), f"{asset} 主要資金去向第 {rank} 名")
+        for rank, row in enumerate(frequent[:10], 1):
+            add_main_role(str(row[1]), f"{asset} 高頻交易對手第 {rank} 名")
         if source_rows:
             address = str(source_rows[0][2])
             key_rows.append(
-                (f"主要 {asset} 來源 1", *address_cells(address), "主要供款來源")
+                (f"主要 {asset} 來源 1", *key_address_cells(address), "主要供款來源")
             )
         if outgoing:
             address = str(outgoing[0][1])
             key_rows.append(
-                (f"主要 {asset} 去向 1", *address_cells(address), "主要去向候選")
+                (f"主要 {asset} 去向 1", *key_address_cells(address), "主要去向候選")
             )
         if frequent:
             address = str(frequent[0][1])
             key_rows.append(
-                (f"高頻 {asset} 對手", *address_cells(address), "高頻互動地址")
+                (f"高頻 {asset} 對手", *key_address_cells(address), "高頻互動地址")
             )
 
         for category, rows in (
@@ -395,7 +506,7 @@ def _asset_first_sections(document, registry, material_assets):
             ("高頻交易對手", frequent_rows),
         ):
             for row in rows[:3]:
-                all_ranking_rows.append((asset, category, *row[:3]))
+                all_ranking_rows.append((asset, category, *row[:2]))
 
         if source_rows and outgoing and target:
             source_address = str(source_rows[0][2])
@@ -407,7 +518,7 @@ def _asset_first_sections(document, registry, material_assets):
                     registry.get(source_address, "—"),
                     registry.get(target, "—"),
                     registry.get(destination, "—"),
-                    str(outgoing[0][6]),
+                    _display_amount_2(outgoing[0][6]),
                     str(outgoing[0][7]),
                     str(outgoing[0][8]),
                     "candidate",
@@ -418,32 +529,31 @@ def _asset_first_sections(document, registry, material_assets):
         narrative = [
             f"在本次分析範圍內，{asset} 共納入 "
             f"{str(asset_row[3]) if asset_row else 'unavailable'} 筆交易；"
-            f"流入金額為 {str(asset_row[1]) if asset_row else 'unavailable'}，"
-            f"流出金額為 {str(asset_row[2]) if asset_row else 'unavailable'}。",
+            f"流入金額為 {_display_amount_2(asset_row[1]) if asset_row else 'unavailable'}，"
+            f"流出金額為 {_display_amount_2(asset_row[2]) if asset_row else 'unavailable'}。",
         ]
         if source_rows:
             source_address = str(source_rows[0][2])
             narrative.append(
-                f"最大資金來源為 {registry.get(source_address, '—')} "
-                f"{abbreviate_identifier(source_address)}，"
-                f"目前範圍內流入金額 {source_rows[0][3]}、占比 {source_rows[0][4]}。"
+                f"最大資金來源為 {registry.get(source_address, '—')}，"
+                f"目前範圍內流入金額 {_display_amount_2(source_rows[0][3])}、"
+                f"占比 {source_rows[0][4]}。"
             )
         else:
             narrative.append("目前結構化結果未提供可排名的主要資金來源。")
         if outgoing:
             destination = str(outgoing[0][1])
             narrative.append(
-                f"最大資金去向為 {registry.get(destination, '—')} "
-                f"{abbreviate_identifier(destination)}，"
-                f"目前範圍內流出金額 {outgoing[0][6]}。"
+                f"最大資金去向為 {registry.get(destination, '—')}，"
+                f"目前範圍內流出金額 {_display_amount_2(outgoing[0][6])}。"
             )
         else:
             narrative.append("目前結構化結果未提供可排名的主要資金去向。")
         if frequent:
             address = str(frequent[0][1])
             narrative.append(
-                f"互動最頻繁的交易對手為 {registry.get(address, '—')} "
-                f"{abbreviate_identifier(address)}，共 {frequent[0][3]} 次。"
+                f"互動最頻繁的交易對手為 {registry.get(address, '—')}，"
+                f"共 {frequent[0][3]} 次。"
             )
 
         tables = [
@@ -456,19 +566,19 @@ def _asset_first_sections(document, registry, material_assets):
             ReportTable(
                 f"funding_rank_{asset.casefold()}",
                 f"{asset} 主要資金來源 Top 10（依流入金額）",
-                ("排名", "Address ID", "地址", "流入金額", "占比", "首次", "最後"),
+                ("排名", "地址編號", "流入金額", "占比", "首次", "最後"),
                 source_table_rows,
             ),
             ReportTable(
                 f"outgoing_rank_{asset.casefold()}",
                 f"{asset} 主要資金去向 Top 10（依流出金額）",
-                ("排名", "Address ID", "地址", "方向", "交易次數", "流出金額", "首次", "最後"),
+                ("排名", "地址編號", "方向", "交易次數", "流出金額", "首次", "最後"),
                 outgoing_rows,
             ),
             ReportTable(
                 f"frequency_rank_{asset.casefold()}",
                 f"{asset} 高頻交易對手 Top 10（依交易次數）",
-                ("排名", "Address ID", "地址", "方向", "交易次數", "流出金額", "首次", "最後"),
+                ("排名", "地址編號", "方向", "交易次數", "流出金額", "首次", "最後"),
                 frequent_rows,
             ),
         ]
@@ -479,7 +589,7 @@ def _asset_first_sections(document, registry, material_assets):
                 50 + asset_index,
                 tuple(narrative) + (
                     f"以下依序呈現 {asset} 的來源、去向及互動頻率排名；三種排名不得混為同一結論。",
-                    "Address ID 僅供識別；完整地址列於後段 Address Registry 與 address_registry.csv。",
+                    "地址編號是全報告固定索引，不等於本表排名；排名以最左欄為準。重要地址已於前段對照，其餘完整地址保留於後段地址對照表及 address_registry.csv。",
                 ),
                 tables=tuple(tables),
             )
@@ -493,10 +603,19 @@ def _asset_first_sections(document, registry, material_assets):
             ("本節先說明主文反覆引用之關鍵地址及其規則式角色。候選角色不代表身分已確認。",),
             tables=(
                 ReportTable(
-                    "key_address_summary",
-                    "關鍵地址",
-                    ("角色", "Address ID", "地址", "說明"),
-                    tuple(dict.fromkeys(key_rows)),
+                    "main_address_reference",
+                    "重要地址索引",
+                    ("地址編號", "完整地址"),
+                    tuple(
+                        (
+                            address_id(address),
+                            address,
+                        )
+                        for address, _roles in sorted(
+                            main_address_roles.items(),
+                            key=lambda item: address_id(item[0]),
+                        )
+                    ),
                 ),
             ),
         ),
@@ -505,12 +624,12 @@ def _asset_first_sections(document, registry, material_assets):
             "address_rankings",
             "地址排名總覽",
             100,
-            ("排名依幣種及用途分開計算，不以 Address ID 或內部資料順序排序。",),
+            ("排名依幣種及用途分開計算，不以地址編號或內部資料順序排序。",),
             tables=(
                 ReportTable(
                     "address_ranking_overview",
                     "重要地址排名摘要",
-                    ("資產", "排名類型", "排名", "Address ID", "地址"),
+                    ("資產", "排名類型", "排名", "地址編號"),
                     tuple(all_ranking_rows),
                 ),
             ),
@@ -540,6 +659,11 @@ def _asset_first_sections(document, registry, material_assets):
 
 def _reorder_booklet(document, sections, registry, material_assets):
     generated = _asset_first_sections(document, registry, material_assets)
+    booklet_assets = tuple(
+        asset for asset in ("USDT", "TRX") if asset in material_assets
+    ) + tuple(
+        asset for asset in material_assets if asset not in {"USDT", "TRX"}
+    )
     excluded = {
         "counterparties",
         "funding_analysis",
@@ -578,7 +702,7 @@ def _reorder_booklet(document, sections, registry, material_assets):
             base.append(
                 ReportSection(
                     "address_registry",
-                    "Address Registry",
+                    "地址對照表",
                     220,
                     ("本節列出主文引用之完整地址；其餘地址請參閱 address_registry.csv。",),
                     tables=registry_tables,
@@ -589,7 +713,7 @@ def _reorder_booklet(document, sections, registry, material_assets):
         "調查標的與分析範圍",
         "關鍵地址與角色摘要",
         "資產總覽",
-        *(f"{asset} 分析" for asset in material_assets),
+        *(f"{asset} 分析" for asset in booklet_assets),
         "地址排名總覽",
         "主要資金流路徑",
         "時間軸與運作階段",
@@ -604,7 +728,7 @@ def _reorder_booklet(document, sections, registry, material_assets):
         "綜合研判",
         "Evidence Index",
         "附錄",
-        "Address Registry",
+        "地址對照表",
     )
     toc = ReportSection(
         "table_of_contents",

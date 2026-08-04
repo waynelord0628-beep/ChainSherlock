@@ -186,15 +186,17 @@ def test_03_counterparty_table_has_no_duplicate_count_columns():
     assert "incoming_count" not in columns
 
 
-def test_04_main_address_has_registry_id_and_full_value():
+def test_04_main_ranking_uses_registry_id_without_duplicate_address():
     display = prepare_report_for_display(_document())
-    row = next(
+    table = next(
         table
         for table in _section(display, "asset_analysis_usdt").tables
         if table.table_id == "outgoing_rank_usdt"
-    ).rows[0]
-    assert row[1].startswith("ADDR-")
-    assert row[2] == abbreviate_identifier(OTHER)
+    )
+    row = table.rows[0]
+    assert row[1].startswith("地址-")
+    assert "地址" not in table.columns
+    assert OTHER not in row
 
 
 def test_05_full_address_is_preserved_in_appendix():
@@ -528,7 +530,7 @@ def test_39_ranking_tables_never_mix_assets():
         )
 
 
-def test_40_main_ranking_addresses_are_abbreviated():
+def test_40_main_ranking_uses_address_id_only():
     table = next(
         table
         for table in _section(
@@ -537,8 +539,8 @@ def test_40_main_ranking_addresses_are_abbreviated():
         ).tables
         if table.table_id == "outgoing_rank_trx"
     )
-    assert table.rows[0][2] == abbreviate_identifier(THIRD)
-    assert table.rows[0][2] != THIRD
+    assert table.rows[0][1].startswith("地址-")
+    assert THIRD not in table.rows[0]
 
 
 def test_41_address_ids_are_stable_across_sections():
@@ -550,10 +552,53 @@ def test_41_address_ids_are_stable_across_sections():
     known = {row[2]: row[0] for row in registry.rows}
     key = _section(display, "key_addresses").tables[0]
     for row in key.rows:
-        assert row[1] == known[next(
-            address for address in known
-            if abbreviate_identifier(address) == row[2]
-        )]
+        assert row[0] == known[row[1]]
+
+
+def test_41a_key_addresses_start_with_contiguous_priority_ids():
+    key = _section(
+        prepare_report_for_display(_two_asset_document()),
+        "key_addresses",
+    ).tables[0]
+    unique_ids = list(dict.fromkeys(row[0] for row in key.rows))
+    assert unique_ids[0] == "地址-001"
+    assert unique_ids == sorted(unique_ids)
+
+
+def test_41b_booklet_amounts_round_half_up_to_two_decimals():
+    table = next(
+        table
+        for table in _section(
+            prepare_report_for_display(_document()),
+            "asset_analysis_usdt",
+        ).tables
+        if table.table_id == "funding_rank_usdt"
+    )
+    assert table.rows[0][2] == "291,166.57"
+
+
+def test_41c_every_main_ranking_id_is_mapped_to_a_full_address_up_front():
+    display = prepare_report_for_display(_two_asset_document())
+    reference = next(
+        table
+        for table in _section(display, "key_addresses").tables
+        if table.table_id == "main_address_reference"
+    )
+    mapped = {row[0] for row in reference.rows}
+    used = {
+        row[1]
+        for section in display.sections
+        if section.section_id.startswith("asset_analysis_")
+        for table in section.tables
+        if table.table_id.startswith(
+            ("funding_rank_", "outgoing_rank_", "frequency_rank_")
+        )
+        for row in table.rows
+    }
+    assert used <= mapped
+    assert all(len(row[1]) > 20 for row in reference.rows)
+    numbers = [int(row[0].split("-")[1]) for row in reference.rows]
+    assert numbers == list(range(1, len(numbers) + 1))
 
 
 def test_42_key_address_summary_is_early():
