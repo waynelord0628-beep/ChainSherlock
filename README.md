@@ -2,7 +2,7 @@
 
 ChainSherlock is a local-first blockchain transaction investigation toolkit.
 
-**Current milestone:** V3 Analysis Engine
+**Current milestone:** V4 Blockchain Provider Engine
 **Package version:** 0.1.2
 
 ## Installation
@@ -26,12 +26,25 @@ pip install -e .
 python -m crypto_investigator --help
 python -m crypto_investigator detect 0x0000000000000000000000000000000000000000
 python -m crypto_investigator analyze-file transactions.csv
+python -m crypto_investigator providers
+python -m crypto_investigator analyze-address <ADDRESS>
+python -m crypto_investigator analyze-tx <TX_HASH> --chain ethereum
 pytest
 ```
 
 V2 adds a reusable Data Pipeline. It imports transaction files, validates every row, normalizes chain-specific representation into Domain Transactions, and exports normalized data. It does not perform transaction analysis.
 
 V3 adds a Domain-only Analysis Engine. It does not connect to blockchain providers, draw graphs, generate reports, use AI, or perform cross-chain analysis.
+
+V4 adds asynchronous Etherscan, Blockscout, TronGrid, and Blockstream Esplora adapters. Provider records always enter the existing V2 Pipeline before the existing V3 Analysis Engine. Configure secrets only through environment variables copied from `.env.example`.
+
+## Blockchain Providers
+
+- Ethereum: Etherscan primary, Blockscout fallback.
+- TRON: TronGrid.
+- Bitcoin: Blockstream Esplora.
+- Capabilities, bounded pagination, retries, partial failures, source-aware deduplication, and file cache primitives are explicit contracts.
+- Outputs add `provider_status.json`, `provider_errors.json`, and sanitized files under `raw/`.
 
 ## Data Pipeline
 
@@ -146,6 +159,8 @@ Flow contains address nodes and transaction edges with direction, weight, asset,
 - `importers`: file readers, field mapping, and validation.
 - `normalizers`: chain-specific normalization selected through a factory.
 - `analyzers`: Domain-only analyzers, result models, factory, engine, and data exporters.
+- `providers`: async contracts, registry, factory, selection/fallback, adapters, and collection.
+- `cache`: TTL file cache with safe keys, atomic writes, and corrupt-entry recovery.
 - `plugins`: extension Protocol, Registry, and explicit Loader.
 - `tools`: future tool Protocol and Registry; no tools are implemented in V1.1.
 - `models` and `detection`: existing V1 domain models and identifier detection.
@@ -159,6 +174,7 @@ Flow contains address nodes and transaction edges with direction, weight, asset,
 - V1.2: framework-independent Domain Layer.
 - V2: Data Pipeline delivering CSV/XLS/XLSX import, validation, normalization, Domain Transactions, and CSV/JSON export.
 - V3: Domain-only Summary, Statistics, Counterparty, Timeline, and Flow analysis.
-- V4 and later: delivered as separately approved milestones.
+- V4: Blockchain Provider Engine feeding V2 Pipeline and V3 Analysis.
+- V5 and later: delivered as separately approved milestones.
 
-Providers, blockchain APIs, graph rendering, reports, AI, risk, bridges, and cross-chain features remain outside V3 scope.
+Graph rendering, reports, AI, risk, bridges, and cross-chain features remain outside V4 scope.

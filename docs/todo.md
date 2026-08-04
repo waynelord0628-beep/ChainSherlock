@@ -1,5 +1,16 @@
 # Planned Work
 
+## V4 completed scope
+
+- Ethereum, TRON, and Bitcoin Provider adapters.
+- Provider contracts, Registry, Factory, capability selection, and fallback.
+- HTTP resilience, bounded pagination, cache primitives, partial outputs, and deduplication.
+- Provider-to-Pipeline-to-Analysis integration and CLI.
+
+## Deferred beyond V4
+
+- Graph rendering, reports, AI, Agents, Risk/AML scoring, cross-chain and bridge correlation, OSINT, and wallet operations.
+
 ## V2 completed scope
 
 - CSV Importer.

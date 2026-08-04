@@ -26,6 +26,7 @@ class AnalysisConfig(BaseModel):
 
 class CacheConfig(BaseModel):
     enabled: bool = True
+    directory: Path = Path("data/cache")
     ttl_seconds: int = 86400
 
 
@@ -38,10 +39,25 @@ class LoggingConfig(BaseModel):
     level: str = "INFO"
 
 
+class HttpConfig(BaseModel):
+    connect_timeout_seconds: float = 10
+    read_timeout_seconds: float = 30
+    total_timeout_seconds: float = 60
+    retries: int = 3
+
+
+class PaginationConfig(BaseModel):
+    max_pages: int = 100
+    max_records: int = 100000
+    page_size: int = 100
+
+
 class Settings(BaseModel):
     providers: ProvidersConfig
     analysis: AnalysisConfig = Field(default_factory=AnalysisConfig)
     cache: CacheConfig = Field(default_factory=CacheConfig)
+    http: HttpConfig = Field(default_factory=HttpConfig)
+    pagination: PaginationConfig = Field(default_factory=PaginationConfig)
     output: OutputConfig = Field(default_factory=OutputConfig)
     logging: LoggingConfig = Field(default_factory=LoggingConfig)
 

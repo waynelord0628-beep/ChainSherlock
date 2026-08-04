@@ -158,3 +158,17 @@ timeline.json / timeline.csv / flow.json
 ```
 
 Amounts are never combined across assets. Flow output is structured data and contains no rendered graph representation.
+
+## V4 Provider Layer
+
+```text
+Blockchain API -> Provider -> ProviderRawRecord
+ProviderRawRecord -> V2 Validation -> V2 Normalization -> Domain Transaction
+Domain Transaction -> V3 Analysis Engine -> data outputs
+```
+
+The Provider Layer owns HTTP, retries, rate limiting, pagination, cache primitives, response parsing, capabilities, and safe errors. Domain has no Provider or HTTP dependency, and Analysis accepts only Domain Transactions.
+
+Selection follows configured primary, capability check, request, then capability-scoped fallback. Successful capability results survive later failures. Status output records completeness, warnings, missing-data categories, and safe errors.
+
+Cache keys contain provider, chain, capability, normalized identifier, safe query parameters, and page/cursor; API keys are excluded. Pagination is bounded by `max_pages`, `max_records`, and `page_size`, and repeated cursors stop collection.

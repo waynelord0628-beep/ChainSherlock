@@ -36,24 +36,38 @@ class DataValidator:
     def validate(self, records: Iterable[Mapping[str, Any]]) -> ValidationResult:
         valid: list[dict[str, Any]] = []
         issues: list[ValidationIssue] = []
-        seen_hashes: set[str] = set()
+        seen_transactions: set[tuple[object, ...]] = set()
 
         for row_number, source in enumerate(records, start=2):
             record = dict(source)
             row_issues = self._validate_record(row_number, record)
             tx_hash = str(record.get("tx_hash") or "").strip()
-            if tx_hash and tx_hash in seen_hashes:
+            identity = self._record_identity(record, tx_hash)
+            if tx_hash and identity in seen_transactions:
                 row_issues.append(
                     ValidationIssue(row_number, "tx_hash", "duplicate_transaction", "Duplicate transaction hash")
                 )
             elif tx_hash:
-                seen_hashes.add(tx_hash)
+                seen_transactions.add(identity)
             if row_issues:
                 issues.extend(row_issues)
             else:
                 valid.append(record)
 
         return ValidationResult(tuple(valid), tuple(issues))
+
+    @staticmethod
+    def _record_identity(record: Mapping[str, Any], tx_hash: str) -> tuple[object, ...]:
+        metadata = record.get("source_metadata")
+        metadata = metadata if isinstance(metadata, Mapping) else {}
+        return (
+            tx_hash,
+            record.get("source_type"),
+            metadata.get("log_index"),
+            metadata.get("trace_id"),
+            metadata.get("input_index"),
+            metadata.get("output_index"),
+        )
 
     def _validate_record(self, row: int, record: Mapping[str, Any]) -> list[ValidationIssue]:
         issues: list[ValidationIssue] = []
@@ -105,4 +119,3 @@ class DataValidator:
         except (ParserError, ValueError, OverflowError, TypeError):
             return False
         return True
-

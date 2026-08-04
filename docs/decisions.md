@@ -55,3 +55,23 @@ Statistics, timeline buckets, and counterparty totals store amounts by asset. Am
 ## ADR-014: Flow is data only
 
 V3 Flow consists only of nodes and transaction edges. Rendering, graph libraries, HTML, Mermaid, GraphML, and visualization are deferred.
+
+## ADR-015: Providers never construct Domain Transactions
+
+Providers emit `ProviderRawRecord`; the Provider importer feeds existing V2 validation and normalization before Domain construction.
+
+## ADR-016: Fallback is capability-scoped
+
+A fallback is attempted only for a failed capability. Successful results from other capabilities are retained.
+
+## ADR-017: Bitcoin preserves input/output identity
+
+Bitcoin inputs and outputs remain separate raw records with index, address, and value metadata instead of being forced into an account model.
+
+## ADR-018: Partial failures are explicit
+
+Completeness, warnings, missing-data categories, and safe errors distinguish partial investigations from complete results.
+
+## ADR-019: Deduplication is source-aware
+
+Normal, token, internal, and Bitcoin input/output records use distinct stable identity keys; transaction hash alone is insufficient.

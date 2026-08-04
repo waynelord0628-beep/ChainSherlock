@@ -1,5 +1,18 @@
 # Development Progress
 
+## V4 completion summary
+
+V4 Blockchain Provider Engine is implemented.
+
+- Provider contracts, capabilities, structured errors, Registry, Factory, and fallback selection.
+- async HTTP client with bounded retry, backoff, rate limiting, and timeouts.
+- Etherscan, Blockscout, TronGrid, and Blockstream adapters.
+- pagination limits, partial retention, source-aware deduplication, and TTL file-cache primitives.
+- Provider Raw Records routed through the existing V2 Pipeline and V3 Analysis Engine.
+- Provider CLI commands, safe output metadata, tests, and offline benchmark.
+
+V4 adds no graph rendering, reports, AI, Agents, Risk/AML scoring, cross-chain, bridge, wallet, or OSINT functionality.
+
 ## Current version
 
 V3 — Analysis Engine.

@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased — V4
+
+- Added Etherscan, Blockscout, TronGrid, and Blockstream Provider adapters.
+- Added async HTTP reliability, bounded pagination, cache primitives, fallback, partial failures, and source-aware deduplication.
+- Routed Provider records through the existing V2 Pipeline and V3 Analysis Engine.
+- Added Provider CLI commands, safe outputs, tests, and an offline benchmark.
+
 ## Unreleased — V3
 
 - Added the Domain-only Analysis Engine and Analyzer Factory.
