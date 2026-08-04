@@ -208,3 +208,21 @@
 - 支援從 investigation、narrative input 或 narrative artifact 離線重建。
 - 新增 compact prompt、尺寸比較、10-run consistency 與人工 real-AI validation。
 - 補齊 deterministic/mock Report composition 及四格式效能量測。
+
+## V8 pre-release data quality
+
+- Added shared Analysis Scope, Time Scope Result and cross-chain pagination metadata.
+- Added Ethereum/TRON/Bitcoin capability completeness policies.
+- Fixed Full History caps, Custom Date Range propagation and downstream filtering.
+- Separated Provider, normalized, Analysis, Investigation and Graph populations.
+- Professionalized deterministic reports, Partial language, asset materiality,
+  neutral Candidate roles and deduplicated Evidence references.
+- Changed AI reporting from replacement to validated enrichment of the complete
+  deterministic ReportDocument.
+- Fixed fallback-resolved required capability errors incorrectly forcing partial.
+- Added date-bound pagination stopping for newest/oldest ordered custom scopes.
+- Fixed Blockstream address analysis to exclude unrelated incoming transaction outputs
+  and to preserve target-relative outgoing/change semantics.
+- Added complete pagination metadata for non-paginated Bitcoin transaction/UTXO calls.
+- Compacted engineering collections in human-facing tables while retaining full JSON.
+- Fixed a cold-start circular import between Provider service and Application exports.

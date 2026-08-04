@@ -2,6 +2,7 @@ from pathlib import Path
 from uuid import uuid4
 
 from crypto_investigator.reports.citations import build_citations
+from crypto_investigator.reports.ai_enrichment import AIReportIntegrator
 from crypto_investigator.reports.composer import ReportComposer
 from crypto_investigator.reports.formatting import redact
 from crypto_investigator.reports.models import (
@@ -19,7 +20,16 @@ from crypto_investigator.detection.identifier import detect_identifier
 class OfflineReportComposer:
     """Reconstruct a report solely from public V7 artifacts."""
 
-    def compose(self, narrative, narrative_input=None, *, output_directory="."):
+    def compose(
+        self,
+        narrative,
+        narrative_input=None,
+        *,
+        base_report=None,
+        output_directory=".",
+    ):
+        if base_report is not None:
+            return AIReportIntegrator().integrate(base_report, narrative)
         source = narrative_input
         chain = self._recover_chain(source)
         evidence = self._evidence(source, chain)

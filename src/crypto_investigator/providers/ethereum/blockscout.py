@@ -112,6 +112,7 @@ class BlockscoutProvider(BaseProvider):
             limits=limits,
             ordering=ProviderOrdering.NEWEST_FIRST,
             pagination_strategy=PaginationStrategy.CURSOR,
+            stop_before=options.get("date_from"),
         )
 
     def _parse_transaction(self, item: dict[str, Any]) -> ProviderRawRecord:

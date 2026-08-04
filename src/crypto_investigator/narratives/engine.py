@@ -110,9 +110,39 @@ class NarrativeEngine:
                             usage = response.usage
                             response_metadata = dict(response.raw_metadata)
                             parser = ResponseParser()
-                            parser.parse(response.content)
+                            candidate = decode(parser.parse(response.content))
                             response_metadata["parser_warnings"] = tuple(parser.warnings)
                             response_metadata["parser_diagnostics"] = parser.diagnostics
+                            candidate = replace(
+                                candidate,
+                                metadata=replace(
+                                    candidate.metadata,
+                                    provider=provider.provider_name,
+                                    model=provider.model_name,
+                                    prompt_version=PROMPT_VERSION,
+                                    status="ai_complete",
+                                    fallback_used=False,
+                                    input_sha256=input_hash,
+                                ),
+                            )
+                            candidate_validation = NarrativeValidator().validate(
+                                candidate, source
+                            )
+                            if not candidate_validation.valid:
+                                raise ValueError(
+                                    "AI narrative validation failed: "
+                                    + ", ".join(candidate_validation.errors)
+                                )
+                            fallback_candidate = (
+                                DeterministicFallbackProvider().generate(source)
+                            )
+                            if self._substantive_text(candidate) == self._substantive_text(
+                                fallback_candidate
+                            ):
+                                raise ValueError(
+                                    "AI narrative adds no substantive content beyond fallback"
+                                )
+                            result = candidate
                             last_error = None
                             break
                         except Exception as error:
@@ -137,14 +167,6 @@ class NarrativeEngine:
                                 break
                     if last_error:
                         raise last_error
-                    result = DeterministicFallbackProvider().generate(source)
-                    result = replace(
-                        result,
-                        metadata=replace(
-                            result.metadata, provider=provider.provider_name,
-                            model=provider.model_name, status="ai_complete", fallback_used=False,
-                        ),
-                    )
                     if use_cache:
                         cache.put(cache_key, {
                             "request_hash": input_hash,
@@ -209,3 +231,13 @@ class NarrativeEngine:
     @staticmethod
     def _write(path, value):
         path.write_text(json.dumps(value, ensure_ascii=False, indent=2, default=str), encoding="utf-8")
+
+    @staticmethod
+    def _substantive_text(result):
+        values = []
+        for name in result.__dataclass_fields__:
+            section = getattr(result, name)
+            if hasattr(section, "paragraphs"):
+                values.extend(paragraph.text.strip() for paragraph in section.paragraphs)
+        values.extend(claim.statement.strip() for claim in result.claims)
+        return tuple(values)

@@ -91,9 +91,17 @@ class CaseUIService:
     def reports(self, case_id: str) -> tuple[dict, ...]:
         return CaseReportService(self.repository).list_reports(case_id)
 
-    def create_report(self, case_id: str, requested_format: str = "all") -> dict:
+    def create_report(
+        self,
+        case_id: str,
+        requested_format: str = "all",
+        *,
+        ai_enrichment_enabled: bool = False,
+    ) -> dict:
         return CaseReportService(self.repository).generate(
-            self.result(case_id), requested_format
+            self.result(case_id),
+            requested_format,
+            ai_enrichment_enabled=ai_enrichment_enabled,
         )
 
     def export_package(self, case_id: str, destination: Path, mode: str = "full") -> Path:

@@ -19,8 +19,8 @@ from crypto_investigator.domain.scope import (
 from crypto_investigator.importers.provider import ProviderRecordImporter
 from crypto_investigator.providers.collector import ProviderCollector
 from crypto_investigator.providers.capabilities import (
-    capability_policy,
     required_capabilities_complete,
+    unresolved_required_errors,
 )
 from crypto_investigator.providers.dedup import deduplicate_records
 from crypto_investigator.providers.factory import ProviderFactory
@@ -52,6 +52,8 @@ async def analyze_provider_identifier(
     )
     provider_options: dict[str, object] = {
         "unbounded": scope.pagination_policy is PaginationPolicy.TO_PROVIDER_END,
+        "date_from": scope.date_from,
+        "date_to": scope.date_to,
     }
     if scope.pagination_policy is PaginationPolicy.BOUNDED:
         provider_options.update(
@@ -124,10 +126,8 @@ async def analyze_provider_identifier(
     required_complete = required_capabilities_complete(
         chain, collection.results
     )
-    required_errors = tuple(
-        error
-        for error in collection.errors
-        if error.capability in capability_policy(chain).required_capabilities
+    required_errors = unresolved_required_errors(
+        chain, collection.results, collection.errors
     )
     scope_complete = (
         required_complete

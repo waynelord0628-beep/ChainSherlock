@@ -91,6 +91,46 @@ async def test_blockstream_transaction_preserves_inputs_outputs():
     assert result.records[0].metadata["outputs"] == payload["vout"]
 
 
+def test_blockstream_address_incoming_keeps_only_target_outputs():
+    other = "bc1q" + "b" * 38
+    payload = {
+        "txid": "abc",
+        "vin": [{"prevout": {"scriptpubkey_address": other, "value": 3000}}],
+        "vout": [
+            {"scriptpubkey_address": BTC, "value": 1000},
+            {"scriptpubkey_address": other, "value": 1900},
+        ],
+        "status": {"confirmed": True, "block_time": 1767225600},
+    }
+    records = BlockstreamProvider()._parse_transaction(
+        payload, target_address=BTC
+    )
+    assert len(records) == 1
+    assert records[0].to_address == BTC
+    assert records[0].from_address == other
+
+
+def test_blockstream_address_outgoing_uses_target_as_source():
+    other = "bc1q" + "b" * 38
+    payload = {
+        "txid": "abc",
+        "vin": [
+            {"prevout": {"scriptpubkey_address": other, "value": 500}},
+            {"prevout": {"scriptpubkey_address": BTC, "value": 3000}},
+        ],
+        "vout": [
+            {"scriptpubkey_address": other, "value": 2500},
+            {"scriptpubkey_address": BTC, "value": 900},
+        ],
+        "status": {"confirmed": True, "block_time": 1767225600},
+    }
+    records = BlockstreamProvider()._parse_transaction(
+        payload, target_address=BTC
+    )
+    assert len(records) == 2
+    assert {record.from_address for record in records} == {BTC}
+
+
 @pytest.mark.asyncio
 @respx.mock
 async def test_blockstream_utxo_parsing():
@@ -102,6 +142,7 @@ async def test_blockstream_utxo_parsing():
     result = await provider.get_utxos(BTC)
     assert result.records[0].metadata["utxo"] is True
     assert result.records[0].metadata["output_index"] == 1
+    assert result.pagination.pagination_complete is True
 
 
 @pytest.mark.asyncio

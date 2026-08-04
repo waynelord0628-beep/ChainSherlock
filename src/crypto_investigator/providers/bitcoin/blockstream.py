@@ -13,6 +13,7 @@ from crypto_investigator.providers.models import (
     ProviderPage,
     ProviderRawRecord,
     ProviderResult,
+    PaginationMetadata,
 )
 from crypto_investigator.providers.models import PaginationStrategy, ProviderOrdering
 from crypto_investigator.providers.pagination import PaginationLimits, paginate
@@ -84,7 +85,9 @@ class BlockstreamProvider(BaseProvider):
             records = tuple(
                 record
                 for item in payload
-                for record in self._parse_transaction(item)
+                for record in self._parse_transaction(
+                    item, target_address=address
+                )
             )
             next_cursor = payload[-1].get("txid") if len(payload) >= 25 else None
             return ProviderPage(records, next_cursor)
@@ -97,6 +100,7 @@ class BlockstreamProvider(BaseProvider):
             limits=limits,
             ordering=ProviderOrdering.NEWEST_FIRST,
             pagination_strategy=PaginationStrategy.BEFORE_TXID,
+            stop_before=kwargs.get("date_from"),
         )
 
     async def get_transaction(self, tx_hash: str, **kwargs) -> ProviderResult:
@@ -114,6 +118,20 @@ class BlockstreamProvider(BaseProvider):
             records,
             Completeness.COMPLETE if records else Completeness.EMPTY,
             pages_fetched=1,
+            fetched_records=len(records),
+            pagination=PaginationMetadata(
+                provider=self.name,
+                chain=self.chain,
+                capability=capability,
+                ordering=ProviderOrdering.PROVIDER_DEFINED,
+                pagination_strategy=PaginationStrategy.PROVIDER_DEFINED,
+                pagination_complete=True,
+                fetched_records=len(records),
+                accepted_records=len(records),
+                completeness=(
+                    Completeness.COMPLETE if records else Completeness.EMPTY
+                ),
+            ),
         )
 
     async def get_utxos(self, address: str, **kwargs) -> ProviderResult:
@@ -152,6 +170,20 @@ class BlockstreamProvider(BaseProvider):
             records,
             Completeness.COMPLETE if records else Completeness.EMPTY,
             pages_fetched=1,
+            fetched_records=len(records),
+            pagination=PaginationMetadata(
+                provider=self.name,
+                chain=self.chain,
+                capability=capability,
+                ordering=ProviderOrdering.PROVIDER_DEFINED,
+                pagination_strategy=PaginationStrategy.PROVIDER_DEFINED,
+                pagination_complete=True,
+                fetched_records=len(records),
+                accepted_records=len(records),
+                completeness=(
+                    Completeness.COMPLETE if records else Completeness.EMPTY
+                ),
+            ),
         )
 
     async def get_balance(self, address: str, **kwargs) -> ProviderBalance:
@@ -168,7 +200,10 @@ class BlockstreamProvider(BaseProvider):
         return ProviderBalance(self.name, self.chain, address, str(funded - spent), 8, "BTC")
 
     def _parse_transaction(
-        self, item: dict[str, Any]
+        self,
+        item: dict[str, Any],
+        *,
+        target_address: str | None = None,
     ) -> tuple[ProviderRawRecord, ...]:
         tx_hash = item["txid"]
         status = item.get("status") or {}
@@ -179,7 +214,19 @@ class BlockstreamProvider(BaseProvider):
             for entry in inputs
             if entry.get("prevout")
         ]
-        first_source = next((value for value in source_addresses if value), None)
+        target_is_source = bool(
+            target_address
+            and any(
+                value == target_address
+                for value in source_addresses
+                if value
+            )
+        )
+        first_source = (
+            target_address
+            if target_is_source
+            else next((value for value in source_addresses if value), None)
+        )
         timestamp = (
             datetime.fromtimestamp(status["block_time"], UTC)
             if status.get("block_time")
@@ -211,6 +258,11 @@ class BlockstreamProvider(BaseProvider):
             )
             for index, output in enumerate(outputs)
             if output.get("scriptpubkey_address")
+            and (
+                target_address is None
+                or target_is_source
+                or output.get("scriptpubkey_address") == target_address
+            )
         )
 
     def _response_error(self, capability: ProviderCapability, message: str):

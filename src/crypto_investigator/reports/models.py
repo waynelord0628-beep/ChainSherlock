@@ -74,6 +74,12 @@ class ReportSection:
     evidence_refs: tuple[str, ...] = ()
     warnings: tuple[ReportWarning, ...] = ()
     limitations: tuple[ReportLimitation, ...] = ()
+    section_type: str = "deterministic"
+    claims: tuple[str, ...] = ()
+    fact_refs: tuple[str, ...] = ()
+    observation_refs: tuple[str, ...] = ()
+    confidence: str = "deterministic"
+    review_status: str = "not_required"
 
 
 @dataclass(frozen=True, slots=True)
@@ -110,6 +116,19 @@ class ReportMetadata:
     failed_count: int = 0
     unclassified_count: int = 0
     excluded_by_scope: int = 0
+    report_type: str = "deterministic"
+    base_report_version: str = "6"
+    ai_enrichment_enabled: bool = False
+    ai_provider: str | None = None
+    ai_model: str | None = None
+    prompt_version: str | None = None
+    validation_status: str = "not_requested"
+    fallback: bool = False
+    fallback_reason: str | None = None
+    review_status: str = "not_reviewed"
+    deterministic_section_count: int = 0
+    ai_section_count: int = 0
+    evidence_reference_count: int = 0
 
 
 @dataclass(frozen=True, slots=True)

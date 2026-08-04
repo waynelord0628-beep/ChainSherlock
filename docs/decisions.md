@@ -436,3 +436,46 @@ DOCX body Chinese uses 標楷體 and Latin text uses Times New Roman. Table Chin
 - Compact prompt 採欄位投影而非刪除核心 facts，並持續揭露 omitted counts。
 - Mock/fallback 的 generated_at 由分析期間決定，確保相同輸入的完整輸出可重現。
 - 真實模型驗收必須人工明確觸發；無 API Key 時直接停止且不發出請求。
+
+## ADR-037: Analysis Scope is shared and explicit
+
+Provider adapters do not define Full History. Domain `AnalysisScope` is saved by
+Planner and passed through Execution. Quick Preview is bounded and cannot produce
+complete-history semantics.
+
+## ADR-038: Completeness is capability-scoped
+
+Each chain owns required, optional and unsupported capabilities. Full History is
+complete only when every required capability reaches Provider end without
+truncation. Optional gaps remain visible limitations.
+
+## ADR-039: Report populations are not interchangeable
+
+Provider raw, normalized, Analysis, Investigation and Graph counts are recorded
+separately. Graph truncation, Provider truncation and analysis completeness have
+separate canonical fields.
+
+## ADR-040: Evidence is artifact-first
+
+Fact and Observation IDs map to record IDs and then one artifact entry with
+SHA-256. Missing hashes are limitations and never marked verified.
+
+## ADR-041: AI enriches but never replaces the base report
+
+AI-assisted output is a strict superset of the deterministic ReportDocument.
+Unknown references, numbers or identifiers, Candidate promotion, scope
+misstatement, unsafe certainty or provider/schema failure causes deterministic
+fallback.
+
+## ADR-042: Ordered custom pagination may stop at the requested boundary
+
+For newest-first providers, Custom Date Range may stop after crossing `date_from`;
+oldest-first providers may stop after crossing `date_to`. This is complete for the
+requested scope, not a claim of complete address history.
+
+## ADR-043: Bitcoin address records are target-relative
+
+Incoming address transactions retain only outputs paying the target. When the target
+appears in inputs, transaction outputs are retained with the target as source so
+outgoing recipients and change remain distinguishable. Unrelated outputs from an
+incoming transaction are not address-analysis records.

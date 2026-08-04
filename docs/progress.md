@@ -268,6 +268,33 @@ V3 contains no Provider, blockchain API, graph rendering, report, Word/PDF, AI, 
 - DOCX 已用 Microsoft Word 實際開啟與列印渲染；PDF 已逐頁渲染檢查。
 - DOCX、PDF 與 HTML 列印樣式均套用：正文中文標楷體、英文與數字 Times New Roman；表格中文標楷體、英文與數字 Consolas。
 - 寬表格改用可跨頁的欄位／值版面，避免 A4 裁切。
+
+## V8 封版阻擋性資料品質修正
+
+- 完成共用 Full History／Custom Date Range／Quick Preview `AnalysisScope`。
+- 完成 Ethereum、TRON、Bitcoin 統一 pagination contract 與 required capability policy。
+- Scope 已由 Wizard、Planner、Execution 傳至 Provider，範圍外資料在下游前排除。
+- deterministic report 已分離資料母體、Partial 語意、Graph／Provider truncation、
+  重要資產、Candidate 角色及 Evidence artifact mapping。
+- AI report 改為完整 deterministic `ReportDocument` 的增補層。
+- 離線完整驗收：`1306 passed, 1 skipped`；`pip check` 無破損相依性。
+- 真實三鏈與單次 AI 驗收尚待最後階段；未開始 V9 或 Windows 打包。
+
+### Final real validation
+
+- Ethereum Full History and Custom Date Range completed through Blockscout fallback;
+  required normal/token capabilities reached explicit end and all four reports exported.
+- TRON Full History and Custom Date Range remained partial after TronGrid 429; reports
+  preserved and used partial/specified-period language. Baseline differences are
+  attributable to incomplete pagination, not silently accepted.
+- Bitcoin Full/Custom attempts received persistent Blockstream 429 and were correctly
+  failed with both required capabilities unavailable. A real-data regression also
+  fixed target-relative Bitcoin output filtering and non-paginated UTXO completeness.
+- One real `gpt-5-mini` call used 17,941 input and 1,800 output tokens. HTTP succeeded
+  but output ended by length; Quality Gates retained all 32 deterministic sections,
+  added zero AI sections, and exported all four fallback formats. No retry was made.
+- Final post-fix validation: `1312 passed, 1 skipped`; `pip check` reports no
+  broken requirements. The skip remains the opt-in real-AI integration test.
 # V7
 
 - 已完成 AI Provider abstraction、OpenAI-compatible HTTP provider、Mock 與 deterministic fallback。

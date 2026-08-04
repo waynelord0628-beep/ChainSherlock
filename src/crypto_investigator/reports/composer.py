@@ -6,9 +6,11 @@ from dataclasses import replace
 
 from crypto_investigator.analyzers.export import AnalysisExporter
 from crypto_investigator.reports.citations import build_citations
+from crypto_investigator.reports.ai_enrichment import AIReportIntegrator
 from crypto_investigator.reports.formatting import (
     format_amount,
     format_datetime,
+    format_compact,
     format_percent,
     format_value,
     redact,
@@ -169,13 +171,6 @@ class ReportComposer:
             time_scope,
             asset_presentations,
         )
-        if narrative is not None:
-            sections = tuple(
-                sorted(
-                    (*sections, *self._narrative_sections(narrative)),
-                    key=lambda item: (item.order, item.section_id),
-                )
-            )
         conclusion = self._conclusion(
             completeness, len(provider_errors), rejected_count, investigation_data
         )
@@ -266,9 +261,11 @@ class ReportComposer:
                     time_scope.get("excluded_by_scope", 0),
                 )
             ),
+            deterministic_section_count=len(sections),
+            evidence_reference_count=len(evidence),
         )
         citations = build_citations(evidence, "evidence_index")
-        return ReportDocument(
+        document = ReportDocument(
             title=redact(title),
             metadata=metadata,
             sections=sections,
@@ -278,6 +275,9 @@ class ReportComposer:
             limitations=limitations,
             conclusion=conclusion,
         )
+        if narrative is not None:
+            return AIReportIntegrator().integrate(document, narrative)
+        return document
 
     @staticmethod
     def _narrative_sections(narrative):
@@ -842,12 +842,12 @@ class ReportComposer:
                 item.get("stage", ""), format_value(item.get("started_at")),
                 format_value(item.get("ended_at")),
                 str(item.get("transaction_count", 0)),
-                format_value(item.get("assets", [])),
-                format_value(item.get("dominant_funding_sources", [])),
-                format_value(item.get("dominant_outgoing_counterparties", [])),
-                format_value(item.get("reason_codes", [])),
+                format_compact(item.get("assets", [])),
+                format_compact(item.get("dominant_funding_sources", [])),
+                format_compact(item.get("dominant_outgoing_counterparties", [])),
+                format_compact(item.get("reason_codes", [])),
                 item.get("confidence", "low" if completeness != "complete" else "medium"),
-                format_value(item.get("evidence_refs", [])),
+                format_compact(item.get("evidence_refs", [])),
             )
             for item in stages
         )
@@ -872,11 +872,11 @@ class ReportComposer:
         observation_rows = tuple(
             (
                 item.get("code", ""), item.get("factual_statement", ""),
-                format_value(item.get("metrics", {})),
-                format_value(item.get("reason_codes", [])),
-                format_value(item.get("evidence_refs", [])),
+                format_compact(item.get("metrics", {})),
+                format_compact(item.get("reason_codes", [])),
+                format_compact(item.get("evidence_refs", [])),
                 item.get("confidence", "medium"),
-                format_value(item.get("limitations", [])),
+                format_compact(item.get("limitations", [])),
             )
             for item in observations
         )
@@ -893,15 +893,15 @@ class ReportComposer:
         fact_rows = tuple(
             (
                 item.get("fact_code", ""),
-                format_value(
+                format_compact(
                     canonical_fact_values.get(
                         item.get("fact_code"), item.get("value")
                     )
                 ),
-                format_value(item.get("unit")), item.get("confidence", "medium"),
-                format_value(item.get("reason_codes", [])),
-                format_value(item.get("evidence_refs", [])),
-                format_value(item.get("limitations", [])),
+                format_compact(item.get("unit")), item.get("confidence", "medium"),
+                format_compact(item.get("reason_codes", [])),
+                format_compact(item.get("evidence_refs", [])),
+                format_compact(item.get("limitations", [])),
             )
             for item in facts
         )
@@ -1148,7 +1148,10 @@ class ReportComposer:
             table_id,
             title,
             ("指標", "值"),
-            tuple((str(key), format_value(value)) for key, value in values.items()),
+            tuple(
+                (str(key), format_compact(value))
+                for key, value in values.items()
+            ),
         )
 
     @staticmethod
@@ -1190,5 +1193,8 @@ class ReportComposer:
             table_id,
             title,
             keys,
-            tuple(tuple(format_value(item.get(key)) for key in keys) for item in records),
+            tuple(
+                tuple(format_compact(item.get(key)) for key in keys)
+                for item in records
+            ),
         )

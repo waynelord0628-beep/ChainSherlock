@@ -69,6 +69,9 @@ def read_report_data(path: Path) -> ReportDocument:
                 "evidence_refs": tuple(item["evidence_refs"]),
                 "warnings": tuple(warning(row) for row in item["warnings"]),
                 "limitations": tuple(limitation(row) for row in item["limitations"]),
+                "claims": tuple(item.get("claims", ())),
+                "fact_refs": tuple(item.get("fact_refs", ())),
+                "observation_refs": tuple(item.get("observation_refs", ())),
             }
         )
 

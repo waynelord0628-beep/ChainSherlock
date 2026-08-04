@@ -1,7 +1,11 @@
 from datetime import UTC, datetime
 from decimal import Decimal
+from pathlib import Path
+
+import reportlab
 
 from crypto_investigator.reports.composer import ReportComposer
+from crypto_investigator.reports.pdf_exporter import PdfReportExporter
 from crypto_investigator.reports.models import ReportEvidence
 
 
@@ -351,3 +355,26 @@ def test_metadata_records_all_pipeline_counts():
     assert document.metadata.failed_count == 4
     assert document.metadata.unclassified_count == 8
     assert document.metadata.excluded_by_scope == 12
+
+
+def test_large_engineering_collections_are_compacted_for_pdf(tmp_path):
+    value = investigation()
+    value["stages"] = [
+        {
+            "stage": "active",
+            "transaction_count": 1000,
+            "assets": ["USDT"],
+            "dominant_funding_sources": [f"T{index:033d}" for index in range(500)],
+            "dominant_outgoing_counterparties": [
+                f"T{index:033d}" for index in range(500)
+            ],
+            "reason_codes": [f"reason_{index}" for index in range(500)],
+            "evidence_refs": [f"IF{index}" for index in range(500)],
+        }
+    ]
+    document = ReportComposer().compose(analysis(), investigation=value)
+    stage = section(document, "operation_stages").tables[0].rows[0]
+    assert any("省略" in cell for cell in stage)
+    font = Path(reportlab.__file__).parent / "fonts" / "Vera.ttf"
+    path = PdfReportExporter().write(document, tmp_path / "report.pdf", font)
+    assert path.read_bytes().startswith(b"%PDF-")

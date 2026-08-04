@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+from dataclasses import replace
 from uuid import uuid4
 
 from crypto_investigator.cases import AuditLog, CaseRepository
@@ -39,7 +40,11 @@ class CaseReportService:
         self.repository = repository
 
     def compose_document(
-        self, result: CaseResult, narrative: CaseNarrativeResult | None = None
+        self,
+        result: CaseResult,
+        narrative: CaseNarrativeResult | None = None,
+        *,
+        ai_enrichment_enabled: bool = False,
     ) -> ReportDocument:
         narrative = narrative or CaseNarrativeService().compose(result)
         sections = [
@@ -114,7 +119,7 @@ class CaseReportService:
         warnings = tuple(
             ReportWarning("case_warning", item) for item in result.warnings
         )
-        return ReportDocument(
+        document = ReportDocument(
             title=f"ChainSherlock Case Investigation Report: {result.title}",
             metadata=ReportMetadata(
                 report_id=f"CASE-{uuid4().hex[:12].upper()}",
@@ -126,6 +131,7 @@ class CaseReportService:
                     int(item.get("transaction_count", 0))
                     for item in result.address_results
                 ),
+                deterministic_section_count=len(sections),
             ),
             sections=tuple(sections),
             evidence=evidence,
@@ -142,8 +148,36 @@ class CaseReportService:
                 ),
             ),
         )
+        if not ai_enrichment_enabled:
+            return document
+        return replace(
+            document,
+            metadata=replace(
+                document.metadata,
+                report_type="fallback",
+                ai_enrichment_enabled=True,
+                validation_status="failed",
+                fallback=True,
+                fallback_reason=(
+                    "validated AI narrative unavailable in Case Report adapter"
+                ),
+            ),
+            warnings=(
+                *document.warnings,
+                ReportWarning(
+                    "ai_enrichment_fallback",
+                    "AI enrichment 未採用；已保留完整 deterministic case report。",
+                ),
+            ),
+        )
 
-    def generate(self, result: CaseResult, requested_format: str = "all") -> dict:
+    def generate(
+        self,
+        result: CaseResult,
+        requested_format: str = "all",
+        *,
+        ai_enrichment_enabled: bool = False,
+    ) -> dict:
         workspace = self.repository.workspace(result.case_id)
         reports_root = workspace.resolve_relative("reports")
         reports_root.mkdir(exist_ok=True)
@@ -154,7 +188,9 @@ class CaseReportService:
         )
         version = len(existing) + 1
         output = reports_root / f"v{version:03d}"
-        document = self.compose_document(result)
+        document = self.compose_document(
+            result, ai_enrichment_enabled=ai_enrichment_enabled
+        )
         exported = ReportExportCoordinator().export(
             document, output, requested_format
         )
@@ -172,6 +208,13 @@ class CaseReportService:
             "status": exported.status,
             "files": files,
             "created_at": document.metadata.generated_at.isoformat(),
+            "report_type": document.metadata.report_type,
+            "ai_enrichment_enabled": document.metadata.ai_enrichment_enabled,
+            "ai_provider": document.metadata.ai_provider,
+            "ai_model": document.metadata.ai_model,
+            "validation_status": document.metadata.validation_status,
+            "review_status": document.metadata.review_status,
+            "fallback_reason": document.metadata.fallback_reason,
         }
         atomic_write_json(output / "case_report_version.json", summary)
         AuditLog(workspace).append(
@@ -179,7 +222,15 @@ class CaseReportService:
             object_type="case_report",
             object_id=f"report_v{version:03d}",
             description="Case report created",
-            metadata={"version": version, "status": exported.status},
+            metadata={
+                "version": version,
+                "status": exported.status,
+                "report_type": document.metadata.report_type,
+                "ai_enrichment_enabled": (
+                    document.metadata.ai_enrichment_enabled
+                ),
+                "validation_status": document.metadata.validation_status,
+            },
         )
         return summary
 

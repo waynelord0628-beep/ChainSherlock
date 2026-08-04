@@ -620,3 +620,33 @@ Windows packaging。不得直接開始 V9。
   raw review status.
 - No real Provider credential and no OpenAI API were used.
 - Actual Windows DPI switching remains a documented limitation.
+
+## 19. V8 pre-release scope/report/AI data-quality repair
+
+- Added cross-chain `AnalysisScope`, common pagination metadata and chain-specific
+  required capability policies.
+- Full History reaches explicit Provider end without test caps; Custom Date Range
+  filters before downstream processing; Quick Preview remains visibly bounded.
+- Reports separate Provider raw, normalized, Analysis, Investigation and Graph
+  populations plus rejected, deduplicated, failed, unclassified and scope-excluded.
+- Deterministic reports use conservative Partial language, neutral Candidate roles,
+  material asset handling and one artifact-level Evidence entry with SHA-256.
+- AI is disabled by default and can only enrich the full deterministic
+  ReportDocument. Failed Quality Gates preserve the document.
+- Offline validation: `1306 passed, 1 skipped`; `pip check` clean. Three-chain real
+  validation and the single permitted AI call are not yet claimed complete.
+- V9 and Windows packaging remain prohibited.
+
+### Final validation evidence
+
+- Offline full suite after the first integration pass: `1312 passed, 1 skipped`.
+- Ethereum Full/Custom: complete via Blockscout fallback; four formats complete.
+- TRON Full/Custom: partial due TronGrid 429; deterministic reports complete.
+- Bitcoin Full/Custom: persistent Blockstream 429; safe failed reports retained.
+- Real-data fixes: resolved-fallback completeness, ordered date-bound stopping,
+  target-relative Bitcoin outputs, UTXO pagination metadata, bounded report cells,
+  and lazy Application Provider export.
+- Exactly one real AI request was made. It returned HTTP 200 but ended at the 1,800
+  output-token limit; no model content was accepted. The complete 32-section
+  deterministic report was preserved as fallback in MD/HTML/DOCX/PDF.
+- No second paid-model request is permitted in this work.

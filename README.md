@@ -455,3 +455,17 @@ API Key 僅能由 `CHAINSHERLOCK_AI_API_KEY` 環境變數提供。指令輸出
 `real_ai_validation.json`，不保存 Key；無 Key 時不會送出請求。Prompt 提供
 `standard` 與內部 deterministic `compact` 模式，compact 保留 Conclusion Facts、
 重要 Observations、完整度、限制與必要 Evidence IDs，同時移除重複欄位。
+
+## V8 封版前：分析範圍與專業報告
+
+案件建立與 Planner 共用 `AnalysisScope`。`full_history` 持續分頁到 Provider
+明確結尾，且只有鏈別 required capabilities 全部完成、pagination complete 且未
+截斷，才可使用完整歷史語意。`custom_date_range` 使用指定時區與 inclusive
+boundaries，範圍外交易不進入下游。`quick_preview` 有明確頁數／筆數上限，只供
+預覽，不代表完整首次、最後、總額或交易數。
+
+Ethereum 必要能力為 normal transactions 與 token transfers；TRON 為 native
+transactions 與 TRC20 transfers；Bitcoin 為 address transactions 與 UTXO/spend
+information。報告分離 Provider、正規化、Analysis、Investigation、Graph 及所有
+排除計數。AI 預設停用；啟用時只可在完整 deterministic `ReportDocument` 上新增
+已驗證章節，任何 Quality Gate 失敗均保留完整 deterministic report。

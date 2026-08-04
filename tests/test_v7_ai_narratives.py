@@ -30,7 +30,7 @@ from crypto_investigator.ai.schema import (
     unsupported_schema_keywords,
     validate_strict_schema,
 )
-from crypto_investigator.narratives.export import NarrativeExporter
+from crypto_investigator.narratives.export import NarrativeExporter, encode
 from crypto_investigator.narratives.models import (
     HumanReviewStatus,
     NarrativeClaim,
@@ -73,6 +73,23 @@ def source(**changes):
         requested_sections=DEFAULT_SECTIONS,
     )
     return replace(value, **changes)
+
+
+def substantive_ai_result():
+    base = DeterministicFallbackProvider().generate(source())
+    return replace(
+        base,
+        executive_summary=NarrativeSection(
+            "executive_summary",
+            "專業綜合摘要",
+            (
+                NarrativeParagraph(
+                    "結構化資料顯示 12 筆交易；本節交叉整理供款、去向與完整度限制。",
+                    ("C1",),
+                ),
+            ),
+        ),
+    )
 
 
 @pytest.mark.parametrize("field", NarrativeInput.__dataclass_fields__)
@@ -443,13 +460,16 @@ def test_http_errors_are_safe_and_never_retried(
 
 @respx.mock
 def test_timeout_retries_once_then_succeeds(tmp_path):
+    content = __import__("json").dumps(
+        encode(substantive_ai_result()), ensure_ascii=False
+    )
     route = respx.post("https://mock.openai.test/v1/chat/completions").mock(
         side_effect=[
             httpx.ReadTimeout("temporary timeout"),
             httpx.Response(
                 200,
                 json={
-                    "choices": [{"message": {"content": "{}"}, "finish_reason": "stop"}],
+                    "choices": [{"message": {"content": content}, "finish_reason": "stop"}],
                     "usage": {},
                 },
             ),
@@ -463,6 +483,38 @@ def test_timeout_retries_once_then_succeeds(tmp_path):
     assert __import__("json").loads(
         (tmp_path / "ai_errors.json").read_text(encoding="utf-8")
     ) == []
+
+
+def test_engine_uses_validated_model_content_instead_of_relabeling_fallback(tmp_path):
+    result = NarrativeEngine().run_input(
+        source(),
+        tmp_path,
+        settings=replace(ai_settings(), provider="mock"),
+        requested=True,
+        mock_response=encode(substantive_ai_result()),
+        use_cache=False,
+        prompt_mode="compact",
+    )
+    assert result.metadata.fallback_used is False
+    assert result.executive_summary.title == "專業綜合摘要"
+    assert "交叉整理" in result.executive_summary.paragraphs[0].text
+
+
+def test_engine_rejects_model_content_identical_to_fallback(tmp_path):
+    result = NarrativeEngine().run_input(
+        source(),
+        tmp_path,
+        settings=replace(ai_settings(), provider="mock"),
+        requested=True,
+        mock_response=encode(DeterministicFallbackProvider().generate(source())),
+        use_cache=False,
+        prompt_mode="compact",
+    )
+    assert result.metadata.fallback_used is True
+    errors = __import__("json").loads(
+        (tmp_path / "ai_errors.json").read_text(encoding="utf-8")
+    )
+    assert any("no substantive content" in item["message"] for item in errors)
 
 
 @pytest.mark.parametrize(

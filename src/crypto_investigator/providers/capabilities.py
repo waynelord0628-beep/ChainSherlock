@@ -53,7 +53,12 @@ def capability_policy(chain: Chain) -> ChainCapabilityPolicy:
 
 def required_capabilities_complete(chain: Chain, results) -> bool:
     required = set(capability_policy(chain).required_capabilities)
-    complete = {
+    complete = completed_capabilities(results)
+    return required.issubset(complete)
+
+
+def completed_capabilities(results) -> set[ProviderCapability]:
+    return {
         result.capability
         for result in results
         if result.pagination is not None
@@ -61,4 +66,13 @@ def required_capabilities_complete(chain: Chain, results) -> bool:
         and not result.truncated
         and result.completeness.value in {"complete", "empty"}
     }
-    return required.issubset(complete)
+
+
+def unresolved_required_errors(chain: Chain, results, errors):
+    required = set(capability_policy(chain).required_capabilities)
+    complete = completed_capabilities(results)
+    return tuple(
+        error
+        for error in errors
+        if error.capability in required and error.capability not in complete
+    )

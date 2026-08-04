@@ -47,6 +47,31 @@ def format_value(value: Any) -> str:
     return redact(value)
 
 
+def format_compact(value: Any, *, maximum_items: int = 8, maximum_chars: int = 240) -> str:
+    if isinstance(value, dict):
+        ordered = sorted(value.items(), key=lambda pair: str(pair[0]))
+        visible = ordered[:maximum_items]
+        rendered = "；".join(
+            f"{redact(key)}：{format_compact(item, maximum_items=maximum_items)}"
+            for key, item in visible
+        )
+        if len(ordered) > maximum_items:
+            rendered += f"；…省略 {len(ordered) - maximum_items} 項"
+    elif isinstance(value, (tuple, list, set, frozenset)):
+        ordered = list(value)
+        rendered = "、".join(
+            format_compact(item, maximum_items=maximum_items)
+            for item in ordered[:maximum_items]
+        )
+        if len(ordered) > maximum_items:
+            rendered += f"、…省略 {len(ordered) - maximum_items} 項"
+    else:
+        rendered = format_value(value)
+    if len(rendered) > maximum_chars:
+        return rendered[: maximum_chars - 16] + "…（完整值見 JSON）"
+    return rendered
+
+
 def format_datetime(value: Any, timezone: str = "UTC") -> str:
     if value in (None, "", "—"):
         return "—"

@@ -6,6 +6,7 @@ __pycache__/
 .venv-v7-validation/
 .ai_cache/
 output/
+work/
 data/cache/
 examples/v5_graph_output/
 examples/v6_*/

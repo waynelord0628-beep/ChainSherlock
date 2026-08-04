@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from datetime import datetime
 from typing import Awaitable, Callable
 
 from crypto_investigator.domain.transaction import Chain
@@ -31,6 +32,8 @@ async def paginate(
     limits: PaginationLimits,
     ordering: ProviderOrdering = ProviderOrdering.PROVIDER_DEFINED,
     pagination_strategy: PaginationStrategy = PaginationStrategy.PROVIDER_DEFINED,
+    stop_before: datetime | None = None,
+    stop_after: datetime | None = None,
 ) -> ProviderResult:
     records: list[ProviderRawRecord] = []
     cursor: str | None = None
@@ -64,6 +67,25 @@ async def paginate(
             truncation_reason = "max_records"
             available_more = True
             warnings.append("Maximum record limit reached")
+            break
+        page_timestamps = tuple(
+            record.timestamp
+            for record in page.records
+            if record.timestamp is not None
+        )
+        scope_end_reached = (
+            ordering is ProviderOrdering.NEWEST_FIRST
+            and stop_before is not None
+            and page_timestamps
+            and min(page_timestamps) < stop_before
+        ) or (
+            ordering is ProviderOrdering.OLDEST_FIRST
+            and stop_after is not None
+            and page_timestamps
+            and max(page_timestamps) > stop_after
+        )
+        if scope_end_reached:
+            cursor = None
             break
         if not page.records or page.next_cursor is None:
             cursor = None

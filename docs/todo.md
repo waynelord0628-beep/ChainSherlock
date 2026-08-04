@@ -171,3 +171,19 @@ Future work must be approved and delivered one milestone at a time.
 - 真實 AI 的 3-run 驗收仍需使用者提供環境變數並人工執行 `validate-ai`。
 - Narrative-only 離線報告無法還原 artifact 中未保存的 target、chain 或 Evidence Index；
   這些欄位會保持 unavailable。
+
+## V8 pre-release validation remaining
+
+- Validate one Ethereum, TRON and Bitcoin address in Full History and Custom Date
+  Range modes, recording Provider limitations and differences without hard-coding.
+- After all three chains, execute exactly one compact structured-facts AI request
+  and validate the complete four-format AI-assisted report.
+- Do not start V9 or Windows packaging.
+
+### Validation outcome
+
+- Ethereum completed; TRON remained partial due TronGrid 429; Bitcoin remained failed
+  due persistent Blockstream 429. Re-run external validation only after a new prompt.
+- The one permitted AI request ended at the 1,800-token completion limit and safely
+  fell back. Do not retry automatically. A future approved iteration may further
+  reduce structured output requirements or deliberately raise the one-call limit.

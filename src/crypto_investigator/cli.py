@@ -39,6 +39,7 @@ from crypto_investigator.narratives.export import NarrativeExporter
 from crypto_investigator.narratives.models import NarrativeInput, NarrativeResult
 from crypto_investigator.narratives.composer import NarrativeInputBuilder
 from crypto_investigator.reports.offline import OfflineReportComposer
+from crypto_investigator.reports.json_exporter import read_report_data
 
 app = typer.Typer(help="ChainSherlock: local-first blockchain transaction investigation toolkit.")
 
@@ -582,6 +583,7 @@ def _export_report(
             "provider_status.json",
             "provider_errors.json",
             "rejected_records.json",
+            "investigation_evidence.json",
             *(
                 (
                     "narrative_input.json",
@@ -944,8 +946,17 @@ def narrate_investigation(
             prompt_mode=prompt_mode,
         )
     if report:
+        base_report_path = investigation_json.with_name("report_data.json")
+        base_report = (
+            read_report_data(base_report_path)
+            if base_report_path.is_file()
+            else None
+        )
         document = OfflineReportComposer().compose(
-            narrative, public_input, output_directory=str(output)
+            narrative,
+            public_input,
+            base_report=base_report,
+            output_directory=str(output),
         )
         exported = ReportExportCoordinator().export(document, output, format)
         typer.echo(f"Report status: {exported.status}")

@@ -25,9 +25,6 @@ from crypto_investigator.application.execution_service import CaseExecutionServi
 from crypto_investigator.application.offline_handlers import (
     create_offline_execution_registry,
 )
-from crypto_investigator.application.provider_handlers import (
-    create_desktop_execution_registry,
-)
 from crypto_investigator.application.case_result_service import CaseResultService
 from crypto_investigator.application.case_report_service import CaseReportService
 from crypto_investigator.application.case_package_service import CasePackageService
@@ -60,3 +57,13 @@ __all__ = [
     "CaseReportService",
     "CaseResultService",
 ]
+
+
+def __getattr__(name: str):
+    if name == "create_desktop_execution_registry":
+        from crypto_investigator.application.provider_handlers import (
+            create_desktop_execution_registry,
+        )
+
+        return create_desktop_execution_registry
+    raise AttributeError(name)

@@ -640,11 +640,17 @@ class MainWindow(QMainWindow):
             actions.addWidget(resume)
             actions.addWidget(cancel)
         elif name == "Report":
+            self.report_ai_enrichment = QCheckBox("AI 專業綜合")
+            self.report_ai_enrichment.setChecked(False)
+            self.report_ai_enrichment.setToolTip(
+                "預設停用；僅採用已驗證的 AI Narrative，否則保留完整 deterministic report。"
+            )
             generate = QPushButton("產生新版報告")
             generate.clicked.connect(self.generate_report)
             package = QPushButton("匯出案件套件")
             package.setProperty("variant", "secondary")
             package.clicked.connect(self.export_case_package)
+            actions.addWidget(self.report_ai_enrichment)
             actions.addWidget(generate)
             actions.addWidget(package)
         actions.addStretch()
@@ -1248,8 +1254,16 @@ class MainWindow(QMainWindow):
                 "<div class='card'>"
                 f"<b>Report v{_safe(item.get('report_version'))}</b>　"
                 f"{_badge(item.get('status', 'unavailable'))}"
+                f" {_badge(item.get('report_type', 'deterministic'))}"
                 f"<p class='muted'>產生時間：{_safe(item.get('created_at'))}<br>"
-                f"格式：{format_badges}</p></div>"
+                f"格式：{format_badges}<br>"
+                f"AI validation：{_safe(item.get('validation_status', 'not_requested'))}"
+                + (
+                    f"<br>Fallback：{_safe(item.get('fallback_reason'))}"
+                    if item.get("fallback_reason")
+                    else ""
+                )
+                + "</p></div>"
             )
         return self._html(
             "案件報告",
@@ -1319,7 +1333,10 @@ class MainWindow(QMainWindow):
             case_id = self.state.current_case_id
             self.run_background(
                 "產生案件報告",
-                lambda: self.case_service.create_report(case_id),
+                lambda: self.case_service.create_report(
+                    case_id,
+                    ai_enrichment_enabled=self.report_ai_enrichment.isChecked(),
+                ),
                 lambda _: self.open_case(case_id),
             )
 

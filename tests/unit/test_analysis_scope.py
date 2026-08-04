@@ -16,6 +16,7 @@ from crypto_investigator.domain.transaction import Chain
 from crypto_investigator.providers.capabilities import (
     capability_policy,
     required_capabilities_complete,
+    unresolved_required_errors,
 )
 from crypto_investigator.providers.models import (
     Completeness,
@@ -210,6 +211,23 @@ def test_optional_capability_missing_does_not_prevent_complete():
     ).optional_capabilities
 
 
+def test_fallback_completion_resolves_primary_required_capability_error():
+    results = (
+        provider_result(
+            ProviderCapability.ADDRESS_TRANSACTIONS, (record(1),)
+        ),
+        provider_result(ProviderCapability.TOKEN_TRANSFERS, (record(2),)),
+    )
+    errors = (
+        type(
+            "SafeError",
+            (),
+            {"capability": ProviderCapability.ADDRESS_TRANSACTIONS},
+        )(),
+    )
+    assert unresolved_required_errors(Chain.TRON, results, errors) == ()
+
+
 def test_bitcoin_policy_is_not_account_based():
     policy = capability_policy(Chain.BITCOIN)
     assert ProviderCapability.UTXO in policy.required_capabilities
@@ -290,3 +308,54 @@ async def test_repeated_cursor_is_partial():
     )
     assert result.completeness == Completeness.PARTIAL
     assert result.pagination.pagination_complete is False
+
+
+@pytest.mark.asyncio
+async def test_newest_first_custom_scope_stops_after_crossing_start():
+    calls = 0
+
+    async def fetch(cursor, size):
+        nonlocal calls
+        calls += 1
+        return ProviderPage(
+            (record(5 - calls * 2), record(6 - calls * 2)),
+            f"page-{calls}",
+        )
+
+    result = await paginate(
+        provider="fixture",
+        chain=Chain.TRON,
+        capability=ProviderCapability.ADDRESS_TRANSACTIONS,
+        fetch_page=fetch,
+        limits=PaginationLimits(max_pages=None, max_records=None, page_size=2),
+        ordering=ProviderOrdering.NEWEST_FIRST,
+        stop_before=START + timedelta(days=2),
+    )
+    assert calls == 2
+    assert result.pagination.pagination_complete is True
+
+
+@pytest.mark.asyncio
+async def test_oldest_first_custom_scope_stops_after_crossing_end():
+    calls = 0
+
+    async def fetch(cursor, size):
+        nonlocal calls
+        calls += 1
+        start = calls * 2 - 2
+        return ProviderPage(
+            (record(start), record(start + 1)),
+            f"page-{calls}",
+        )
+
+    result = await paginate(
+        provider="fixture",
+        chain=Chain.TRON,
+        capability=ProviderCapability.ADDRESS_TRANSACTIONS,
+        fetch_page=fetch,
+        limits=PaginationLimits(max_pages=None, max_records=None, page_size=2),
+        ordering=ProviderOrdering.OLDEST_FIRST,
+        stop_after=START + timedelta(days=2),
+    )
+    assert calls == 2
+    assert result.pagination.pagination_complete is True

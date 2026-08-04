@@ -485,3 +485,22 @@ period、evidence 等缺失值標記 `unavailable`。這條路徑不引用 Analy
 Prompt compaction 分為 standard/compact；兩者使用相同排序與核心 fact contract。
 Compact 僅投影必要欄位、限制 reason codes 與 hashes，不刪除 Conclusion Facts 或已選取
 Observations。真實模型驗收位於明確的人工 CLI boundary，預設測試永不呼叫外部模型。
+
+## Cross-chain Analysis Scope and report enrichment
+
+```text
+Case/Wizard -> AnalysisScope -> Plan/Step -> Execution
+             -> Provider pagination -> scope filter
+             -> Pipeline -> Analysis -> Graph -> Investigation -> Report
+```
+
+Domain/Application own `AnalysisScope` and `TimeScopeResult`. Adapters translate
+page, cursor, fingerprint and before-txid state into one `PaginationMetadata`
+contract. Full History removes test caps but is complete only when every
+chain-specific required capability reaches an explicit end. Custom Date Range is
+filtered before normalization and all downstream consumers.
+
+Report composition separately records Provider truncation, Graph truncation,
+Analysis completeness and Investigation completeness. The deterministic
+ReportDocument is the immutable base; `AIReportIntegrator` may only append grounded
+sections and every exporter receives the same final document.
