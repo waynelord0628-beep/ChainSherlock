@@ -7,6 +7,7 @@ from PySide6.QtWidgets import (
     QCheckBox,
     QComboBox,
     QDialog,
+    QDateTimeEdit,
     QFileDialog,
     QFormLayout,
     QHBoxLayout,
@@ -42,7 +43,14 @@ class CaseWizard(QDialog):
         self.setWindowTitle("建立新案件")
         self.setMinimumSize(760, 590)
         self.attachments: list[Path] = []
-        self.step_names = ["基本資料", "案件說明", "匯入證據", "確認線索", "調查目標"]
+        self.step_names = [
+            "基本資料",
+            "案件說明",
+            "匯入證據",
+            "確認線索",
+            "分析範圍",
+            "調查目標",
+        ]
         root = QVBoxLayout(self)
         self.progress = QLabel()
         self.progress.setObjectName("sectionTitle")
@@ -133,6 +141,51 @@ class CaseWizard(QDialog):
         layout.addStretch()
         self.stack.addWidget(page)
 
+        page, layout = self._page(
+            "分析範圍",
+            "正式報告預設使用 Full History；若 Provider 無法完整分頁，報告會標記 partial。",
+        )
+        form = QFormLayout()
+        self.scope_type = QComboBox()
+        self.scope_type.addItem("Full History", "full_history")
+        self.scope_type.addItem("Custom Date Range", "custom_date_range")
+        self.scope_type.addItem("Quick Preview（非正式）", "quick_preview")
+        self.scope_timezone = QComboBox()
+        self.scope_timezone.addItems(["Asia/Taipei", "UTC"])
+        self.scope_from = QDateTimeEdit()
+        self.scope_from.setCalendarPopup(True)
+        self.scope_from.setDisplayFormat("yyyy-MM-dd HH:mm:ss")
+        self.scope_to = QDateTimeEdit()
+        self.scope_to.setCalendarPopup(True)
+        self.scope_to.setDisplayFormat("yyyy-MM-dd HH:mm:ss")
+        self.scope_from.setEnabled(False)
+        self.scope_to.setEnabled(False)
+        self.scope_inclusive_start = QCheckBox("包含開始時間")
+        self.scope_inclusive_start.setChecked(True)
+        self.scope_inclusive_end = QCheckBox("包含結束時間")
+        self.scope_inclusive_end.setChecked(True)
+        self.scope_max_pages = QLineEdit("1")
+        self.scope_max_records = QLineEdit("500")
+        self.scope_max_pages.setEnabled(False)
+        self.scope_max_records.setEnabled(False)
+        self.scope_type.currentIndexChanged.connect(self._scope_changed)
+        self.chain_edit.currentIndexChanged.connect(self._scope_changed)
+        form.addRow("模式", self.scope_type)
+        form.addRow("時區", self.scope_timezone)
+        form.addRow("開始", self.scope_from)
+        form.addRow("結束", self.scope_to)
+        form.addRow("", self.scope_inclusive_start)
+        form.addRow("", self.scope_inclusive_end)
+        form.addRow("Quick Preview max pages", self.scope_max_pages)
+        form.addRow("Quick Preview max records", self.scope_max_records)
+        layout.addLayout(form)
+        self.scope_guidance = QLabel(objectName="muted")
+        self.scope_guidance.setWordWrap(True)
+        layout.addWidget(self.scope_guidance)
+        self._scope_changed()
+        layout.addStretch()
+        self.stack.addWidget(page)
+
         page, layout = self._page("調查目標", "選擇本案要回答的問題；建立後仍可調整。")
         self.goal_checks: dict[str, QCheckBox] = {}
         for goal in DEFAULT_GOALS:
@@ -142,6 +195,38 @@ class CaseWizard(QDialog):
             layout.addWidget(checkbox)
         layout.addStretch()
         self.stack.addWidget(page)
+
+    def _scope_changed(self) -> None:
+        value = self.scope_type.currentData()
+        custom = value == "custom_date_range"
+        quick = value == "quick_preview"
+        self.scope_from.setEnabled(custom)
+        self.scope_to.setEnabled(custom)
+        self.scope_max_pages.setEnabled(quick)
+        self.scope_max_records.setEnabled(quick)
+        chain = self.chain_edit.currentText().lower()
+        capabilities = {
+            "ethereum": "normal transactions、token transfers",
+            "tron": "native transactions、TRC20 transfers",
+            "bitcoin": "address transactions、UTXO/spend information",
+        }.get(chain, "依所選鏈別決定")
+        if value == "full_history":
+            message = (
+                "Full History 會持續分頁到 Provider 明確資料結尾，可能耗時且增加 "
+                f"API 呼叫；必要資料能力：{capabilities}。只有必要能力均完整時才會"
+                "標記為完整歷史。"
+            )
+        elif value == "custom_date_range":
+            message = (
+                f"指定期間會使用所選時區與包含邊界；必要資料能力：{capabilities}。"
+                "期間外交易不會進入分析、圖譜、調查或報告。"
+            )
+        else:
+            message = (
+                "Quick Preview 受頁數與筆數上限限制，只供快速預覽；不得解讀為完整"
+                "歷史或正式首次／最後交易判定。"
+            )
+        self.scope_guidance.setText(message)
 
     def add_attachment(self) -> None:
         paths, _ = QFileDialog.getOpenFileNames(self, "選擇證據")
@@ -176,6 +261,41 @@ class CaseWizard(QDialog):
 
     def payload(self) -> dict:
         confirmed = self.confirm_clues.isChecked()
+        scope_type = self.scope_type.currentData()
+        analysis_scope = {
+            "scope_type": scope_type,
+            "date_from": (
+                self.scope_from.dateTime().toPython().astimezone().isoformat()
+                if scope_type == "custom_date_range"
+                else None
+            ),
+            "date_to": (
+                self.scope_to.dateTime().toPython().astimezone().isoformat()
+                if scope_type == "custom_date_range"
+                else None
+            ),
+            "timezone": self.scope_timezone.currentText(),
+            "inclusive_start": self.scope_inclusive_start.isChecked(),
+            "inclusive_end": self.scope_inclusive_end.isChecked(),
+            "completeness_requirement": (
+                "best_effort"
+                if scope_type == "quick_preview"
+                else "required_capabilities_complete"
+            ),
+            "pagination_policy": (
+                "bounded" if scope_type == "quick_preview" else "to_provider_end"
+            ),
+            "max_pages": (
+                max(1, int(self.scope_max_pages.text() or "1"))
+                if scope_type == "quick_preview"
+                else None
+            ),
+            "max_records": (
+                max(1, int(self.scope_max_records.text() or "500"))
+                if scope_type == "quick_preview"
+                else None
+            ),
+        }
         return {
             "title": self.title_edit.text().strip(),
             "description": self.description_edit.toPlainText().strip(),
@@ -215,6 +335,7 @@ class CaseWizard(QDialog):
                 "confirmed_amount": (
                     self.amount_edit.text().strip() if confirmed else None
                 ),
+                "analysis_scope": analysis_scope,
             },
             "attachments": list(self.attachments),
             "goals": [

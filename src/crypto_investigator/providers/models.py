@@ -23,6 +23,46 @@ class Completeness(StrEnum):
     EMPTY = "empty"
 
 
+class ProviderOrdering(StrEnum):
+    NEWEST_FIRST = "newest_first"
+    OLDEST_FIRST = "oldest_first"
+    PROVIDER_DEFINED = "provider_defined"
+
+
+class PaginationStrategy(StrEnum):
+    PAGE_NUMBER = "page_number"
+    OFFSET = "offset"
+    CURSOR = "cursor"
+    FINGERPRINT = "fingerprint"
+    BEFORE_TXID = "before_txid"
+    BLOCK_RANGE = "block_range"
+    PROVIDER_DEFINED = "provider_defined"
+
+
+@dataclass(frozen=True, slots=True)
+class PaginationMetadata:
+    provider: str
+    chain: Chain
+    capability: ProviderCapability
+    ordering: ProviderOrdering = ProviderOrdering.PROVIDER_DEFINED
+    pagination_strategy: PaginationStrategy = (
+        PaginationStrategy.PROVIDER_DEFINED
+    )
+    next_cursor: str | None = None
+    has_more: bool = False
+    pagination_complete: bool = False
+    fetched_records: int = 0
+    accepted_records: int = 0
+    excluded_by_scope: int = 0
+    rejected_records: int = 0
+    deduplicated_records: int = 0
+    earliest_fetched_at: datetime | None = None
+    latest_fetched_at: datetime | None = None
+    truncated: bool = False
+    truncation_reason: str | None = None
+    completeness: Completeness = Completeness.PARTIAL
+
+
 @dataclass(frozen=True, slots=True)
 class ProviderRawRecord:
     chain: Chain
@@ -66,6 +106,7 @@ class ProviderResult:
     truncation_reason: str | None = None
     fetched_records: int = 0
     available_more: bool = False
+    pagination: PaginationMetadata | None = None
 
 
 @dataclass(frozen=True, slots=True)

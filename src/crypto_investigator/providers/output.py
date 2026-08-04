@@ -30,6 +30,7 @@ def write_provider_outputs(
             if candidate.capability is result.capability
         ]
         final = later[-1] if later else result
+        pagination = asdict(result.pagination) if result.pagination else None
         status.append({
             "provider": result.provider,
             "chain": result.chain.value,
@@ -47,6 +48,7 @@ def write_provider_outputs(
             "fetched_records": result.fetched_records or len(result.records),
             "available_more": result.available_more,
             "analysis_completeness": analysis_completeness,
+            "pagination": pagination,
         }
         )
     exporter.write_json(status_path, status)

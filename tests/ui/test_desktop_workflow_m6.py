@@ -88,12 +88,36 @@ def test_status_badges_are_text_and_color(qtbot, status) -> None:
     assert badge.objectName() == status
 
 
-@pytest.mark.parametrize("index,name", enumerate(("基本資料", "案件說明", "匯入證據", "確認線索", "調查目標")))
+@pytest.mark.parametrize(
+    "index,name",
+    enumerate(
+        ("基本資料", "案件說明", "匯入證據", "確認線索", "分析範圍", "調查目標")
+    ),
+)
 def test_case_wizard_steps(wizard, index, name) -> None:
     wizard.stack.setCurrentIndex(index)
     wizard._sync()
     assert name in wizard.progress.text()
-    assert f"{index + 1}／5" in wizard.progress.text()
+    assert f"{index + 1}／6" in wizard.progress.text()
+
+
+def test_case_wizard_defaults_to_formal_full_history(wizard) -> None:
+    payload = wizard.payload()
+    scope = payload["metadata"]["analysis_scope"]
+    assert scope["scope_type"] == "full_history"
+    assert scope["pagination_policy"] == "to_provider_end"
+    assert scope["max_pages"] is None
+    assert scope["max_records"] is None
+
+
+def test_case_wizard_quick_preview_is_explicitly_bounded(wizard) -> None:
+    wizard.scope_type.setCurrentIndex(2)
+    payload = wizard.payload()
+    scope = payload["metadata"]["analysis_scope"]
+    assert scope["scope_type"] == "quick_preview"
+    assert scope["pagination_policy"] == "bounded"
+    assert scope["max_pages"] == 1
+    assert scope["max_records"] == 500
 
 
 def test_case_wizard_next_and_back(wizard) -> None:

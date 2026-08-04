@@ -8,6 +8,7 @@ from typing import Any
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from crypto_investigator.domain.transaction import Chain
+from crypto_investigator.domain.scope import AnalysisScope
 from crypto_investigator.planner.goals import InvestigationGoal
 
 
@@ -86,6 +87,7 @@ class PlanStep(BaseModel):
     assets: list[str] = Field(default_factory=list)
     date_from: date | None = None
     date_to: date | None = None
+    analysis_scope: AnalysisScope = Field(default_factory=AnalysisScope)
     provider: str | None = None
     parameters: dict[str, Any] = Field(default_factory=dict)
     prerequisites: list[str] = Field(default_factory=list)
@@ -121,6 +123,7 @@ class InvestigationPlan(BaseModel):
     confirmed_by: str | None = None
     plan_version: int = 1
     settings_snapshot: dict[str, Any] = Field(default_factory=dict)
+    analysis_scope: AnalysisScope = Field(default_factory=AnalysisScope)
 
     @field_validator("generated_at", "confirmed_at")
     @classmethod

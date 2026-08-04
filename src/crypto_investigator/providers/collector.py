@@ -29,13 +29,22 @@ class ProviderCollector:
         address: str,
         *,
         provider: str | None = None,
+        provider_options: dict[str, object] | None = None,
     ) -> CollectionResult:
         capabilities = [ProviderCapability.ADDRESS_TRANSACTIONS]
         if chain in (Chain.ETHEREUM, Chain.TRON):
             capabilities.append(ProviderCapability.TOKEN_TRANSFERS)
         if chain is Chain.ETHEREUM:
             capabilities.append(ProviderCapability.INTERNAL_TRANSACTIONS)
-        return await self._collect(chain, address, tuple(capabilities), provider)
+        if chain is Chain.BITCOIN:
+            capabilities.append(ProviderCapability.UTXO)
+        return await self._collect(
+            chain,
+            address,
+            tuple(capabilities),
+            provider,
+            provider_options or {},
+        )
 
     async def collect_transaction(
         self,
@@ -43,9 +52,14 @@ class ProviderCollector:
         tx_hash: str,
         *,
         provider: str | None = None,
+        provider_options: dict[str, object] | None = None,
     ) -> CollectionResult:
         return await self._collect(
-            chain, tx_hash, (ProviderCapability.TRANSACTION,), provider
+            chain,
+            tx_hash,
+            (ProviderCapability.TRANSACTION,),
+            provider,
+            provider_options or {},
         )
 
     async def _collect(
@@ -54,6 +68,7 @@ class ProviderCollector:
         identifier: str,
         capabilities: tuple[ProviderCapability, ...],
         requested: str | None,
+        provider_options: dict[str, object],
     ) -> CollectionResult:
         results: list[ProviderResult] = []
         errors: list[ProviderError] = []
@@ -70,8 +85,11 @@ class ProviderCollector:
                         ProviderCapability.TRANSACTION: "get_transaction",
                         ProviderCapability.TOKEN_TRANSFERS: "get_token_transfers",
                         ProviderCapability.INTERNAL_TRANSACTIONS: "get_internal_transactions",
+                        ProviderCapability.UTXO: "get_utxos",
                     }[capability]
-                    result = await getattr(candidate, method_name)(identifier)
+                    result = await getattr(candidate, method_name)(
+                        identifier, **provider_options
+                    )
                     results.append(result)
                     errors.extend(
                         error

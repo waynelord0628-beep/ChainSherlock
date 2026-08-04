@@ -24,6 +24,7 @@ from crypto_investigator.cases.models import CaseRecord
 from crypto_investigator.cases.repository import CaseRepository
 from crypto_investigator.cases.audit import redact_sensitive
 from crypto_investigator.config import Settings, load_config
+from crypto_investigator.domain.scope import AnalysisScope
 from crypto_investigator.planner.models import PlanStep, StepType
 from crypto_investigator.providers.service import analyze_provider_identifier
 
@@ -92,6 +93,10 @@ class ProviderAnalysisStepHandler:
                 provider=None,
                 refresh=bool(step.parameters.get("refresh", False)),
                 cache_ttl=None,
+                analysis_scope=AnalysisScope.model_validate(
+                    step.parameters.get("analysis_scope")
+                    or step.analysis_scope.model_dump(mode="json")
+                ),
             )
         )
         cancellation_token.raise_if_cancelled()

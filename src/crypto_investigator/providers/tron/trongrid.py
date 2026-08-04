@@ -14,6 +14,7 @@ from crypto_investigator.providers.models import (
     ProviderRawRecord,
     ProviderResult,
 )
+from crypto_investigator.providers.models import PaginationStrategy, ProviderOrdering
 from crypto_investigator.providers.pagination import PaginationLimits, paginate
 from crypto_investigator.utils.tron import tron_address_to_base58
 
@@ -117,10 +118,11 @@ class TronGridProvider(BaseProvider):
         max_pages: int | None = None,
         max_records: int | None = None,
         page_size: int | None = None,
+        unbounded: bool = False,
     ) -> ProviderResult:
         limits = PaginationLimits(
-            max_pages=max_pages or self.limits.max_pages,
-            max_records=max_records or self.limits.max_records,
+            max_pages=None if unbounded else max_pages or self.limits.max_pages,
+            max_records=None if unbounded else max_records or self.limits.max_records,
             page_size=min(page_size or self.limits.page_size, 200),
         )
 
@@ -153,6 +155,8 @@ class TronGridProvider(BaseProvider):
             capability=capability,
             fetch_page=fetch,
             limits=limits,
+            ordering=ProviderOrdering.NEWEST_FIRST,
+            pagination_strategy=PaginationStrategy.FINGERPRINT,
         )
 
     def _parse_trx(self, item: dict[str, Any]) -> ProviderRawRecord:

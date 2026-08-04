@@ -9,6 +9,11 @@ from typing import Iterable
 from crypto_investigator.cases.models import CaseRecord
 from crypto_investigator.config import Settings
 from crypto_investigator.detection.identifier import IdentifierKind, detect_identifier
+from crypto_investigator.domain.scope import (
+    AnalysisScope,
+    PaginationPolicy,
+    ScopeType,
+)
 from crypto_investigator.planner.errors import NoExecutableClueError
 from crypto_investigator.planner.goals import GoalType, InvestigationGoal
 from crypto_investigator.planner.models import (
@@ -49,6 +54,17 @@ class DeterministicPlanner:
         ordered_goals = sorted(
             goals,
             key=lambda item: (-int(item.priority), item.goal_type.value, item.goal_id),
+        )
+        raw_scope = case.metadata.get("analysis_scope")
+        scope = (
+            AnalysisScope.model_validate(raw_scope)
+            if raw_scope
+            else AnalysisScope(
+                scope_type=ScopeType.QUICK_PREVIEW,
+                pagination_policy=PaginationPolicy.BOUNDED,
+                max_pages=self.settings.pagination.max_pages,
+                max_records=self.settings.pagination.max_records,
+            )
         )
         steps: list[PlanStep] = []
 
@@ -175,14 +191,33 @@ class DeterministicPlanner:
                     assets=target_assets,
                     date_from=date_from,
                     date_to=date_to,
+                    analysis_scope=scope,
                     provider=selected_provider,
                     prerequisites=[
                         chain_step.step_id,
                         *[item.step_id for item in import_steps],
                     ],
                     parameters={
-                        "max_pages": self.settings.pagination.max_pages,
-                        "max_records": self.settings.pagination.max_records,
+                        "scope_type": scope.scope_type.value,
+                        "date_from": (
+                            scope.date_from.isoformat()
+                            if scope.date_from
+                            else None
+                        ),
+                        "date_to": (
+                            scope.date_to.isoformat()
+                            if scope.date_to
+                            else None
+                        ),
+                        "timezone": scope.timezone,
+                        "inclusive_start": scope.inclusive_start,
+                        "inclusive_end": scope.inclusive_end,
+                        "pagination_policy": scope.pagination_policy.value,
+                        "completeness_requirement": (
+                            scope.completeness_requirement.value
+                        ),
+                        "max_pages": scope.max_pages,
+                        "max_records": scope.max_records,
                         "cache": self.settings.cache.enabled,
                         "refresh": False,
                         "data_source": (
@@ -350,6 +385,7 @@ class DeterministicPlanner:
             "max_records": self.settings.pagination.max_records,
             "cache": self.settings.cache.enabled,
             "ai_enabled": self.ai_enabled,
+            "analysis_scope": scope.model_dump(mode="json"),
             "providers": {
                 chain: {
                     "primary": getattr(self.settings.providers, chain).primary,
@@ -383,6 +419,7 @@ class DeterministicPlanner:
                 "targets": len(detected),
                 "structured_attachments": len(import_steps),
                 "steps": len(steps),
+                "analysis_scope": scope.model_dump(mode="json"),
             },
             provider_requirements=list(
                 {
@@ -393,5 +430,6 @@ class DeterministicPlanner:
             possible_costs=None,
             warnings=warnings,
             settings_snapshot=settings_snapshot,
+            analysis_scope=scope,
         )
         return validate_plan(plan)

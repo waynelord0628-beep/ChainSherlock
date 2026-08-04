@@ -35,6 +35,9 @@ class BaseProvider(ABC):
     async def get_internal_transactions(self, address: str, **kwargs) -> ProviderResult:
         self._unsupported(ProviderCapability.INTERNAL_TRANSACTIONS)
 
+    async def get_utxos(self, address: str, **kwargs) -> ProviderResult:
+        self._unsupported(ProviderCapability.UTXO)
+
     async def get_balance(self, address: str, **kwargs) -> ProviderBalance:
         self._unsupported(ProviderCapability.BALANCE)
 

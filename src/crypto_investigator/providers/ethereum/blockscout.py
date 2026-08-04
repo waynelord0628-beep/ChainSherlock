@@ -14,6 +14,7 @@ from crypto_investigator.providers.models import (
     ProviderRawRecord,
     ProviderResult,
 )
+from crypto_investigator.providers.models import PaginationStrategy, ProviderOrdering
 from crypto_investigator.providers.pagination import PaginationLimits, paginate
 
 
@@ -67,8 +68,16 @@ class BlockscoutProvider(BaseProvider):
         self, address: str, endpoint: str, capability, parser, options
     ) -> ProviderResult:
         limits = PaginationLimits(
-            max_pages=options.get("max_pages") or self.limits.max_pages,
-            max_records=options.get("max_records") or self.limits.max_records,
+            max_pages=(
+                None
+                if options.get("unbounded")
+                else options.get("max_pages") or self.limits.max_pages
+            ),
+            max_records=(
+                None
+                if options.get("unbounded")
+                else options.get("max_records") or self.limits.max_records
+            ),
             page_size=self.limits.page_size,
         )
 
@@ -101,6 +110,8 @@ class BlockscoutProvider(BaseProvider):
             capability=capability,
             fetch_page=fetch,
             limits=limits,
+            ordering=ProviderOrdering.NEWEST_FIRST,
+            pagination_strategy=PaginationStrategy.CURSOR,
         )
 
     def _parse_transaction(self, item: dict[str, Any]) -> ProviderRawRecord:

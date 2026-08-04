@@ -14,6 +14,7 @@ from crypto_investigator.providers.models import (
     ProviderRawRecord,
     ProviderResult,
 )
+from crypto_investigator.providers.models import PaginationStrategy, ProviderOrdering
 from crypto_investigator.providers.pagination import PaginationLimits, paginate
 
 
@@ -56,8 +57,16 @@ class BlockstreamProvider(BaseProvider):
     async def get_address_transactions(self, address: str, **kwargs) -> ProviderResult:
         capability = ProviderCapability.ADDRESS_TRANSACTIONS
         limits = PaginationLimits(
-            max_pages=kwargs.get("max_pages") or self.limits.max_pages,
-            max_records=kwargs.get("max_records") or self.limits.max_records,
+            max_pages=(
+                None
+                if kwargs.get("unbounded")
+                else kwargs.get("max_pages") or self.limits.max_pages
+            ),
+            max_records=(
+                None
+                if kwargs.get("unbounded")
+                else kwargs.get("max_records") or self.limits.max_records
+            ),
             page_size=25,
         )
 
@@ -86,6 +95,8 @@ class BlockstreamProvider(BaseProvider):
             capability=capability,
             fetch_page=fetch,
             limits=limits,
+            ordering=ProviderOrdering.NEWEST_FIRST,
+            pagination_strategy=PaginationStrategy.BEFORE_TXID,
         )
 
     async def get_transaction(self, tx_hash: str, **kwargs) -> ProviderResult:
@@ -105,7 +116,7 @@ class BlockstreamProvider(BaseProvider):
             pages_fetched=1,
         )
 
-    async def get_utxos(self, address: str) -> ProviderResult:
+    async def get_utxos(self, address: str, **kwargs) -> ProviderResult:
         capability = ProviderCapability.UTXO
         payload = await self.client.request_json(
             "GET", f"{self.base_url}/address/{address}/utxo", capability=capability

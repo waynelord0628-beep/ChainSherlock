@@ -18,6 +18,7 @@ from crypto_investigator.providers.models import (
     ProviderRawRecord,
     ProviderResult,
 )
+from crypto_investigator.providers.models import PaginationStrategy, ProviderOrdering
 from crypto_investigator.providers.pagination import PaginationLimits, paginate
 
 
@@ -155,10 +156,11 @@ class EtherscanProvider(BaseProvider):
         max_pages: int | None = None,
         max_records: int | None = None,
         page_size: int | None = None,
+        unbounded: bool = False,
     ) -> ProviderResult:
         limits = PaginationLimits(
-            max_pages=max_pages or self.limits.max_pages,
-            max_records=max_records or self.limits.max_records,
+            max_pages=None if unbounded else max_pages or self.limits.max_pages,
+            max_records=None if unbounded else max_records or self.limits.max_records,
             page_size=page_size or self.limits.page_size,
         )
 
@@ -188,6 +190,8 @@ class EtherscanProvider(BaseProvider):
             capability=capability,
             fetch_page=fetch,
             limits=limits,
+            ordering=ProviderOrdering.OLDEST_FIRST,
+            pagination_strategy=PaginationStrategy.PAGE_NUMBER,
         )
 
     async def _query(
