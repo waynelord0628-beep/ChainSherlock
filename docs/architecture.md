@@ -1,5 +1,25 @@
 # ChainSherlock Architecture
 
+## V8 Milestone 5: Desktop UI Layer
+
+```text
+PySide6 View -> UI-safe adapter / ViewModel -> Application Service
+     |                                           |
+     +-- QRunnable/QThreadPool worker -----------+
+                         |
+                         v
+           events / safe status / public artifacts
+```
+
+Views 不直接存取 Provider、Analyzer、Graph 或 AI internals。Case、Planner、
+Execution 與 Case Output 均經既有 Application Services；worker 不持有 QWidget，
+只透過 signals 回傳階段、筆數、warning、artifact 與完成狀態。進度在 total
+未知時使用 indeterminate stage progress，不顯示虛構百分比。
+
+Graph boundary 只允許 Qt WebEngine 載入目前 case workspace 內已存在的
+`flow.html`。Settings 僅保存 allowlisted UI 選項，所有 credentials 由環境變數
+或未來 Credential Adapter 提供。
+
 ## V8 Milestone 4: Case Output
 
 ```text

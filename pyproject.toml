@@ -22,6 +22,9 @@ dependencies = [
   "pyvis>=0.3.2",
   "python-dateutil>=2.9",
   "reportlab>=4.2",
+  "PySide6>=6.8",
+  "PySide6-Essentials>=6.8",
+  "PySide6-Addons>=6.8",
   "PyYAML>=6.0,<7",
   "jinja2>=3.1",
   "typer>=0.12,<1",
@@ -33,6 +36,7 @@ dependencies = [
 dev = [
   "pytest>=8,<9",
   "pytest-asyncio>=0.25",
+  "pytest-qt>=4.4",
   "respx>=0.22",
 ]
 

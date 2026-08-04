@@ -1,5 +1,30 @@
 # Architecture Decisions
 
+## ADR-063: PySide6 is the only desktop UI framework
+
+The workbench uses PySide6 Essentials and Addons. No Electron, web server, Tkinter,
+Streamlit or other UI runtime is introduced.
+
+## ADR-064: UI contains no business logic
+
+Views use UI adapters and existing Application Services. Provider, Analyzer, Graph
+generation and AI internals remain outside the UI layer.
+
+## ADR-065: Long operations use stage-based background workers
+
+QRunnable and QThreadPool keep hashing, imports, planning, execution and exports off
+the GUI thread. Unknown totals use indeterminate progress; no fake percentage is shown.
+
+## ADR-066: Large tables use QAbstractTableModel
+
+Case and investigation tables use model/view data access so large row collections are
+not represented by thousands of QWidget instances.
+
+## ADR-067: UI settings never persist secrets
+
+Only `UISettings` fields are accepted. API keys, Authorization headers, passwords,
+tokens, raw prompts and secret values are not valid persisted fields.
+
 ## ADR-060: Case output preserves epistemic boundaries
 
 Confirmed facts may only originate from deterministic results or explicit reviewed

@@ -1,5 +1,13 @@
 # Development Progress
 
+## V8 Milestone 5
+
+- 完成本機 PySide6 Desktop Case Workbench 與 12 個案件工作區頁籤。
+- 完成案件建立、搜尋、封存、可復原刪除、Evidence 匯入與 SHA-256 顯示。
+- 完成 Planner、Execution 狀態、Case Result、Graph、Narrative、Report、Audit 串接。
+- 完成 QRunnable/QThreadPool worker、cooperative cancellation 與安全錯誤顯示。
+- 完成安全設定、AI disabled default、100 項 UI 測試及 TRON Mock Flow 驗收。
+
 ## V8 Milestone 4
 
 - 完成 Case Artifact Aggregation 與公開 `CaseResult`。

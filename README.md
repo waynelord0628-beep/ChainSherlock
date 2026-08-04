@@ -1,5 +1,20 @@
 # ChainSherlock
 
+## V8 Desktop UI（Milestone 5）
+
+ChainSherlock 現在提供本機 PySide6 案件工作台。可由下列任一方式啟動：
+
+```powershell
+python -m crypto_investigator
+python -m crypto_investigator ui
+python -m crypto_investigator ui --case-root cases
+```
+
+工作台提供案件清單、案件建立、Evidence、Goals、Planner、Execution 狀態、
+Case Result、Investigation、既有 Graph、Narrative、版本化報告、Audit 與安全設定。
+耗時作業透過背景 worker 執行；AI 預設停用，API Key、Authorization Header、
+Password、Prompt 與 Secrets 不會寫入 UI 設定檔。
+
 ## V8 案件輸出（Milestone 4）
 
 V8 Milestone 4 將案件、調查計畫與 Execution artifacts 聚合為 `CaseResult`，

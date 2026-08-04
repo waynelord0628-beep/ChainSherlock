@@ -1,5 +1,14 @@
 # Planned Work
 
+## After V8 Milestone 5
+
+- Await explicit approval before Milestone 6.
+- Windows packaging, installer, auto-update and code signing remain deferred.
+- Real Provider execution remains a bounded manual action; M5 acceptance uses mock
+  handlers and does not call paid AI or commercial APIs.
+- Dedicated visual editors for every planner field and human report signatures remain
+  follow-up work.
+
 ## After V8 Milestone 4
 
 - Await explicit approval before starting the Desktop UI milestone.

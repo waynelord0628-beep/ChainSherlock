@@ -1,5 +1,13 @@
 # Changelog
 
+## V8 Milestone 5
+
+- Added the PySide6 desktop case workbench and no-argument launcher.
+- Added case list, creation, workspace tabs, evidence, planning and output actions.
+- Added background workers, cancellable UI operations and safe status rendering.
+- Added local Graph WebEngine boundary and allowlisted settings persistence.
+- Added 100 UI tests, a bounded TRON mock acceptance flow and UI benchmark.
+
 ## V8 Milestone 4
 
 - Added CaseResult aggregation from case, plan, execution, evidence and public artifacts.

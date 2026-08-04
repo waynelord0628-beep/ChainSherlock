@@ -1,5 +1,5 @@
 ﻿annotated-doc==0.0.5
-# ChainSherlock V7.1 dependency freeze
+# ChainSherlock V8 Milestone 5 dependency freeze
 # Python: 3.12.13
 # Generated from: python -m pip freeze --all
 # Install with: python -m pip install -r requirements.lock
@@ -47,6 +47,10 @@ pydantic_core==2.46.4
 Pygments==2.20.0
 pytest==8.4.2
 pytest-asyncio==1.4.0
+pytest-qt==4.5.0
+PySide6==6.11.1
+PySide6_Addons==6.11.1
+PySide6_Essentials==6.11.1
 python-dateutil==2.9.0.post0
 python-docx==1.2.0
 python-dotenv==1.2.2
@@ -57,6 +61,7 @@ respx==0.23.1
 rich==15.0.0
 shellingham==1.5.4
 six==1.17.0
+shiboken6==6.11.1
 stack-data==0.6.3
 tenacity==9.1.4
 traitlets==5.16.1

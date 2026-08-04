@@ -49,6 +49,16 @@ def _case_repository(case_root: Path):
     return CaseRepository(case_root)
 
 
+@app.command("ui")
+def ui_command(
+    case_root: Path = typer.Option(Path("cases"), "--case-root"),
+) -> None:
+    """Launch the local PySide6 case investigation workbench."""
+    from crypto_investigator.ui import launch_ui
+
+    raise typer.Exit(launch_ui(case_root))
+
+
 @app.command("case-result")
 def case_result_command(
     case_id: str,
