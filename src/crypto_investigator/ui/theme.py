@@ -1,6 +1,7 @@
 LIGHT_THEME = """
 * { font-family: "Segoe UI", "Microsoft JhengHei UI"; font-size: 13px; }
 QMainWindow, QWidget { background: #F4F6F8; color: #1F2937; }
+QLabel { background: transparent; }
 QFrame#sidebar { background: #1F2937; border: 0; }
 QFrame#sidebar QLabel { background: transparent; color: #E5E7EB; }
 QLabel#brand { color: #FFFFFF; font-size: 19px; font-weight: 700; }
