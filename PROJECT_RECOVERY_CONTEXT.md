@@ -572,3 +572,22 @@ Windows packaging。不得直接開始 V9。
 - M8-B 三鏈單頁／20 筆／0 retry 真實驗收均完成，皆因 bounded truncation 或
   capability 缺口正確標記 partial，但 Graph/Investigation 完成且 0 fatal failure。
 - 秘密與本機絕對路徑掃描命中 0；raw 驗收 artifacts 位於 ignored `output/`。
+
+## 16. V8 Pre-Packaging Crypto Investigation Command Center Redesign
+
+- 基準為 `e194f606ca8f01fde9fd7a1aed71bcd328fead51`。
+- Desktop presentation 改為深色 blockchain-forensics command center；沒有新增
+  分析規則、Provider、AI、外部資產或第三方 UI dependency。
+- 首頁包括 static QPainter node-flow Hero、Operational Cards、Investigation
+  Queue、System Readiness 與 LIVE EXECUTION。
+- 案件工作區顯示 14 階段：案情、線索、Evidence、調查目標、調查計畫、
+  Execution、Result、Investigation、Counterparty、Graph、Narrative、Report、
+  Review、Audit。
+- Evidence／Audit 顯示縮寫 SHA-256 與文字 integrity；地址／Tx Hash 採 monospace
+  縮寫，完整值保留供選取或複製。
+- Graph confinement、Plan confirmation、cooperative cancellation、partial policy、
+  credentials 不落盤與不同資產不加總均保持不變。
+- UI targeted：260 passed。
+- 完整 pytest：1,207 passed、1 skipped；skip 為未配置真實 AI Key。
+- `pip check`：No broken requirements found。
+- 本輪仍未開始 Windows packaging 或 V9。

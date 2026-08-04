@@ -45,16 +45,13 @@ def test_workflow_navigation_has_all_stages(window, tab) -> None:
 
 @pytest.mark.parametrize(
     "token",
-    [
-        "#F4F6F8",
-        "#1F2937",
-        "#0F766E",
-        "#14B8A6",
-        "#DCFCE7",
-        "#DBEAFE",
-        "#FFEDD5",
-        "#FEE2E2",
-        "#FEF3C7",
+        [
+            "#0B1220",
+            "#111B2B",
+            "#2DD4BF",
+            "#60A5FA",
+            "#A78BFA",
+            "#F59E0B",
         "QFrame#card",
         "QFrame#metricCard",
         "QFrame#heroCard",
@@ -160,12 +157,13 @@ def test_home_recent_cases(window) -> None:
 @pytest.mark.parametrize(
     "tab,empty_text",
     [
-        ("線索與證據", "尚未加入已確認線索"),
+        ("線索", "尚未加入已確認線索"),
+        ("Evidence", "尚未匯入證據"),
         ("調查目標", "尚未設定調查目標"),
         ("調查計畫", "尚未產生 Plan"),
-        ("執行進度", "尚無執行時間軸"),
+        ("Execution", "尚無執行時間軸"),
         ("Graph", "尚無 Graph"),
-        ("報告", "尚無報告版本"),
+        ("Report", "尚無報告版本"),
     ],
 )
 def test_actionable_empty_states(window, tab, empty_text) -> None:
@@ -200,7 +198,7 @@ def test_no_engineering_names_in_primary_goal_ui(window) -> None:
 def test_execution_unknown_total_has_no_percentage(window) -> None:
     case = window.case_service.create_case("Unknown total")
     window.open_case(case.case_id)
-    text = window.tab_views["執行進度"].toPlainText()
+    text = window.tab_views["Execution"].toPlainText()
     assert "總量未知" in text
     assert "%" not in text
 
@@ -216,10 +214,10 @@ def test_result_asset_cards_separated(window) -> None:
 
 
 def test_candidate_and_confirmed_visual_distinction() -> None:
-    assert "#FEF3C7" in LIGHT_THEME
-    assert "#DCFCE7" in LIGHT_THEME
-    assert "#92400E" in LIGHT_THEME
-    assert "#166534" in LIGHT_THEME
+    assert "#302A52" in LIGHT_THEME
+    assert "#123C3B" in LIGHT_THEME
+    assert "#D0C4FF" in LIGHT_THEME
+    assert "#7EE7D5" in LIGHT_THEME
 
 
 def test_escape_has_no_execution_cancel_shortcut(window) -> None:
@@ -254,7 +252,7 @@ def test_workspace_uses_left_stage_navigation(window) -> None:
 def test_no_raw_json_on_empty_primary_pages(window) -> None:
     case = window.case_service.create_case("Readable")
     window.open_case(case.case_id)
-    for page in ("案件總覽", "調查目標", "調查計畫", "結果總覽"):
+    for page in ("案情", "調查目標", "調查計畫", "Result"):
         text = window.tab_views[page].toPlainText()
         assert not text.lstrip().startswith("{")
         assert not text.lstrip().startswith("[")

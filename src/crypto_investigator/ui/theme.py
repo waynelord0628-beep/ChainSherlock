@@ -1,75 +1,109 @@
-LIGHT_THEME = """
+CRYPTO_INVESTIGATION_THEME = """
 * { font-family: "Segoe UI", "Microsoft JhengHei UI"; font-size: 13px; }
-QMainWindow, QWidget { background: #F4F6F8; color: #1F2937; }
+QMainWindow, QWidget { background: #0B1220; color: #D9E4F0; }
+QScrollArea, QScrollArea > QWidget > QWidget { background:#0B1220; border:0; }
 QLabel { background: transparent; }
-QFrame#sidebar { background: #1F2937; border: 0; }
-QFrame#sidebar QLabel { background: transparent; color: #E5E7EB; }
-QLabel#brand { color: #FFFFFF; font-size: 19px; font-weight: 700; }
-QLabel#brandSubtitle { color: #9CA3AF; font-size: 11px; }
+QToolTip { background:#172235; color:#E6EDF7; border:1px solid #334155; padding:5px; }
+QFrame#sidebar { background: #0A101C; border-right: 1px solid #223047; }
+QFrame#sidebar QLabel { background: transparent; color: #D9E4F0; }
+QLabel#brand { color: #F1F5F9; font-size: 20px; font-weight: 700; }
+QLabel#brandSubtitle, QLabel#eyebrow {
+  color: #5EEAD4; font-family: "Consolas"; font-size: 10px; font-weight: 600;
+}
 QListWidget#navigation {
-  background: transparent; color: #CBD5E1; border: 0; outline: 0;
+  background: transparent; color: #AAB8CA; border: 0; outline: 0;
 }
 QListWidget#navigation::item {
-  margin: 3px 8px; padding: 11px 12px; border-radius: 7px;
+  margin: 3px 6px; padding: 11px 12px; border-radius: 5px;
 }
-QListWidget#navigation::item:hover { background: #374151; color: #FFFFFF; }
+QListWidget#navigation::item:hover { background: #132035; color: #E6EDF7; }
 QListWidget#navigation::item:selected {
-  background: #0F766E; color: #FFFFFF; font-weight: 600;
+  background: #12313A; color: #D6FFFA; font-weight: 600;
+  border-left: 3px solid #2DD4BF;
 }
 QFrame#card, QFrame#metricCard, QFrame#heroCard, QFrame#sectionCard {
-  background: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 10px;
+  background: #111B2B; border: 1px solid #26364D; border-radius: 9px;
 }
-QFrame#heroCard { background: #F0FDFA; border-color: #99F6E4; }
-QLabel#pageTitle { font-size: 25px; font-weight: 700; color: #111827; }
-QLabel#sectionTitle { font-size: 16px; font-weight: 650; color: #1F2937; }
-QLabel#muted { color: #64748B; }
-QLabel#metricValue { font-size: 25px; font-weight: 700; color: #0F766E; }
-QLabel#metricLabel { color: #64748B; font-size: 12px; }
+QFrame#heroCard { background: #0E1B2B; border-color: #285665; }
+QFrame#emptyState {
+  background:#0E1828; border:1px dashed #334A65; border-radius:8px;
+}
+QFrame#queueItem { background:#111B2B; border:1px solid #26364D; border-radius:7px; }
+QFrame#metricCard[accent="teal"] { border-top: 2px solid #2DD4BF; }
+QFrame#metricCard[accent="blue"] { border-top: 2px solid #60A5FA; }
+QFrame#metricCard[accent="amber"] { border-top: 2px solid #F59E0B; }
+QFrame#metricCard[accent="violet"] { border-top: 2px solid #A78BFA; }
+QLabel#pageTitle { font-size: 25px; font-weight: 700; color: #F1F5F9; }
+QLabel#sectionTitle { font-size: 16px; font-weight: 650; color: #E6EDF7; }
+QLabel#muted { color: #8FA1B7; }
+QLabel#metricValue { font-size: 27px; font-weight: 700; color: #E6FFFB; }
+QLabel#metricLabel { color: #B8C6D8; font-size: 12px; }
+QLabel#monoValue {
+  color:#B9F5EC; font-family:"Cascadia Mono","Consolas","Courier New";
+}
+QLabel#chainBadge, QLabel#assetBadge {
+  background:#172A40; color:#BFE8FF; border:1px solid #31506C;
+  border-radius:8px; padding:3px 7px; font-family:"Consolas"; font-size:11px;
+}
+QLabel#chainBadge[chain="tron"] { color:#F4B4B4; border-color:#704048; }
+QLabel#chainBadge[chain="eth"] { color:#C8C7FF; border-color:#515284; }
+QLabel#chainBadge[chain="btc"] { color:#F8D59A; border-color:#73562D; }
 QPushButton {
-  background: #0F766E; color: #FFFFFF; border: 0;
-  padding: 8px 15px; border-radius: 6px; font-weight: 600;
+  background: #13796F; color: #F1FFFD; border: 1px solid #229A8E;
+  padding: 8px 15px; border-radius: 5px; font-weight: 600;
 }
-QPushButton:hover { background: #115E59; }
-QPushButton:pressed { background: #134E4A; }
-QPushButton:disabled { background: #CBD5E1; color: #64748B; }
+QPushButton:hover { background: #16877C; border-color:#5EEAD4; }
+QPushButton:focus { border: 2px solid #7DD3FC; }
+QPushButton:pressed { background: #0F625A; }
+QPushButton:disabled { background: #263449; color: #718096; border-color:#334155; }
 QPushButton[variant="secondary"] {
-  background: #FFFFFF; color: #334155; border: 1px solid #CBD5E1;
+  background: #142033; color: #C7D4E5; border: 1px solid #3A4C65;
 }
-QPushButton[variant="secondary"]:hover { background: #F8FAFC; border-color: #94A3B8; }
-QPushButton[variant="danger"] { background: #B42318; }
-QLineEdit, QComboBox, QPlainTextEdit, QTextBrowser, QTableView {
-  background: #FFFFFF; border: 1px solid #CBD5E1; border-radius: 6px; padding: 6px;
-  selection-background-color: #CCFBF1; selection-color: #134E4A;
+QPushButton[variant="secondary"]:hover { background: #1A2A40; border-color: #5A718F; }
+QPushButton[variant="danger"] { background: #813B42; border-color:#A4515A; }
+QLineEdit, QComboBox, QPlainTextEdit, QTextBrowser, QTableView, QListWidget {
+  background: #0D1726; color:#D9E4F0; border: 1px solid #2B3B52;
+  border-radius: 5px; padding: 6px;
+  selection-background-color: #155E75; selection-color: #ECFEFF;
 }
-QLineEdit:focus, QComboBox:focus, QPlainTextEdit:focus {
-  border: 2px solid #14B8A6;
+QLineEdit:focus, QComboBox:focus, QPlainTextEdit:focus, QListWidget:focus {
+  border: 2px solid #2DD4BF;
 }
 QHeaderView::section {
-  background: #F8FAFC; color: #475569; border: 0;
-  border-bottom: 1px solid #E2E8F0; padding: 8px; font-weight: 600;
+  background: #142033; color: #93A8C0; border: 0;
+  border-bottom: 1px solid #304159; padding: 8px; font-weight: 600;
 }
-QTableView { gridline-color: #EEF2F6; alternate-background-color: #F8FAFC; }
-QTabWidget::pane { border: 1px solid #E2E8F0; background: #FFFFFF; border-radius: 8px; }
+QTableView { gridline-color: #26364D; alternate-background-color: #101C2D; }
+QTabWidget::pane { border: 1px solid #26364D; background: #0D1726; border-radius: 7px; }
 QTabBar::tab {
-  background: transparent; color: #64748B; min-width: 135px;
-  padding: 11px 14px; margin: 2px 0; text-align: left;
+  background: transparent; color: #8294AA; min-width: 138px;
+  padding: 10px 12px; margin: 1px 0; text-align: left;
 }
+QTabBar::tab:hover { color:#C5D2E2; background:#111E30; }
 QTabBar::tab:selected {
-  background: #ECFDF5; color: #0F766E; font-weight: 650;
-  border-left: 3px solid #0F766E;
+  background: #12313A; color: #9FF5E8; font-weight: 650;
+  border-left: 3px solid #2DD4BF;
 }
 QProgressBar {
-  background: #E2E8F0; border: 0; border-radius: 4px; min-height: 8px; max-height: 8px;
+  background: #243147; border: 0; border-radius: 3px; min-height: 6px; max-height: 6px;
+  color:transparent;
 }
-QProgressBar::chunk { background: #14B8A6; border-radius: 4px; }
-QStatusBar { background: #FFFFFF; color: #64748B; border-top: 1px solid #E2E8F0; }
-QLabel#confirmed { color: #166534; background: #DCFCE7; padding: 4px 8px; border-radius: 9px; }
-QLabel#candidate { color: #92400E; background: #FEF3C7; padding: 4px 8px; border-radius: 9px; }
-QLabel#partial, QLabel#warning { color: #9A3412; background: #FFEDD5; padding: 4px 8px; border-radius: 9px; }
-QLabel#failed { color: #991B1B; background: #FEE2E2; padding: 4px 8px; border-radius: 9px; }
-QLabel#running { color: #1D4ED8; background: #DBEAFE; padding: 4px 8px; border-radius: 9px; }
-QLabel#completed { color: #166534; background: #DCFCE7; padding: 4px 8px; border-radius: 9px; }
-QLabel#cancelled, QLabel#skipped, QLabel#unavailable {
-  color: #475569; background: #E2E8F0; padding: 4px 8px; border-radius: 9px;
+QProgressBar::chunk { background: #2DD4BF; border-radius: 3px; }
+QStatusBar { background: #0A101C; color: #8799AF; border-top: 1px solid #223047; }
+QLabel#available, QLabel#configured, QLabel#confirmed, QLabel#completed, QLabel#verified {
+  color:#7EE7D5; background:#123C3B; border:1px solid #21645F; padding:3px 8px; border-radius:8px;
+}
+QLabel#observation, QLabel#running, QLabel#ready {
+  color:#A5D8FF; background:#173553; border:1px solid #285E87; padding:3px 8px; border-radius:8px;
+}
+QLabel#candidate { color:#D0C4FF; background:#302A52; border:1px solid #554B82; padding:3px 8px; border-radius:8px; }
+QLabel#partial, QLabel#warning { color:#F7D08A; background:#49361C; border:1px solid #765625; padding:3px 8px; border-radius:8px; }
+QLabel#failed, QLabel#error, QLabel#mismatch { color:#F2A6AD; background:#49242A; border:1px solid #75363E; padding:3px 8px; border-radius:8px; }
+QLabel#pending, QLabel#unknown, QLabel#not_configured, QLabel#disabled,
+QLabel#cancelled, QLabel#skipped, QLabel#unavailable, QLabel#missing {
+  color:#AAB8CA; background:#263247; border:1px solid #3B4A61; padding:3px 8px; border-radius:8px;
 }
 """
+
+# Compatibility alias retained for existing integrations.
+LIGHT_THEME = CRYPTO_INVESTIGATION_THEME

@@ -1,5 +1,15 @@
 # Changelog
 
+## V8 Pre-Packaging Crypto Investigation Command Center Redesign
+
+- Replaced the light desktop presentation with a local-only blockchain-forensics theme.
+- Added a static QPainter node-flow hero, operational case cards and investigation queue.
+- Added textual readiness, chain, asset, integrity, provider and execution presentation.
+- Expanded the case workspace to fourteen visible investigation stages without changing
+  execution, provider, analysis, graph or report service boundaries.
+- Added dark forensic presentations for Result, Investigation, Evidence, Graph, Report
+  and Audit data and responsive DPI/viewport regressions.
+
 ## V8 Milestone 8
 
 - Added hybrid offline/Provider analysis StepHandlers to Desktop Execution.

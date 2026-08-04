@@ -1,5 +1,18 @@
 # Development Progress
 
+## V8 Pre-Packaging Crypto Investigation Command Center Redesign
+
+- Desktop 改為深石墨藍黑的 blockchain forensics command center 視覺語言。
+- 首頁完成 Crypto Investigation Hero、2×2／4-column operational cards、
+  Investigation Queue empty/error/list states 與十項 System Readiness。
+- 案件工作區改為 14 階段 navigation，加入 Case Intelligence 摘要、鏈／資產、
+  Evidence integrity、Result、Investigation、Graph、Report 與 Audit 語意。
+- LIVE EXECUTION 顯示人類可讀 stage、provider/capability、records、elapsed、
+  artifact count；未知總量維持 indeterminate，不顯示假百分比。
+- 新增 55 個 command-center UI regression cases；UI targeted 260 passed。
+- 完整驗收：1,207 passed、1 skipped；`pip check` 通過。
+- 本輪未新增分析功能、第三方 UI 套件或外部資產，未開始 V9／Windows 打包。
+
 ## V8 Milestone 8
 
 - 完成 Provider-only address/transaction StepHandler 與 Desktop hybrid registry。

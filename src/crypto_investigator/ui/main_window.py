@@ -3,9 +3,10 @@ from __future__ import annotations
 import html
 import json
 import os
+import time
 from pathlib import Path
 
-from PySide6.QtCore import QThreadPool, Qt, Signal
+from PySide6.QtCore import QThreadPool, QTimer, Qt, Signal
 from PySide6.QtGui import QKeySequence, QShortcut
 from PySide6.QtWidgets import (
     QAbstractItemView,
@@ -26,6 +27,8 @@ from PySide6.QtWidgets import (
     QPlainTextEdit,
     QProgressBar,
     QPushButton,
+    QScrollArea,
+    QSizePolicy,
     QStackedWidget,
     QTabWidget,
     QTableView,
@@ -42,23 +45,36 @@ from crypto_investigator.ui.models import RecordsTableModel
 from crypto_investigator.ui.services import CaseUIService, UISettings, UISettingsService
 from crypto_investigator.ui.state import UIState
 from crypto_investigator.ui.theme import LIGHT_THEME
-from crypto_investigator.ui.widgets import MetricCard, SafeGraphView, StatusBadge
+from crypto_investigator.ui.widgets import (
+    AssetBadge,
+    ChainBadge,
+    EmptyState,
+    InvestigationBackdrop,
+    InvestigationQueueItem,
+    MetricCard,
+    MonoValueLabel,
+    SafeGraphView,
+    StatusBadge,
+    abbreviate_chain_value,
+)
 from crypto_investigator.ui.workers import BackgroundWorker
 
 
 WORKSPACE_TABS = (
-    "案件總覽",
-    "線索與證據",
+    "案情",
+    "線索",
+    "Evidence",
     "調查目標",
     "調查計畫",
-    "執行進度",
-    "結果總覽",
+    "Execution",
+    "Result",
     "Investigation",
-    "交易對手",
+    "Counterparty",
     "Graph",
     "Narrative",
-    "報告",
-    "稽核紀錄",
+    "Report",
+    "Review",
+    "Audit",
 )
 
 _STATUS_ZH = {
@@ -103,6 +119,7 @@ def _badge(status: str) -> str:
 
 class MainWindow(QMainWindow):
     case_opened = Signal(str)
+    execution_event_received = Signal(object)
 
     def __init__(
         self,
@@ -134,6 +151,13 @@ class MainWindow(QMainWindow):
         self.state = UIState(case_root=Path(case_root))
         self.thread_pool = QThreadPool(self)
         self.active_workers: list[BackgroundWorker] = []
+        self._execution_started_at: float | None = None
+        self._active_execution_case_id: str | None = None
+        self._active_execution_artifacts: set[str] = set()
+        self.execution_event_received.connect(self._apply_execution_event)
+        self.execution_clock = QTimer(self)
+        self.execution_clock.setInterval(1000)
+        self.execution_clock.timeout.connect(self._update_execution_elapsed)
         self.setStyleSheet(LIGHT_THEME)
         self._build_ui()
         self._install_shortcuts()
@@ -150,7 +174,7 @@ class MainWindow(QMainWindow):
         side_layout = QVBoxLayout(sidebar)
         side_layout.setContentsMargins(10, 18, 10, 14)
         brand = QLabel("ChainSherlock", objectName="brand")
-        brand_note = QLabel("INVESTIGATION WORKBENCH", objectName="brandSubtitle")
+        brand_note = QLabel("BLOCKCHAIN FORENSICS", objectName="brandSubtitle")
         side_layout.addWidget(brand)
         side_layout.addWidget(brand_note)
         side_layout.addSpacing(16)
@@ -161,14 +185,39 @@ class MainWindow(QMainWindow):
         self.global_execution = QFrame(objectName="sectionCard")
         global_layout = QVBoxLayout(self.global_execution)
         global_layout.setContentsMargins(10, 10, 10, 10)
+        global_layout.addWidget(QLabel("LIVE EXECUTION", objectName="eyebrow"))
+        self.global_execution_badge = StatusBadge()
+        self.global_execution_badge.set_status("disabled", "IDLE")
         self.global_execution_title = QLabel("目前沒有執行中的工作")
         self.global_execution_title.setWordWrap(True)
-        self.global_execution_title.setStyleSheet("color:#334155;font-weight:600")
-        self.global_execution_detail = QLabel("建立並確認 Plan 後即可執行")
+        self.global_execution_title.setStyleSheet("font-weight:600")
+        self.global_execution_detail = QLabel("建立並確認調查計畫後即可開始執行。")
         self.global_execution_detail.setWordWrap(True)
-        self.global_execution_detail.setStyleSheet("color:#64748B;font-size:11px")
+        self.global_execution_detail.setObjectName("muted")
+        self.global_execution_meta = QLabel()
+        self.global_execution_meta.setWordWrap(True)
+        self.global_execution_meta.setObjectName("muted")
+        self.global_execution_progress = QProgressBar(objectName="global_execution_progress")
+        self.global_execution_progress.setTextVisible(False)
+        self.global_execution_progress.hide()
+        self.global_execution_actions = QWidget()
+        global_actions = QHBoxLayout(self.global_execution_actions)
+        global_actions.setContentsMargins(0, 2, 0, 0)
+        details = QPushButton("查看詳情")
+        details.setProperty("variant", "secondary")
+        details.clicked.connect(self._open_active_execution)
+        cancel = QPushButton("取消")
+        cancel.setProperty("variant", "danger")
+        cancel.clicked.connect(self.cancel_execution)
+        global_actions.addWidget(details)
+        global_actions.addWidget(cancel)
+        self.global_execution_actions.hide()
+        global_layout.addWidget(self.global_execution_badge, alignment=Qt.AlignLeft)
         global_layout.addWidget(self.global_execution_title)
         global_layout.addWidget(self.global_execution_detail)
+        global_layout.addWidget(self.global_execution_meta)
+        global_layout.addWidget(self.global_execution_progress)
+        global_layout.addWidget(self.global_execution_actions)
         side_layout.addWidget(self.global_execution)
         self.case_status = QLabel("未開啟案件")
         self.case_status.setWordWrap(True)
@@ -217,15 +266,16 @@ class MainWindow(QMainWindow):
     def _build_home(self) -> QWidget:
         page, layout = self._page(
             "案件調查工作台",
-            "從案件建立、證據匯入、調查計畫到報告覆核，依序完成每一個可驗證步驟。",
+            "從鏈上線索、Evidence、資金流分析到案件報告，建立可驗證、可追溯的完整調查流程。",
         )
-        hero = QFrame(objectName="heroCard")
+        hero = InvestigationBackdrop()
+        hero.setObjectName("heroCard")
         hero_layout = QHBoxLayout(hero)
-        hero_layout.setContentsMargins(18, 16, 18, 16)
+        hero_layout.setContentsMargins(20, 18, 20, 18)
         hero_text = QVBoxLayout()
-        hero_title = QLabel("開始一個新的調查", objectName="sectionTitle")
+        hero_title = QLabel("CRYPTO INVESTIGATION COMMAND CENTER", objectName="eyebrow")
         hero_note = QLabel(
-            "使用五步驟 Wizard 建立案件、確認線索並選擇調查目標。",
+            "LOCAL-FIRST  ·  EVIDENCE-BASED  ·  HASH-VERIFIED  ·  AUDITABLE",
             objectName="muted",
         )
         hero_text.addWidget(hero_title)
@@ -241,48 +291,88 @@ class MainWindow(QMainWindow):
         layout.addWidget(hero)
 
         metrics = QGridLayout()
+        self.home_metrics_layout = metrics
         self.home_metric_cards = {
-            "cases": MetricCard("進行中案件"),
-            "running": MetricCard("執行中的工作"),
-            "partial": MetricCard("部分完成"),
-            "review": MetricCard("等待覆核"),
+            "cases": MetricCard("進行中案件", eyebrow="ACTIVE CASES", accent="teal"),
+            "running": MetricCard("執行中的工作", eyebrow="LIVE EXECUTIONS", accent="blue"),
+            "partial": MetricCard("部分完成", eyebrow="PARTIAL COVERAGE", accent="amber"),
+            "review": MetricCard("等待審核", eyebrow="REVIEW REQUIRED", accent="violet"),
         }
         for index, card in enumerate(self.home_metric_cards.values()):
             metrics.addWidget(card, 0, index)
         layout.addLayout(metrics)
 
-        lower = QHBoxLayout()
+        lower_content = QWidget()
+        lower = QHBoxLayout(lower_content)
+        lower.setContentsMargins(0, 0, 0, 0)
         recent_card = QFrame(objectName="sectionCard")
         recent_layout = QVBoxLayout(recent_card)
-        recent_layout.addWidget(QLabel("最近案件", objectName="sectionTitle"))
+        recent_layout.addWidget(QLabel("調查佇列", objectName="sectionTitle"))
+        recent_layout.addWidget(QLabel("INVESTIGATION QUEUE", objectName="eyebrow"))
+        self.home_recent_stack = QStackedWidget()
+        loading = QLabel("正在載入調查案件…", objectName="muted")
+        loading.setAlignment(Qt.AlignCenter)
+        self.home_recent_stack.addWidget(loading)
+        self.home_recent_empty = EmptyState(
+            "尚無調查案件",
+            "建立案件並加入地址、交易雜湊或 CSV／Excel Evidence，開始第一個鏈上調查。",
+        )
+        self.home_recent_empty.add_action("建立新案件", self.open_case_wizard)
+        self.home_recent_empty.add_action(
+            "開啟案件清單",
+            lambda: self.navigation.setCurrentRow(1),
+            secondary=True,
+        )
+        self.home_recent_stack.addWidget(self.home_recent_empty)
+        self.home_recent_error = EmptyState(
+            "無法載入調查佇列",
+            "案件資料目前無法讀取，請檢查本機 workspace 後重試。",
+        )
+        self.home_recent_error.add_action("重新載入", self.refresh_cases)
+        self.home_recent_stack.addWidget(self.home_recent_error)
         self.home_recent = QListWidget()
+        self.home_recent.setSpacing(6)
+        self.home_recent.setWordWrap(True)
         self.home_recent.itemDoubleClicked.connect(self._open_recent_case)
-        recent_layout.addWidget(self.home_recent)
+        self.home_recent_stack.addWidget(self.home_recent)
+        recent_layout.addWidget(self.home_recent_stack)
         lower.addWidget(recent_card, 2)
         status_card = QFrame(objectName="sectionCard")
         status_layout = QVBoxLayout(status_card)
-        status_layout.addWidget(QLabel("系統狀態", objectName="sectionTitle"))
-        for name, value in (
-            ("TronGrid", "依環境設定"),
-            ("Etherscan", "依環境設定"),
-            ("Blockstream", "公開服務"),
-            ("本機快取", "可用"),
-            ("AI", "預設停用"),
-        ):
+        status_layout.addWidget(QLabel("調查系統狀態", objectName="sectionTitle"))
+        status_layout.addWidget(QLabel("SYSTEM READINESS", objectName="eyebrow"))
+        self.home_status_badges: dict[str, StatusBadge] = {}
+        for name, status_code, status_text, description in self._system_readiness():
             row = QHBoxLayout()
-            row.addWidget(QLabel(name))
-            status = QLabel(value)
-            status.setStyleSheet("color:#64748B")
-            row.addStretch()
-            row.addWidget(status)
+            text = QVBoxLayout()
+            text.addWidget(QLabel(name))
+            detail = QLabel(description, objectName="muted")
+            detail.setWordWrap(True)
+            text.addWidget(detail)
+            badge = StatusBadge()
+            badge.set_status(status_code, status_text)
+            self.home_status_badges[name] = badge
+            row.addLayout(text, 1)
+            row.addWidget(badge, alignment=Qt.AlignTop)
             status_layout.addLayout(row)
-        status_layout.addStretch()
         lower.addWidget(status_card, 1)
-        layout.addLayout(lower, 1)
+        lower_scroll = QScrollArea()
+        lower_scroll.setWidgetResizable(True)
+        lower_scroll.setFrameShape(QFrame.NoFrame)
+        lower_scroll.setWidget(lower_content)
+        layout.addWidget(lower_scroll, 1)
         self.home_counts = QLabel()
         self.home_counts.hide()
         layout.addWidget(self.home_counts)
         return page
+
+    def resizeEvent(self, event) -> None:  # noqa: N802 - Qt API
+        super().resizeEvent(event)
+        if not hasattr(self, "home_metrics_layout"):
+            return
+        columns = 2 if self.width() < 1180 else 4
+        for index, card in enumerate(self.home_metric_cards.values()):
+            self.home_metrics_layout.addWidget(card, index // columns, index % columns)
 
     def _build_case_list(self) -> QWidget:
         page, layout = self._page("案件清單", "搜尋、排序並開啟既有案件。")
@@ -416,9 +506,16 @@ class MainWindow(QMainWindow):
         header = QFrame(objectName="sectionCard")
         header_layout = QHBoxLayout(header)
         header_text = QVBoxLayout()
+        header_text.addWidget(
+            QLabel("CASE WORKSPACE · ON-CHAIN INVESTIGATION", objectName="eyebrow")
+        )
         self.workspace_header = QLabel("尚未開啟案件", objectName="sectionTitle")
+        self.workspace_header.setWordWrap(True)
+        self.workspace_intelligence = QLabel("EVIDENCE VERIFIED", objectName="muted")
+        self.workspace_intelligence.setWordWrap(True)
         self.workflow_stage = QLabel("下一步：確認案件線索", objectName="muted")
         header_text.addWidget(self.workspace_header)
+        header_text.addWidget(self.workspace_intelligence)
         header_text.addWidget(self.workflow_stage)
         self.workspace_badge = StatusBadge()
         self.workspace_badge.set_status("unavailable")
@@ -437,7 +534,7 @@ class MainWindow(QMainWindow):
             container = QWidget()
             tab_layout = QVBoxLayout(container)
             tab_layout.setContentsMargins(14, 14, 14, 14)
-            if tab_name == "執行進度":
+            if tab_name == "Execution":
                 self.execution_progress = QProgressBar(objectName="execution_progress")
                 self.execution_progress.setRange(0, 0)
                 self.execution_progress.setVisible(False)
@@ -459,7 +556,7 @@ class MainWindow(QMainWindow):
 
     def _add_tab_actions(self, name: str, layout: QVBoxLayout) -> None:
         actions = QHBoxLayout()
-        if name == "線索與證據":
+        if name == "Evidence":
             button = QPushButton("匯入證據")
             button.clicked.connect(self.import_evidence)
             actions.addWidget(button)
@@ -506,7 +603,7 @@ class MainWindow(QMainWindow):
             confirm.clicked.connect(self.confirm_plan)
             actions.addWidget(create)
             actions.addWidget(confirm)
-        elif name == "執行進度":
+        elif name == "Execution":
             start = QPushButton("開始執行")
             start.clicked.connect(self.start_execution)
             cancel = QPushButton("取消")
@@ -518,7 +615,7 @@ class MainWindow(QMainWindow):
             actions.addWidget(start)
             actions.addWidget(resume)
             actions.addWidget(cancel)
-        elif name == "報告":
+        elif name == "Report":
             generate = QPushButton("產生新版報告")
             generate.clicked.connect(self.generate_report)
             package = QPushButton("匯出案件套件")
@@ -541,11 +638,54 @@ class MainWindow(QMainWindow):
                 f"目前階段：{self.workspace_tabs.tabText(index)}"
             )
 
+    def _system_readiness(self) -> list[tuple[str, str, str, str]]:
+        from crypto_investigator.reports.pdf_exporter import pdf_font_status
+
+        pdf = pdf_font_status()
+        return [
+            (
+                "TronGrid",
+                "configured" if os.getenv("TRONGRID_API_KEY") else "not_configured",
+                "已設定" if os.getenv("TRONGRID_API_KEY") else "未設定",
+                "TRON transaction provider",
+            ),
+            (
+                "Etherscan",
+                "configured" if os.getenv("ETHERSCAN_API_KEY") else "not_configured",
+                "已設定" if os.getenv("ETHERSCAN_API_KEY") else "未設定",
+                "Blockscout fallback available",
+            ),
+            ("Blockscout", "available", "可用", "Ethereum public fallback"),
+            ("Blockstream", "available", "公開服務", "Bitcoin provider（未測試連線）"),
+            ("Local Pipeline", "available", "正常", "CSV／Excel offline execution"),
+            ("Case Workspace", "available", "正常", "Local-first case storage"),
+            ("Cache", "available", "正常", "Local execution cache"),
+            ("Audit Chain", "verified", "已驗證", "Hash-chain verified"),
+            ("AI", "disabled", "已停用", "Deterministic fallback enabled"),
+            (
+                "PDF CJK Font",
+                "available" if pdf.get("available") else "unavailable",
+                "可用" if pdf.get("available") else "不可用",
+                (
+                    f"{pdf.get('font_name')} · {pdf.get('source')}"
+                    if pdf.get("available")
+                    else "PDF export may be partial"
+                ),
+            ),
+        ]
+
     def refresh_cases(self) -> None:
-        records = self.case_service.list_cases(
-            self.case_search.text() if hasattr(self, "case_search") else "",
-            self.show_archived.isChecked() if hasattr(self, "show_archived") else False,
-        )
+        if hasattr(self, "home_recent_stack"):
+            self.home_recent_stack.setCurrentIndex(0)
+        try:
+            records = self.case_service.list_cases(
+                self.case_search.text() if hasattr(self, "case_search") else "",
+                self.show_archived.isChecked() if hasattr(self, "show_archived") else False,
+            )
+        except Exception:
+            if hasattr(self, "home_recent_stack"):
+                self.home_recent_stack.setCurrentIndex(2)
+            return
         self._case_ids = [item.case_id for item in records]
         if hasattr(self, "case_model"):
             self.case_model.replace(
@@ -584,12 +724,44 @@ class MainWindow(QMainWindow):
                 self.home_metric_cards[key].set_value(value)
             self.home_recent.clear()
             for item in sorted(records, key=lambda case: case.updated_at, reverse=True)[:6]:
-                entry = self.home_recent.addItem(
-                    f"{item.title}　·　{_STATUS_ZH.get(item.last_execution_status or 'not_started', '尚未開始')}"
+                chain = str(item.metadata.get("chain") or "UNKNOWN").upper()
+                assets = ", ".join(
+                    str(asset).upper() for asset in item.metadata.get("assets", [])
+                ) or "未指定資產"
+                seeds = len(item.metadata.get("known_addresses", []))
+                status = _STATUS_ZH.get(
+                    item.last_execution_status or "not_started", "尚未開始"
+                )
+                completeness = item.execution_summary.get("completeness", "尚無資料")
+                next_action = self._next_action(item).replace("下一步：", "")
+                self.home_recent.addItem(
+                    f"{item.title}\n"
+                    f"{item.case_id}  ·  {chain}  ·  {assets}\n"
+                    f"Seed {seeds}  ·  Evidence {len(item.evidence)}  ·  {status}  ·  "
+                    f"Completeness {completeness}\n"
+                    f"下一步：{next_action}  ·  "
+                    f"{item.updated_at.astimezone().strftime('%Y-%m-%d %H:%M')}"
                 )
                 self.home_recent.item(self.home_recent.count() - 1).setData(
                     Qt.UserRole, item.case_id
                 )
+                list_item = self.home_recent.item(self.home_recent.count() - 1)
+                widget = InvestigationQueueItem(
+                    title=item.title,
+                    case_id=item.case_id,
+                    chain=chain,
+                    assets=list(item.metadata.get("assets", [])) or ["UNSPECIFIED"],
+                    seed_count=seeds,
+                    evidence_count=len(item.evidence),
+                    status=status,
+                    completeness=str(completeness),
+                    updated_at=item.updated_at.astimezone().strftime("%Y-%m-%d %H:%M"),
+                    next_action=next_action,
+                    open_case=lambda checked=False, case_id=item.case_id: self.open_case(case_id),
+                )
+                list_item.setSizeHint(widget.sizeHint())
+                self.home_recent.setItemWidget(list_item, widget)
+            self.home_recent_stack.setCurrentIndex(3 if records else 1)
         if hasattr(self, "home_counts"):
             self.home_counts.setText(
                 f"案件：{len(records)} 執行中：{len(running)} 部分完成：{len(partial)}"
@@ -670,6 +842,24 @@ class MainWindow(QMainWindow):
         self.state.select_case(case_id)
         self.case_status.setText(f"{case.title}\n{case.case_id}")
         self.workspace_header.setText(case.title)
+        try:
+            result = self.case_service.result(case.case_id)
+        except Exception:
+            result = None
+        chain = str(case.metadata.get("chain") or "UNKNOWN").upper()
+        assets = ", ".join(
+            str(item).upper() for item in case.metadata.get("assets", [])
+        ) or "UNSPECIFIED"
+        transaction_count = len(result.known_transactions) if result else 0
+        completeness = result.completeness if result else "unavailable"
+        self.workspace_intelligence.setText(
+            f"{case.case_id}  ·  CHAIN {chain}  ·  ASSET {assets}  ·  "
+            f"SEEDS {len(case.metadata.get('known_addresses', []))}  ·  "
+            f"EVIDENCE {len(case.evidence)}  ·  TX {transaction_count}  ·  "
+            f"COMPLETENESS {completeness}  ·  "
+            f"REVIEW {human_label(case.metadata.get('review_status', 'not_reviewed'))}  ·  "
+            f"UPDATED {case.updated_at.astimezone().strftime('%Y-%m-%d %H:%M')}"
+        )
         status = case.last_execution_status or case.status.value
         self.workspace_badge.set_status(status)
         self.workflow_stage.setText(self._next_action(case))
@@ -697,18 +887,20 @@ class MainWindow(QMainWindow):
         except Exception:
             result = None
         renderers = {
-            "案件總覽": self._render_overview(case, result),
-            "線索與證據": self._render_evidence(case),
+            "案情": self._render_overview(case, result),
+            "線索": self._render_clues(case),
+            "Evidence": self._render_evidence(case),
             "調查目標": self._render_goals(case),
             "調查計畫": self._render_plan(case),
-            "執行進度": self._render_execution(case),
-            "結果總覽": self._render_result(result),
+            "Execution": self._render_execution(case),
+            "Result": self._render_result(result),
             "Investigation": self._render_investigation(result),
-            "交易對手": self._render_counterparties(result),
+            "Counterparty": self._render_counterparties(result),
             "Graph": self._render_graph(result),
             "Narrative": self._render_narrative(result),
-            "報告": self._render_reports(case),
-            "稽核紀錄": self._render_audit(case),
+            "Report": self._render_reports(case),
+            "Review": self._render_review(case),
+            "Audit": self._render_audit(case),
         }
         for name, content in renderers.items():
             self.tab_views[name].setHtml(content)
@@ -742,15 +934,19 @@ class MainWindow(QMainWindow):
     def _html(self, title: str, body: str) -> str:
         return (
             "<style>"
-            "body{font-family:'Segoe UI','Microsoft JhengHei UI';color:#334155;"
-            "background:#fff;margin:8px;line-height:1.55}"
-            "h2{color:#111827;margin:0 0 4px}h3{color:#334155;margin:18px 0 8px}"
-            ".muted{color:#64748b}.card{border:1px solid #e2e8f0;border-radius:8px;"
-            "padding:13px;margin:8px 0;background:#fff}.grid{display:flex;gap:10px}"
+            "body{font-family:'Segoe UI','Microsoft JhengHei UI';color:#d9e4f0;"
+            "background:#0d1726;margin:8px;line-height:1.55}"
+            "h2{color:#f1f5f9;margin:0 0 4px}h3{color:#b8c8db;margin:18px 0 8px}"
+            ".muted{color:#8fa1b7}.card{border:1px solid #2b3b52;border-radius:8px;"
+            "padding:13px;margin:8px 0;background:#111b2b}.grid{display:flex;gap:10px;flex-wrap:wrap}"
+            ".mono{font-family:'Cascadia Mono','Consolas','Courier New';color:#b9f5ec}"
+            ".fact{border-left:3px solid #2dd4bf}.observation{border-left:3px solid #60a5fa}"
+            ".candidate{border-left:3px solid #a78bfa}.limitation{border-left:3px solid #f59e0b}"
+            ".format{border:1px solid #3b5872;border-radius:7px;padding:2px 6px;color:#bfe8ff}"
             "table{border-collapse:collapse;width:100%}th,td{padding:8px;"
-            "border-bottom:1px solid #e2e8f0;text-align:left}th{color:#64748b;background:#f8fafc}"
-            ".empty{padding:42px;text-align:center;color:#64748b;background:#f8fafc;"
-            "border:1px dashed #cbd5e1;border-radius:8px}</style>"
+            "border-bottom:1px solid #26364d;text-align:left}th{color:#93a8c0;background:#142033}"
+            ".empty{padding:42px;text-align:center;color:#8fa1b7;background:#101b2b;"
+            "border:1px dashed #334a65;border-radius:8px}</style>"
             f"<h2>{_safe(title)}</h2>{body}"
         )
 
@@ -773,20 +969,17 @@ class MainWindow(QMainWindow):
         )
         return self._html("案件摘要", body)
 
-    def _render_evidence(self, case) -> str:
+    def _render_clues(self, case) -> str:
         addresses = case.metadata.get("known_addresses", [])
         transactions = case.metadata.get("known_transactions", [])
         clues = "".join(
-            f"<tr><td>地址</td><td>{_safe(item)}</td><td>{_badge('confirmed')}</td></tr>"
+            f"<tr><td>地址</td><td class='mono' title='{_safe(item)}'>"
+            f"{_safe(abbreviate_chain_value(item))}</td><td>{_badge('confirmed')}</td></tr>"
             for item in addresses
         ) + "".join(
-            f"<tr><td>交易</td><td>{_safe(item)}</td><td>{_badge('confirmed')}</td></tr>"
+            f"<tr><td>交易</td><td class='mono' title='{_safe(item)}'>"
+            f"{_safe(abbreviate_chain_value(item, 10, 8))}</td><td>{_badge('confirmed')}</td></tr>"
             for item in transactions
-        )
-        evidence = "".join(
-            f"<tr><td>{_safe(item.original_filename)}</td><td>{_safe(item.file_type)}</td>"
-            f"<td>{item.size:,}</td><td>{_safe(item.sha256[:12])}…</td></tr>"
-            for item in case.evidence
         )
         body = "<h3>已確認線索</h3>"
         body += (
@@ -794,13 +987,23 @@ class MainWindow(QMainWindow):
             if clues
             else "<div class='empty'>尚未加入已確認線索。請先確認資料來源再加入案件。</div>"
         )
-        body += "<h3>證據檔案</h3>"
+        return self._html("線索", body)
+
+    def _render_evidence(self, case) -> str:
+        evidence = "".join(
+            f"<tr><td>{_safe(item.original_filename)}</td><td>{_safe(item.file_type)}</td>"
+            f"<td>{item.size:,}</td><td class='mono' title='{_safe(item.sha256)}'>"
+            f"{_safe(abbreviate_chain_value(item.sha256, 12, 8))}</td>"
+            f"<td>{_badge('verified' if self.case_service.verify_evidence(case.case_id, item.evidence_id) else 'mismatch')}</td></tr>"
+            for item in case.evidence
+        )
+        body = "<h3>DIGITAL EVIDENCE · SHA-256 INTEGRITY</h3>"
         body += (
-            f"<table><tr><th>檔案</th><th>類型</th><th>大小</th><th>SHA-256</th></tr>{evidence}</table>"
+            f"<table><tr><th>檔案</th><th>類型</th><th>大小</th><th>SHA-256</th><th>Integrity</th></tr>{evidence}</table>"
             if evidence
             else "<div class='empty'>尚未匯入證據。匯入後會保留原始檔並計算 SHA-256。</div>"
         )
-        return self._html("線索與證據", body)
+        return self._html("Evidence", body)
 
     def _render_goals(self, case) -> str:
         rows = "".join(
@@ -886,7 +1089,8 @@ class MainWindow(QMainWindow):
                 "<div class='empty'>尚無分析結果。完成 Execution 後會在此顯示重點。</div>",
             )
         asset_cards = "".join(
-            f"<div class='card'><b>{_safe(asset)}</b><br>獨立統計，不與其他資產加總</div>"
+            f"<div class='card'><b>{_safe(asset)}</b><br>"
+            "ASSET-SEGREGATED · 不與其他資產加總</div>"
             for asset in result.assets
         ) or "<div class='card'>尚無資產統計</div>"
         observations = "".join(
@@ -897,10 +1101,13 @@ class MainWindow(QMainWindow):
         ) or "<div class='empty'>尚無確定性觀察。</div>"
         body = (
             "<div class='grid'>"
-            f"<div class='card'><b>地址</b><br>{len(result.known_addresses)}</div>"
-            f"<div class='card'><b>交易</b><br>{len(result.known_transactions)}</div>"
+            f"<div class='card'><b>已分析地址</b><br>{len(result.known_addresses)}</div>"
+            f"<div class='card'><b>已分析交易</b><br>{len(result.known_transactions)}</div>"
             f"<div class='card'><b>完整度</b><br>{_badge(result.completeness)}</div>"
-            f"<div class='card'><b>未解問題</b><br>{len(result.unresolved_questions)}</div>"
+            f"<div class='card'><b>Counterparties</b><br>{sum(len(item.get('counterparties', [])) for item in result.address_results)}</div>"
+            f"<div class='card'><b>Operation Stages</b><br>{sum(len(item.get('operation_stages', [])) for item in result.address_results)}</div>"
+            f"<div class='card'><b>Evidence</b><br>{len(result.evidence_index)}</div>"
+            f"<div class='card limitation'><b>Partial Coverage</b><br>{len(result.unresolved_questions)}</div>"
             "</div><h3>資產摘要</h3><div class='grid'>"
             f"{asset_cards}</div><h3>重要觀察</h3>{observations}"
         )
@@ -913,18 +1120,21 @@ class MainWindow(QMainWindow):
                 "<div class='empty'>尚無 Investigation 結果。</div>",
             )
         facts = "".join(
-            f"<div class='card'>{_badge('confirmed')} <b>{_safe(item.statement)}</b>"
-            f"<p class='muted'>Evidence：{_safe(', '.join(item.evidence_ids) or '未提供')}</p></div>"
+            f"<div class='card fact'>{_badge('confirmed')} <b>CONFIRMED FACT · 已確認事實</b>"
+            f"<p>{_safe(item.statement)}</p><p class='muted'>VERIFIED · Evidence："
+            f"{_safe(', '.join(item.evidence_ids) or '未提供')}</p></div>"
             for item in result.confirmed_facts
         )
         observations = "".join(
-            f"<div class='card'>{_badge('completed')} <b>{_safe(item.factual_statement)}</b>"
-            f"<p class='muted'>Confidence：{_safe(item.confidence)}　"
+            f"<div class='card observation'>{_badge('observation')} <b>OBSERVATION · 規則式觀察</b>"
+            f"<p>{_safe(item.factual_statement)}</p>"
+            f"<p class='muted'>Deterministic rule · Confidence：{_safe(item.confidence)}　"
             f"Limitation：{_safe('; '.join(item.limitations) or '無')}</p></div>"
             for item in result.deterministic_observations
         )
         candidates = "".join(
-            f"<div class='card'>{_badge('candidate')} <b>{_safe(item.title)}</b>"
+            f"<div class='card candidate'>{_badge('candidate')} <b>CANDIDATE · 候選解釋</b>"
+            f"<p><b>{_safe(item.title)}</b></p>"
             f"<p>{_safe(item.statement)}</p><p class='muted'>Confidence：{_safe(item.confidence)}　"
             f"Limitation：{_safe('; '.join(item.limitations))}</p></div>"
             for item in result.candidate_interpretations
@@ -974,7 +1184,8 @@ class MainWindow(QMainWindow):
             for item in graph_entries
         )
         body = (
-            f"<table><tr><th>Graph artifact</th><th>來源</th><th>完整性</th></tr>{rows}</table>"
+            "<div class='card'>GRAPH ARTIFACT · LOCAL WORKSPACE ONLY · NO EXTERNAL URL</div>"
+            f"<table><tr><th>Graph Artifact</th><th>來源</th><th>Integrity</th></tr>{rows}</table>"
             if rows
             else "<div class='empty'>尚無 Graph。UI 不會重新產生 Graph；完成對應步驟後載入既有 flow.html。</div>"
         )
@@ -1000,7 +1211,12 @@ class MainWindow(QMainWindow):
             f"<b>Report v{_safe(item.get('report_version'))}</b>　"
             f"{_badge(item.get('status', 'unavailable'))}"
             f"<p class='muted'>產生時間：{_safe(item.get('created_at'))}<br>"
-            f"格式：{_safe(', '.join(item.get('files', {}).keys()))}</p></div>"
+            "格式："
+            + " ".join(
+                f"<span class='format'>{_safe(name.upper())}</span>"
+                for name in item.get("files", {}).keys()
+            )
+            + "</p></div>"
             for item in reversed(reports)
         )
         return self._html(
@@ -1016,12 +1232,26 @@ class MainWindow(QMainWindow):
             f"<b>{_safe(item.timestamp.astimezone().strftime('%Y-%m-%d %H:%M:%S'))}</b>　"
             f"{_safe(human_label(item.action))}"
             f"<p>{_safe(item.description)}</p>"
-            f"<p class='muted'>{_safe(item.object_type)} · {_safe(item.object_id)}</p></div>"
+            f"<p class='muted'>{_safe(item.object_type)} · {_safe(item.object_id)} · "
+            f"Actor {_safe(item.actor)}</p>"
+            f"<p class='mono'>PREV {_safe(abbreviate_chain_value(item.previous_hash or 'GENESIS', 8, 6))} "
+            f"→ HASH {_safe(abbreviate_chain_value(item.entry_hash, 8, 6))}</p></div>"
             for item in reversed(entries)
         )
         integrity = "confirmed" if self.case_service.audit_valid(case.case_id) else "failed"
-        body = f"<p>Hash-chain integrity：{_badge(integrity)}</p>{timeline}"
+        label = "CHAIN VERIFIED" if integrity == "confirmed" else "INTEGRITY WARNING"
+        body = f"<p>Hash-chain integrity：{_badge(integrity)} {label}</p>{timeline}"
         return self._html("稽核時間軸", body)
+
+    def _render_review(self, case) -> str:
+        status = case.metadata.get("review_status", "not_reviewed")
+        return self._html(
+            "Review",
+            "<div class='card'>"
+            f"<b>人工覆核</b>　{_badge('confirmed' if status == 'reviewed' else 'pending')}"
+            f"<p class='muted'>狀態：{_safe(human_label(status))}。"
+            "UI 不會略過 Plan confirmation 或自動確認調查結論。</p></div>",
+        )
 
     def archive_selected_case(self) -> None:
         case_id = self.selected_case_id()
@@ -1134,22 +1364,91 @@ class MainWindow(QMainWindow):
                 case.case_id, str(plan["plan_id"])
             )
             self.state.running_execution_id = execution.execution_id
-            self.global_execution_title.setText(f"執行中：{case.title}")
-            self.global_execution_detail.setText("正在處理調查計畫")
+            self._active_execution_case_id = case.case_id
+            self._execution_started_at = time.monotonic()
+            self._active_execution_artifacts.clear()
+            self.execution_clock.start()
+            self.global_execution_badge.set_status("running", "RUNNING")
+            self.global_execution_title.setText(f"案件：{case.title}")
+            self.global_execution_detail.setText("目前階段：準備執行調查計畫")
+            self.global_execution_meta.setText("紀錄：0 records  ·  耗時：00:00:00  ·  Artifacts：0")
+            self.global_execution_progress.setRange(0, 0)
+            self.global_execution_progress.show()
+            self.global_execution_actions.show()
             self.execution_progress.show()
             self.run_background(
                 "執行調查計畫",
-                lambda: self.execution_service.run_execution(execution.execution_id),
+                lambda: self.execution_service.run_execution(
+                    execution.execution_id,
+                    event_callback=self.execution_event_received.emit,
+                ),
                 lambda _: self._execution_complete(case.case_id),
             )
         except Exception as exc:
             self.show_safe_error("開始 Execution 失敗", exc)
 
     def _execution_complete(self, case_id: str) -> None:
+        self.execution_clock.stop()
+        self._execution_started_at = None
+        self._active_execution_case_id = None
+        self.global_execution_badge.set_status("disabled", "IDLE")
         self.global_execution_title.setText("目前沒有執行中的工作")
-        self.global_execution_detail.setText("最近一次工作已結束")
+        self.global_execution_detail.setText("建立並確認調查計畫後即可開始執行。")
+        self.global_execution_meta.clear()
+        self.global_execution_progress.hide()
+        self.global_execution_actions.hide()
         self.execution_progress.hide()
         self.open_case(case_id)
+
+    def _apply_execution_event(self, event) -> None:
+        stage = human_label(getattr(event, "stage", "") or "執行")
+        message = human_label(getattr(event, "message", "") or stage)
+        provider = getattr(event, "provider", None)
+        capability = getattr(event, "capability", None)
+        current = max(0, int(getattr(event, "current_records", 0) or 0))
+        total = getattr(event, "total_records_if_known", None)
+        artifacts = getattr(event, "artifacts", []) or []
+        self._active_execution_artifacts.update(Path(item).name for item in artifacts)
+        status = str(getattr(event, "status", "running"))
+        badge_status = status if status in StatusBadge.SAFE_STATUSES else "running"
+        self.global_execution_badge.set_status(badge_status, badge_status.upper())
+        source = provider or "Local Pipeline"
+        if capability:
+            source = f"{source} · {human_label(capability)}"
+        self.global_execution_detail.setText(
+            f"目前階段：{stage}\n目前步驟：{message}\n來源：{source}"
+        )
+        if isinstance(total, int) and total > 0:
+            self.global_execution_progress.setRange(0, total)
+            self.global_execution_progress.setValue(min(current, total))
+        else:
+            self.global_execution_progress.setRange(0, 0)
+        self._update_execution_elapsed(current)
+
+    def _update_execution_elapsed(self, current_records: int | None = None) -> None:
+        if self._execution_started_at is None:
+            return
+        elapsed = max(0, int(time.monotonic() - self._execution_started_at))
+        hours, remainder = divmod(elapsed, 3600)
+        minutes, seconds = divmod(remainder, 60)
+        if current_records is None:
+            current_records = 0
+            text = self.global_execution_meta.text()
+            if text.startswith("紀錄："):
+                try:
+                    current_records = int(text.split("：", 1)[1].split()[0])
+                except (ValueError, IndexError):
+                    pass
+        self.global_execution_meta.setText(
+            f"紀錄：{current_records} records  ·  "
+            f"耗時：{hours:02d}:{minutes:02d}:{seconds:02d}  ·  "
+            f"Artifacts：{len(self._active_execution_artifacts)}"
+        )
+
+    def _open_active_execution(self) -> None:
+        if self._active_execution_case_id:
+            self.open_case(self._active_execution_case_id)
+            self.workspace_tabs.setCurrentIndex(WORKSPACE_TABS.index("Execution"))
 
     def cancel_execution(self) -> None:
         if self.execution_service is None or not self.state.running_execution_id:
@@ -1192,11 +1491,11 @@ class MainWindow(QMainWindow):
         elif not case.plans or not case.plans[-1].get("confirmed_at"):
             target = WORKSPACE_TABS.index("調查計畫")
         elif not case.executions:
-            target = WORKSPACE_TABS.index("執行進度")
+            target = WORKSPACE_TABS.index("Execution")
         elif case.last_execution_status in {"completed", "partial"}:
-            target = WORKSPACE_TABS.index("結果總覽")
+            target = WORKSPACE_TABS.index("Result")
         else:
-            target = WORKSPACE_TABS.index("執行進度")
+            target = WORKSPACE_TABS.index("Execution")
         self.workspace_tabs.setCurrentIndex(target)
 
     def save_current_case(self) -> None:

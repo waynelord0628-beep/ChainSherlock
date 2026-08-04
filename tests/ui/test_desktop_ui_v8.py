@@ -169,7 +169,7 @@ def test_statuses_render_as_explicit_text(window, status) -> None:
         "cancelled": "已取消",
         "skipped": "已略過",
     }[status]
-    assert expected in window.tab_views["執行進度"].toPlainText()
+    assert expected in window.tab_views["Execution"].toPlainText()
 
 
 @pytest.mark.parametrize(
@@ -360,7 +360,7 @@ def test_result_sections_visible(window) -> None:
 def test_report_versions_empty(window) -> None:
     case = window.case_service.create_case("Report")
     window.open_case(case.case_id)
-    assert "尚無報告版本" in window.tab_views["報告"].toPlainText()
+    assert "尚無報告版本" in window.tab_views["Report"].toPlainText()
 
 
 def test_case_delete_is_recoverable(tmp_path) -> None:

@@ -1,5 +1,24 @@
 # Architecture Decisions
 
+## ADR-081: Desktop uses a forensic theme without changing service boundaries
+
+The Crypto Investigation Command Center is a presentation-only redesign. UI components
+consume CaseRecord, public result summaries, execution events and registered artifacts.
+They do not access Provider, Analyzer, Graph, AI or Report Exporter internals.
+
+## ADR-082: Investigation decoration is static and explicitly non-evidentiary
+
+The Hero node-flow is drawn locally with QPainter and contains no random address, hash,
+amount, block height or network asset. It is static, low contrast and cannot be confused
+with case evidence. No external image, URL, CDN, animation or third-party UI package is
+used.
+
+## ADR-083: Readiness is configuration presence, not network health
+
+System Readiness never contacts a Provider. Configured credentials are represented only
+as a boolean textual state; values and credential URLs are never rendered. Public-service
+badges explicitly do not claim that a live connection was tested.
+
 ## ADR-078: Provider execution is selected only without structured evidence
 
 The hybrid analysis handler always prefers immutable CSV/XLS/XLSX evidence. It invokes

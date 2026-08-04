@@ -1,5 +1,27 @@
 # ChainSherlock Desktop UI Guide
 
+## Crypto Investigation Command Center
+
+V8 pre-packaging redesign 使用深石墨藍黑介面、低飽和青綠主操作與冷藍／紫／
+琥珀狀態色。所有狀態仍同時顯示文字，不以顏色取代語意。首頁 Hero 的節點連線
+是明確的靜態裝飾，不代表任何案件地址、交易或金額。
+
+首頁包含：
+
+- `CRYPTO INVESTIGATION COMMAND CENTER` 與 local-first／evidence-based 標示。
+- Operational Cards：進行中案件、執行中的工作、部分完成、等待審核。
+- Investigation Queue：只呈現已保存案件摘要；無案件時提供建立／開啟操作。
+- System Readiness：只檢查安全的本機設定存在性，不主動呼叫 Provider。
+- LIVE EXECUTION：未知總量採 indeterminate progress，不產生推測百分比。
+
+案件工作區依序為：案情、線索、Evidence、調查目標、調查計畫、Execution、
+Result、Investigation、Counterparty、Graph、Narrative、Report、Review、Audit。
+地址、Tx Hash、SHA-256 預設縮寫並使用 monospace；完整值保留於可選取／複製
+的安全呈現，不在裝飾區建立假資料。
+
+Graph 仍只允許案件 workspace 內既有 `flow.html`，不載入外部 URL。PDF CJK
+Font readiness 只顯示字型名稱與來源類別，不顯示本機絕對路徑。
+
 ## Milestone 6 workflow
 
 首頁的「建立新案件」會開啟五步驟 Wizard：
