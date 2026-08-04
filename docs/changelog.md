@@ -189,6 +189,14 @@
 - Hardened report text against event-handler, script, formula and traversal payloads.
 # V7
 
+## V8 Desktop manual validation follow-up
+
+- Localized workspace, plan, report, and review status labels.
+- Replaced rotated workspace tabs with readable horizontal, scrollable tabs.
+- Fixed deterministic fallback narrative contrast in the dark theme.
+- Limited report status badges to the four user-facing report formats.
+- Added regression coverage for the corrected desktop presentation states.
+
 - 新增 grounded AI Investigation Narrative Engine。
 - 新增 deterministic fallback、privacy/redaction、cache 與 usage contract。
 - 報告新增經驗證且標記為「AI 輔助敘事」的可選章節。

@@ -245,8 +245,9 @@ def test_ai_disabled_card(window) -> None:
     assert "不顯示" in window.credential_status.text()
 
 
-def test_workspace_uses_left_stage_navigation(window) -> None:
-    assert window.workspace_tabs.tabPosition() == QTabWidget.West
+def test_workspace_uses_readable_stage_navigation(window) -> None:
+    assert window.workspace_tabs.tabPosition() == QTabWidget.North
+    assert window.workspace_tabs.tabBar().usesScrollButtons()
 
 
 def test_no_raw_json_on_empty_primary_pages(window) -> None:

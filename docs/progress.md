@@ -232,6 +232,19 @@ V3 — Analysis Engine.
 - All automated tests pass.
 - CLI help command runs successfully.
 
+## V8 Desktop manual validation follow-up
+
+- Completed an isolated TRON case workflow through case creation, deterministic
+  planning, plan approval, execution cancellation, results, investigation,
+  graph empty state, deterministic narrative, four-format report generation,
+  review, and audit verification.
+- Corrected raw status/enumeration labels, workspace badge sizing, horizontal
+  stage navigation, fallback narrative contrast, report-format badges, and
+  review status wording.
+- The provider step was cancelled cooperatively because TronGrid was not
+  configured; no paid AI request was made.
+- Actual Windows 100%/125%/150% system-DPI switching remains unverified.
+
 ## Scope guard
 
 V2 contains no Provider, Graph, Timeline, Counterparty analysis, Report, AI, Risk, Cross-chain, Bridge, or on-chain API implementation.

@@ -7,7 +7,7 @@ from types import SimpleNamespace
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
 import pytest
-from PySide6.QtWidgets import QPushButton
+from PySide6.QtWidgets import QPushButton, QSizePolicy, QTabWidget
 
 from crypto_investigator.ui.main_window import MainWindow, WORKSPACE_TABS
 from crypto_investigator.ui.theme import CRYPTO_INVESTIGATION_THEME
@@ -252,6 +252,34 @@ def test_workspace_uses_fourteen_investigation_stages() -> None:
     )
 
 
+def test_workspace_stage_labels_are_horizontal_and_scrollable(window) -> None:
+    assert window.workspace_tabs.tabPosition() == QTabWidget.North
+    assert window.workspace_tabs.tabBar().usesScrollButtons()
+
+
+def test_workspace_badge_does_not_expand_vertically(window) -> None:
+    assert window.workspace_badge.sizePolicy().verticalPolicy() == QSizePolicy.Fixed
+    case = window.case_service.create_case("Badge semantics")
+    window.open_case(case.case_id)
+    assert window.workspace_badge.text() == "進行中"
+    assert window.workspace_badge.height() < window.workspace_header.parentWidget().height()
+
+
+@pytest.mark.parametrize(
+    "status,expected",
+    [
+        ("proposed", "待確認"),
+        ("approved", "已核准"),
+        ("confirmed", "已確認"),
+        ("unknown", "未知"),
+    ],
+)
+def test_plan_and_workspace_statuses_are_human_readable(status, expected) -> None:
+    from crypto_investigator.ui.main_window import _STATUS_ZH
+
+    assert _STATUS_ZH[status] == expected
+
+
 def test_evidence_integrity_and_monospace(window, tmp_path) -> None:
     case = window.case_service.create_case("Evidence UI")
     source = tmp_path / "fixture.csv"
@@ -272,7 +300,39 @@ def test_graph_keeps_local_workspace_boundary(window) -> None:
 
 
 def test_report_format_badges(window) -> None:
-    assert "class='format'" in window._html("Report", "<span class='format'>PDF</span>")
+    case = window.case_service.create_case("Report badges")
+    window.case_service.reports = lambda case_id: [
+        {
+            "report_version": 1,
+            "status": "complete",
+            "created_at": "2026-01-01T00:00:00+00:00",
+            "files": {
+                "case_report.md": "reports/case_report.md",
+                "case_report.html": "reports/case_report.html",
+                "case_report.docx": "reports/case_report.docx",
+                "case_report.pdf": "reports/case_report.pdf",
+                "case_report_data.json": "reports/case_report_data.json",
+            },
+        }
+    ]
+    rendered = window._render_reports(case)
+    for format_name in ("MD", "HTML", "DOCX", "PDF"):
+        assert f"class='format'>{format_name}</span>" in rendered
+    assert "CASE_REPORT_DATA.JSON" not in rendered
+    assert "完整" in rendered
+
+
+def test_narrative_fallback_uses_dark_theme_semantic_card(window) -> None:
+    rendered = window._render_narrative(None)
+    assert "card limitation" in rendered
+    assert "#fff7ed" not in rendered.lower()
+
+
+def test_review_status_is_human_readable(window) -> None:
+    case = window.case_service.create_case("Review semantics")
+    rendered = window._render_review(case)
+    assert "尚未覆核" in rendered
+    assert "Not Reviewed" not in rendered
 
 
 def test_audit_timeline_shows_hash_chain_without_full_hash(window) -> None:

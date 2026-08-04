@@ -135,3 +135,17 @@ Windows、Python 3.12.13、PySide6 6.11.1 的 offscreen 驗收結果：
 - report preview：1.137 ms
 - 10,000 counterparty sort：8.548 ms
 - Python traced peak memory：3.639 MB
+## V8 Desktop manual validation notes
+
+- Workspace stages use horizontal, scrollable tabs so labels remain readable.
+- Status badges always include localized text and use compact fixed-height
+  presentation.
+- Deterministic fallback is presented as a limitation, not as an AI success.
+- Report format badges show Markdown, HTML, DOCX, and PDF only; supplementary
+  JSON artifacts remain available without cluttering the status row.
+- A provider-only TRON fixture was manually exercised. With no configured
+  TronGrid credential, cancellation remained cooperative and the case retained
+  an explicit partial/cancelled state.
+- Native Windows DPI switching at 100%, 125%, and 150% has not yet been
+  performed; automated font-scaling coverage is not a substitute for that
+  manual check.

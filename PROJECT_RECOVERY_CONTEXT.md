@@ -606,3 +606,17 @@ Windows packaging。不得直接開始 V9。
   全部人工逐頁操作完成。
 - 未修改 M7／M8 Execution、Provider、Analyzer 或 Graph 邏輯；未開始 V9、
   Windows packaging。
+
+## 18. V8 Desktop manual validation follow-up
+
+- An isolated TRON fixture case was manually operated through Wizard, Plan,
+  Execution, Result, Investigation, Graph, deterministic Narrative, Report,
+  Review, and Audit pages.
+- Execution cancellation used the existing cooperative cancellation path.
+- Generated report artifacts included Markdown, HTML, DOCX, and PDF.
+- Audit hash-chain verification was visibly successful.
+- UI regressions corrected: raw status enums, oversized workspace badge,
+  rotated stage tabs, fallback narrative contrast, report artifact clutter, and
+  raw review status.
+- No real Provider credential and no OpenAI API were used.
+- Actual Windows DPI switching remains a documented limitation.

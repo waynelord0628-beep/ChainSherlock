@@ -82,6 +82,7 @@ _STATUS_ZH = {
     "pending": "等待中",
     "running": "執行中",
     "completed": "已完成",
+    "complete": "完整",
     "warning": "需要注意",
     "partial": "部分完成",
     "failed": "失敗",
@@ -90,6 +91,19 @@ _STATUS_ZH = {
     "unavailable": "尚無資料",
     "open": "進行中",
     "archived": "已封存",
+    "approved": "已核准",
+    "proposed": "待確認",
+    "confirmed": "已確認",
+    "candidate": "候選",
+    "ready": "就緒",
+    "unknown": "未知",
+    "supported": "已支援",
+    "available": "可用",
+    "configured": "已設定",
+    "not_configured": "未設定",
+    "disabled": "已停用",
+    "not_reviewed": "尚未覆核",
+    "reviewed": "已覆核",
 }
 
 
@@ -525,15 +539,19 @@ class MainWindow(QMainWindow):
         header_text.addWidget(self.workflow_stage)
         self.workspace_badge = StatusBadge()
         self.workspace_badge.set_status("unavailable")
+        self.workspace_badge.setAlignment(Qt.AlignCenter)
+        self.workspace_badge.setSizePolicy(QSizePolicy.Maximum, QSizePolicy.Fixed)
         next_button = QPushButton("前往下一步")
         next_button.clicked.connect(self.next_workflow_action)
         header_layout.addLayout(header_text, 1)
-        header_layout.addWidget(self.workspace_badge)
+        header_layout.addWidget(self.workspace_badge, alignment=Qt.AlignVCenter)
         header_layout.addWidget(next_button)
         layout.addWidget(header)
 
         self.workspace_tabs = QTabWidget()
-        self.workspace_tabs.setTabPosition(QTabWidget.West)
+        self.workspace_tabs.setTabPosition(QTabWidget.North)
+        self.workspace_tabs.tabBar().setUsesScrollButtons(True)
+        self.workspace_tabs.tabBar().setElideMode(Qt.ElideRight)
         self.workspace_tabs.currentChanged.connect(self._workflow_changed)
         self.tab_views: dict[str, QTextBrowser] = {}
         for tab_name in WORKSPACE_TABS:
@@ -867,7 +885,10 @@ class MainWindow(QMainWindow):
             f"UPDATED {case.updated_at.astimezone().strftime('%Y-%m-%d %H:%M')}"
         )
         status = case.last_execution_status or case.status.value
-        self.workspace_badge.set_status(status)
+        self.workspace_badge.set_status(
+            status,
+            _STATUS_ZH.get(status, human_label(status)),
+        )
         self.workflow_stage.setText(self._next_action(case))
         self._load_case_views(case)
         self.pages.setCurrentWidget(self.workspace_page)
@@ -1204,7 +1225,7 @@ class MainWindow(QMainWindow):
             "<div class='card'><b>AI</b><br>預設停用</div>"
             "<div class='card'><b>Validation</b><br>等待 narrative artifact</div>"
             "<div class='card'><b>人工覆核</b><br>尚未覆核</div></div>"
-            "<div class='card' style='background:#fff7ed'>"
+            "<div class='card limitation'>"
             "<b>目前使用 deterministic fallback。</b>"
             "<p>內容只整理已保存的事實與觀察，不代表 AI 模型已成功執行。</p></div>"
         )
@@ -1212,22 +1233,27 @@ class MainWindow(QMainWindow):
 
     def _render_reports(self, case) -> str:
         reports = self.case_service.reports(case.case_id)
-        cards = "".join(
-            "<div class='card'>"
-            f"<b>Report v{_safe(item.get('report_version'))}</b>　"
-            f"{_badge(item.get('status', 'unavailable'))}"
-            f"<p class='muted'>產生時間：{_safe(item.get('created_at'))}<br>"
-            "格式："
-            + " ".join(
+        cards = []
+        for item in reversed(reports):
+            formats = []
+            for name in item.get("files", {}).keys():
+                suffix = Path(name).suffix.lower().lstrip(".")
+                if suffix in {"md", "html", "docx", "pdf"} and suffix not in formats:
+                    formats.append(suffix)
+            format_badges = " ".join(
                 f"<span class='format'>{_safe(name.upper())}</span>"
-                for name in item.get("files", {}).keys()
+                for name in formats
+            ) or "<span class='muted'>尚無主要報告格式</span>"
+            cards.append(
+                "<div class='card'>"
+                f"<b>Report v{_safe(item.get('report_version'))}</b>　"
+                f"{_badge(item.get('status', 'unavailable'))}"
+                f"<p class='muted'>產生時間：{_safe(item.get('created_at'))}<br>"
+                f"格式：{format_badges}</p></div>"
             )
-            + "</p></div>"
-            for item in reversed(reports)
-        )
         return self._html(
             "案件報告",
-            cards
+            "".join(cards)
             or "<div class='empty'>尚無報告版本。覆核結果後再產生第一版報告。</div>",
         )
 
@@ -1255,7 +1281,7 @@ class MainWindow(QMainWindow):
             "Review",
             "<div class='card'>"
             f"<b>人工覆核</b>　{_badge('confirmed' if status == 'reviewed' else 'pending')}"
-            f"<p class='muted'>狀態：{_safe(human_label(status))}。"
+            f"<p class='muted'>狀態：{_safe(_STATUS_ZH.get(status, human_label(status)))}。"
             "UI 不會略過 Plan confirmation 或自動確認調查結論。</p></div>",
         )
 
