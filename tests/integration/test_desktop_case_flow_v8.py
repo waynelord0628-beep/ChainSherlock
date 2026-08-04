@@ -158,4 +158,9 @@ def test_tron_case_mock_execution_and_case_output(qtbot, tmp_path: Path) -> None
     window.open_case(case.case_id)
     assert "mock_flow_completed" in window.tab_views["Investigation"].toPlainText()
     assert "flow.html" in window.tab_views["Graph"].toPlainText()
+    plan_text = window.tab_views["調查計畫"].toPlainText()
+    assert "整理調查觀察" in plan_text
+    assert "run_investigation_features" not in plan_text
+    assert "已確認事實" in window.tab_views["Investigation"].toPlainText()
+    assert "候選解釋" in window.tab_views["Investigation"].toPlainText()
     assert window.case_service.audit_valid(case.case_id)

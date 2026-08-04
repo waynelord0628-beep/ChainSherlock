@@ -1,5 +1,13 @@
 # Planned Work
 
+## After V8 Milestone 6
+
+- Await explicit approval before any Windows packaging or V9 work.
+- Provider credential connection tests remain mocked in automated UI tests.
+- Graph node-click synchronization depends on future bridge support from the existing
+  HTML artifact; M6 provides the safe selection boundary only.
+- Report approval signatures and external reviewer identities remain deferred.
+
 ## After V8 Milestone 5
 
 - Await explicit approval before Milestone 6.

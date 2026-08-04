@@ -1,5 +1,38 @@
 # Architecture Decisions
 
+## ADR-068: Desktop navigation follows the investigation workflow
+
+The primary navigation presents the next investigator action instead of internal
+modules. A case moves through clues, goals, plan confirmation, execution, result
+review and report review without requiring knowledge of internal classes.
+
+## ADR-069: Case creation uses a wizard
+
+The wizard separates case metadata, narrative context, evidence, clue confirmation
+and goals. Addresses and transaction hashes are persisted only when the user checks
+the explicit confirmation control.
+
+## ADR-070: Primary UI uses human-readable labels
+
+Goal and step codes are mapped at the UI boundary. Engineering model names and raw
+JSON are excluded from primary views but remain available in persisted artifacts.
+
+## ADR-071: Execution is represented as a timeline
+
+Every step retains its explicit status, records, provider, warning and artifact
+context. Unknown totals remain indeterminate and never receive a fake percentage.
+
+## ADR-072: Result views preserve evidence categories
+
+Confirmed facts, deterministic observations and candidate interpretations use
+different labels and colors. Asset cards remain separated and do not sum currencies.
+
+## ADR-073: Visual status always includes text
+
+Color reinforces but never replaces status text. The palette uses green for
+completed/confirmed, blue for running, amber for warning/candidate, red for failure,
+and gray for cancelled/skipped/unavailable.
+
 ## ADR-063: PySide6 is the only desktop UI framework
 
 The workbench uses PySide6 Essentials and Addons. No Electron, web server, Tkinter,

@@ -1,5 +1,15 @@
 # Development Progress
 
+## V8 Milestone 6
+
+- 完成 workflow-oriented Home、最近案件、pending review 與 system status。
+- 完成五步驟 Case Wizard、線索明確確認、Evidence 與 Goals 選擇。
+- 完成左側 workflow navigation、next-action 提示與鍵盤操作。
+- 完成 human-readable Plan cards、Execution timeline 與 global execution panel。
+- 完成 Result Dashboard、Investigation、Counterparty、Graph、Narrative、Report、
+  Audit 與 Settings cards。
+- 完成低飽和青綠 Visual System、actionable empty states 與 99 項 M6 tests。
+
 ## V8 Milestone 5
 
 - 完成本機 PySide6 Desktop Case Workbench 與 12 個案件工作區頁籤。

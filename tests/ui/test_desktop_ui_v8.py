@@ -159,7 +159,17 @@ def test_statuses_render_as_explicit_text(window, status) -> None:
         case.model_copy(update={"last_execution_status": status})
     )
     window.open_case(record.case_id)
-    assert status in window.tab_views["執行進度"].toPlainText()
+    expected = {
+        "pending": "等待中",
+        "running": "執行中",
+        "completed": "已完成",
+        "warning": "需要注意",
+        "partial": "部分完成",
+        "failed": "失敗",
+        "cancelled": "已取消",
+        "skipped": "已略過",
+    }[status]
+    assert expected in window.tab_views["執行進度"].toPlainText()
 
 
 @pytest.mark.parametrize(
@@ -322,20 +332,20 @@ def test_visual_distinction_in_theme(label) -> None:
 
 def test_ai_disabled_default(window) -> None:
     assert not window.setting_ai.isChecked()
-    assert "未顯示" in window.credential_status.text()
+    assert "不顯示" in window.credential_status.text()
 
 
 def test_graph_empty_state(window) -> None:
     case = window.case_service.create_case("Graph")
     window.open_case(case.case_id)
-    assert "unavailable" in window.tab_views["Graph"].toPlainText()
+    assert "尚無 Graph" in window.tab_views["Graph"].toPlainText()
 
 
 def test_narrative_fallback_visible(window) -> None:
     case = window.case_service.create_case("Narrative")
     window.open_case(case.case_id)
     content = window.tab_views["Narrative"].toPlainText()
-    assert "false" in content.lower()
+    assert "預設停用" in content
     assert "fallback" in content
 
 
@@ -343,14 +353,14 @@ def test_result_sections_visible(window) -> None:
     case = window.case_service.create_case("Result")
     window.open_case(case.case_id)
     content = window.tab_views["Investigation"].toPlainText()
-    for key in ("confirmed_facts", "observations", "candidates", "unresolved"):
+    for key in ("已確認事實", "確定性觀察", "候選解釋"):
         assert key in content
 
 
 def test_report_versions_empty(window) -> None:
     case = window.case_service.create_case("Report")
     window.open_case(case.case_id)
-    assert window.tab_views["報告"].toPlainText().strip() == "[]"
+    assert "尚無報告版本" in window.tab_views["報告"].toPlainText()
 
 
 def test_case_delete_is_recoverable(tmp_path) -> None:

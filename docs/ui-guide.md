@@ -1,5 +1,26 @@
 # ChainSherlock Desktop UI Guide
 
+## Milestone 6 workflow
+
+首頁的「建立新案件」會開啟五步驟 Wizard：
+
+1. 基本資料：標題、案件編號、主要鏈、負責人與 tags。
+2. 案件說明：案件背景與待回答問題。
+3. 匯入證據：選擇原始檔，建立案件後計算 SHA-256。
+4. 確認線索：地址、Tx Hash、資產與金額；未勾選確認就不會保存。
+5. 調查目標：選擇本案要回答的問題。
+
+開啟案件後，左側 workflow 依序顯示案件總覽、線索與證據、調查目標、調查
+計畫、執行進度、結果總覽、Investigation、交易對手、Graph、Narrative、
+報告與稽核紀錄。頁首會顯示目前階段和下一個可執行動作。
+
+Plan 使用人類可讀 step cards；advanced limits 只顯示必要 bounded parameters。
+Execution 使用 timeline，總量未知時只顯示 records 與 stage。Result Dashboard
+將資產分卡呈現，Confirmed、Observation 與 Candidate 永遠分開。
+
+鍵盤操作：`Ctrl+N` 建立案件、`Ctrl+O` 開啟案件清單、`Ctrl+S` 儲存案件、
+`Ctrl+Enter` 前往下一個 workflow stage。`Esc` 不會取消正在執行的案件。
+
 ## 啟動
 
 ```powershell
@@ -57,3 +78,20 @@ Windows、Python 3.12.13、PySide6 6.11.1 的 offscreen 驗收結果：
 - Python traced peak memory：3.222 MB
 
 數值為本機單次基準，僅供 regression 比較，不代表不同硬體的效能保證。
+
+## M6 Benchmark
+
+- cold startup：8.823 ms
+- main window：69.236 ms
+- home render：105.044 ms
+- wizard open：4.805 ms
+- 100-case list：1,000.497 ms
+- case open：28.398 ms
+- plan render：0.054 ms
+- execution timeline：0.084 ms
+- result dashboard：0.055 ms
+- investigation view：0.034 ms
+- graph page：0.022 ms
+- report preview：1.137 ms
+- 10,000 counterparty sort：8.548 ms
+- Python traced peak memory：3.639 MB

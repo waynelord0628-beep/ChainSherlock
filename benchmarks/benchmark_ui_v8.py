@@ -13,6 +13,7 @@ os.environ.setdefault("QTWEBENGINE_CHROMIUM_FLAGS", "--disable-gpu --no-sandbox"
 from crypto_investigator.ui.app import create_application
 from crypto_investigator.ui.main_window import MainWindow
 from crypto_investigator.ui.models import RecordsTableModel
+from crypto_investigator.ui.case_wizard import CaseWizard
 
 
 def measured(operation):
@@ -27,11 +28,21 @@ def run() -> dict:
         root = Path(temporary)
         _, startup_ms = measured(lambda: create_application([]))
         window, render_ms = measured(lambda: MainWindow(root / "cases", root / "ui.json"))
+        wizard, wizard_ms = measured(CaseWizard)
         for index in range(100):
             window.case_service.create_case(f"Benchmark case {index:03d}")
         _, list_ms = measured(window.refresh_cases)
         case_id = window._case_ids[0]
         _, open_ms = measured(lambda: window.open_case(case_id))
+        case = window.repository.load(case_id)
+        result = window.case_service.result(case_id)
+        _, home_ms = measured(window.refresh_cases)
+        _, plan_ms = measured(lambda: window._render_plan(case))
+        _, execution_ms = measured(lambda: window._render_execution(case))
+        _, result_ms = measured(lambda: window._render_result(result))
+        _, investigation_ms = measured(lambda: window._render_investigation(result))
+        _, graph_ms = measured(lambda: window._render_graph(result))
+        _, report_ms = measured(lambda: window._render_reports(case))
         evidence_rows = [
             [f"evidence_{index}", f"file_{index}.csv", "a" * 64, index]
             for index in range(1_000)
@@ -49,12 +60,21 @@ def run() -> dict:
         _, sort_ms = measured(lambda: model.sort(1))
         current, peak = tracemalloc.get_traced_memory()
         window.close()
+        wizard.close()
     tracemalloc.stop()
     return {
         "cold_startup_ms": startup_ms,
         "main_window_render_ms": render_ms,
+        "home_render_ms": home_ms,
+        "wizard_open_ms": wizard_ms,
         "case_list_100_rows_ms": list_ms,
         "case_open_ms": open_ms,
+        "plan_render_ms": plan_ms,
+        "execution_timeline_render_ms": execution_ms,
+        "result_dashboard_render_ms": result_ms,
+        "investigation_tree_render_ms": investigation_ms,
+        "graph_page_render_ms": graph_ms,
+        "report_preview_render_ms": report_ms,
         "evidence_model_1000_rows_ms": evidence_ms,
         "counterparty_model_10000_rows_ms": counterparties_ms,
         "counterparty_sort_10000_rows_ms": sort_ms,

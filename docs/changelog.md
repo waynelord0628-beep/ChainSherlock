@@ -1,5 +1,14 @@
 # Changelog
 
+## V8 Milestone 6
+
+- Redesigned the desktop UI around the investigation workflow.
+- Added a five-step case wizard and explicit clue confirmation.
+- Replaced primary raw JSON views with human-readable cards, dashboards and timelines.
+- Added left-stage navigation, next-action guidance and global execution status.
+- Added a consistent visual system, actionable empty states and keyboard shortcuts.
+- Added 99 M6 workflow tests and expanded the UI benchmark.
+
 ## V8 Milestone 5
 
 - Added the PySide6 desktop case workbench and no-argument launcher.

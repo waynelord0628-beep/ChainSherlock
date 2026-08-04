@@ -1,5 +1,19 @@
 # ChainSherlock
 
+## V8 Desktop Workflow Redesign（Milestone 6）
+
+Desktop UI 已改為案件調查流程導向：
+
+```text
+建立案件 → 確認線索／證據 → 設定 Goals → 產生並確認 Plan
+→ 執行 → 覆核結果 → Investigation → Graph → Report → 稽核
+```
+
+首頁提供主要操作、案件摘要、最近案件與系統狀態。案件建立採五步驟 Wizard；
+案件工作區使用左側階段導航，Plan、Execution、Result 與 Investigation 皆以
+人類可讀卡片、狀態 badge、timeline 與 dashboard 呈現，不再把原始 JSON
+作為主要 UI。
+
 ## V8 Desktop UI（Milestone 5）
 
 ChainSherlock 現在提供本機 PySide6 案件工作台。可由下列任一方式啟動：

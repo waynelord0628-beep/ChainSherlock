@@ -1,5 +1,26 @@
 # ChainSherlock Architecture
 
+## V8 Milestone 6: Workflow-oriented Desktop UI
+
+```text
+Home / Case Wizard
+        |
+        v
+Case Workflow Navigator
+  Clues -> Goals -> Plan -> Execution -> Results
+                                  |
+              Investigation <- public artifacts -> Graph / Narrative / Report
+```
+
+M6 僅重做 View、ViewModel 與 UI adapter。Case、Planner、Execution 與 Case
+Output 仍由既有 Application Services 負責。Primary UI 使用 human-label
+adapter 將內部 step／goal code 轉成人類可讀標題；原始 engineering names
+僅能出現在 technical details。
+
+未知總量的 Execution 顯示 stage、records 與 indeterminate progress，不顯示
+推測百分比。Graph 只載入案件 workspace 內既有 `flow.html`。Report preview
+讀取既有版本，不重新計算分析。
+
 ## V8 Milestone 5: Desktop UI Layer
 
 ```text
