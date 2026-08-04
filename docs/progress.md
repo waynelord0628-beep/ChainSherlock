@@ -1,5 +1,19 @@
 # Development Progress
 
+## V8 Milestone 1
+
+Status: completed.
+
+- Added public CaseRecord, EvidenceRecord, CaseStatus, and CaseAuditEntry persistence models.
+- Added safe opaque case IDs and workspace-confined path resolution.
+- Added atomic repository create, load, save, list, archive, recoverable delete, and duplicate services.
+- Added immutable evidence import with SHA-256, size, media type, relative path, and timezone-aware import time.
+- Added append-only, redacted, SHA-256 hash-chained audit records.
+- Added migration from legacy unversioned case JSON and preservation of unknown fields.
+- Added 36 focused regression tests.
+- Did not add Planner, Execution, Case Report, Narrative integration, PySide6, desktop UI,
+  packaging, V9, or V2-V7 refactoring.
+
 ## Current version
 
 V6.5 Investigation Feature Engine 已完成。

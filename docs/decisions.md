@@ -1,5 +1,32 @@
 # Architecture Decisions
 
+## ADR-046: Case workspaces use opaque identifiers
+
+Case directories use generated `case_<32 lowercase hex>` IDs. Human-readable titles are
+stored only as data and never become filesystem paths.
+
+## ADR-047: Case persistence is atomic and forward-compatible
+
+`case.json` is written through a same-directory temporary file and atomic replacement.
+Schema migrations operate on copies, reject unsupported future schemas, and preserve
+unknown fields through load/save cycles.
+
+## ADR-048: Evidence is copied, immutable, and relatively addressed
+
+Evidence is streamed into a case-owned file, hashed during import, marked read-only, and
+stored using only a safe relative path plus its original basename. Source absolute paths
+are not persisted.
+
+## ADR-049: Audit history is append-only and hash-chained
+
+Audit entries use append-only JSON Lines and link each entry to the previous SHA-256 hash.
+The audit API has no edit/delete operation and redacts sensitive metadata before writing.
+
+## ADR-050: Case deletion is recoverable
+
+The repository delete service moves a complete case workspace under repository `.trash`
+instead of permanently deleting it. UI confirmation remains deferred.
+
 ## ADR-037: Investigation consumes public results only
 
 V6.5 accepts public AnalysisResult, GraphResult completeness metadata, and Local Labels. It does not inspect raw Provider, Importer, Normalizer, or HTTP internals.

@@ -1,5 +1,15 @@
 # Planned Work
 
+## V8 Milestone 1 boundary
+
+- Case Foundation is complete.
+- Investigation Planner, Execution Service, Case Report, Narrative integration, PySide6,
+  Desktop UI, and Windows packaging remain deferred until explicit Milestone approval.
+- Duplicate currently creates a new case record without copying evidence; evidence package
+  duplication policy remains a later application-service decision.
+- Repository operations are designed for a single local process; cross-process locking is
+  not part of Milestone 1.
+
 ## After V6.5
 
 - V6.5 acceptance is complete. Do not start V7 without a new explicit prompt.

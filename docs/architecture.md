@@ -1,5 +1,36 @@
 # ChainSherlock Architecture
 
+## V8 Milestone 1: Case Foundation
+
+```text
+CaseRepository
+    |
+    +--> safe opaque case_id --> CaseWorkspace
+    |                              |
+    |                              +--> case.json (atomic replace)
+    |                              +--> evidence/ (immutable copies)
+    |                              +--> audit/audit.jsonl (append-only hash chain)
+    |
+    +--> schema migration --> CaseRecord (unknown fields preserved)
+```
+
+The Case Layer is a local persistence boundary. Workspace directory names use generated
+`case_<32 lowercase hex>` identifiers and never derive from a case title. All persisted
+evidence references are relative to the workspace. Repository JSON writes use a temporary
+file, flush and `fsync`, followed by atomic replacement.
+
+Evidence import streams the source into a workspace-owned copy while calculating SHA-256
+and byte size. Records also retain the media type, source basename, and timezone-aware
+import time; the source absolute path is never persisted. Imported copies are marked
+read-only and can be verified against their recorded digest.
+
+Audit entries are appended as JSON Lines and linked using SHA-256 hashes. The public API
+does not expose update or removal operations for audit entries. Sensitive metadata is
+redacted before persistence.
+
+This milestone does not depend on Planner, Execution, Report, Narrative, Provider,
+Analyzer, Graph, AI, PySide6, or desktop UI modules.
+
 ## V6.5 Investigation Feature Layer
 
 ```text

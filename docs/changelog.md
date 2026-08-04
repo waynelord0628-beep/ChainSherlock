@@ -1,5 +1,13 @@
 # Changelog
 
+## V8 Milestone 1
+
+- Added Case models, safe workspace IDs, and forward-compatible schema migration.
+- Added atomic filesystem Case Repository services.
+- Added immutable Evidence import and SHA-256 integrity verification.
+- Added append-only, redacted, hash-chained Audit Log.
+- Added 36 focused Case Foundation tests without UI dependencies.
+
 ## V6.5
 
 - Added deterministic Investigation Feature Engine and public result models.
