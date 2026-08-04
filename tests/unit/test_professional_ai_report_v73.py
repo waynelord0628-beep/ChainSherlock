@@ -16,6 +16,7 @@ from crypto_investigator.reports.ai_enrichment import (
     AIReportIntegrator,
     AI_SECTION_NAMES,
     REQUIRED_DETERMINISTIC_SECTIONS,
+    _formalize_ai_text,
 )
 from crypto_investigator.reports.models import (
     ReportConclusion,
@@ -420,4 +421,15 @@ def test_legacy_public_period_is_migrated_without_claiming_full_history():
     assert result.metadata.full_history_complete is False
     assert any(
         item.code == "legacy_scope_migrated" for item in result.warnings
+    )
+
+
+def test_ai_report_display_localizes_duration_timezone_and_citation():
+    text = _formalize_ai_text(
+        "停留 157 days 23 hours 43 minutes，開始於 "
+        "2025-05-31 00:47:06 (UTC+8)。 IF0"
+    )
+    assert text == (
+        "停留 157 天 23 小時 43 分鐘，開始於 "
+        "2025-05-31 00:47:06（UTC+8）。"
     )

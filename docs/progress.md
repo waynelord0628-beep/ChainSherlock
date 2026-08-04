@@ -335,3 +335,12 @@ V3 contains no Provider, blockchain API, graph rendering, report, Word/PDF, AI, 
 - 最終報告保留 fixture 既有 26 deterministic sections、13 tables、
   Provider/completeness/Evidence Index，新增 12 AI sections；四格式 complete。
 - Fixture 是舊版 partial artifact，實際基礎章節為 26，不宣稱不存在的 32 sections。
+
+## V8 正式報告封版修正
+
+- 完成 6,935 筆 TRON Full History scope-aware 報告；完整度為 complete。
+- 四格式共用正式呈現模型：UTC+8、中文欄名、數字格式、表格拆分及章節順序一致。
+- 建立 Address Registry，主文保留 Address ID，技術附錄保存完整可複製地址。
+- 低重要性及 Spam Candidate 採可追溯、可恢復的候選排除，不修改原始 Evidence。
+- 最終 PDF 共 27 頁，已逐頁渲染檢查封面、表頭、分頁、溢位、頁尾與 AI 章節。
+- 驗收：targeted 191 passed；完整 pytest 1,383 passed、1 skipped；pip check 通過。

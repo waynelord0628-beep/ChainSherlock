@@ -22,6 +22,7 @@ def write_provider_outputs(
     status_path = output_dir / "provider_status.json"
     errors_path = output_dir / "provider_errors.json"
     rejected_path = output_dir / "rejected_records.json"
+    checkpoint_path = output_dir / "pagination_checkpoints.json"
     status = []
     for index, result in enumerate(collection.results):
         later = [
@@ -76,6 +77,35 @@ def write_provider_outputs(
         safe_errors.append(safe)
     exporter.write_json(errors_path, safe_errors)
     exporter.write_json(rejected_path, rejected_records)
+    exporter.write_json(
+        checkpoint_path,
+        [
+            {
+                "provider": result.provider,
+                "chain": result.chain.value,
+                "capability": result.capability.value,
+                "next_cursor": (
+                    result.pagination.next_cursor if result.pagination else None
+                ),
+                "pagination_complete": (
+                    result.pagination.pagination_complete
+                    if result.pagination
+                    else False
+                ),
+                "fetched_records": (
+                    result.pagination.fetched_records if result.pagination else 0
+                ),
+                "resume_via_cache": bool(
+                    result.pagination
+                    and not result.pagination.pagination_complete
+                    and result.pagination.next_cursor
+                ),
+            }
+            for result in collection.results
+            if result.pagination is not None
+            and not result.pagination.pagination_complete
+        ],
+    )
     grouped: dict[str, list[Any]] = {}
     for record in collection.records:
         grouped.setdefault(record.source_provider, []).append(record)
@@ -85,4 +115,5 @@ def write_provider_outputs(
         "provider_status": status_path,
         "provider_errors": errors_path,
         "rejected_records": rejected_path,
+        "pagination_checkpoints": checkpoint_path,
     }

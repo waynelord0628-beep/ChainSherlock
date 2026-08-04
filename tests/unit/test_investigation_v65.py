@@ -492,7 +492,7 @@ def test_counterparty_report_remains_horizontal(analysis, result):
         item for item in report.sections
         if item.section_id == "outgoing_distribution"
     )
-    assert section.tables[0].columns[:4] == ("排名", "地址", "標籤", "候選角色")
+    assert section.tables[0].columns[:4] == ("排名", "地址", "方向", "交易次數")
 
 
 def test_report_evidence_index_includes_investigation_refs(analysis, result):

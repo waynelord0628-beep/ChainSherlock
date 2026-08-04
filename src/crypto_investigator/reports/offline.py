@@ -33,7 +33,11 @@ class OfflineReportComposer:
             base_report = self._migrate_legacy_scope(
                 base_report, narrative_input
             )
-            return AIReportIntegrator().integrate(base_report, narrative)
+            return AIReportIntegrator().integrate(
+                base_report,
+                narrative,
+                validation_source=narrative_input,
+            )
         source = narrative_input
         chain = self._recover_chain(source)
         evidence = self._evidence(source, chain)

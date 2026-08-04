@@ -13,6 +13,7 @@ from crypto_investigator.reports.pdf_exporter import (
     PdfReportExporter,
     pdf_font_status,
 )
+from crypto_investigator.reports.presentation import prepare_report_for_display
 
 
 class ReportExportCoordinator:
@@ -43,11 +44,14 @@ class ReportExportCoordinator:
             document.evidence, safe_output_path(root, "evidence_manifest.json")
         )
         files["evidence_manifest"] = manifest_path.name
+        display_document = prepare_report_for_display(document)
 
         for name in selected:
             filename, exporter_type = self.exporters[name]
             try:
-                path = exporter_type().write(document, safe_output_path(root, filename))
+                path = exporter_type().write(
+                    display_document, safe_output_path(root, filename)
+                )
                 files[name] = path.name
             except ReportExportError as error:
                 errors.append(

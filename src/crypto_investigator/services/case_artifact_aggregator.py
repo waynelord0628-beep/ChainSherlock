@@ -28,7 +28,9 @@ class CaseArtifactAggregator:
         self.repository = repository
         self.state = ExecutionStateService(repository)
 
-    def aggregate(self, case_id: str) -> CaseResult:
+    def aggregate(
+        self, case_id: str, *, execution_id: str | None = None
+    ) -> CaseResult:
         case = self.repository.load(case_id)
         workspace = self.repository.workspace(case_id)
         warnings: list[str] = []
@@ -50,7 +52,16 @@ class CaseArtifactAggregator:
         executions = []
         payloads: list[tuple[Any, dict[str, Any]]] = []
         artifact_service = ArtifactService(workspace)
-        for summary in case.executions:
+        summaries = case.executions
+        if execution_id is not None:
+            summaries = [
+                item
+                for item in summaries
+                if item.get("execution_id") == execution_id
+            ]
+            if not summaries:
+                raise ValueError("Requested execution is not part of this case")
+        for summary in summaries:
             try:
                 execution = self.state.load(summary["execution_id"], case_id)
             except Exception:

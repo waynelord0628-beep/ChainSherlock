@@ -123,7 +123,7 @@ class InputCompactor:
                 {
                     **self._select(item, (
                         "stage", "started_at", "ended_at", "transaction_count",
-                        "transaction_frequency", "concentration",
+                        "concentration",
                     )),
                     "reason_codes": tuple(item.get("reason_codes", ()))[:2],
                 }

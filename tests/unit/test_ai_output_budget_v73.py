@@ -169,6 +169,35 @@ def test_prompt_declares_no_table_duplication_and_section_budget():
     assert "copied exactly from STRUCTURED_FACTS" in prompt
 
 
+def test_prompt_requires_formal_human_readable_report_language():
+    prompt = PromptBuilder().build(source())
+    assert "formal forensic case report" in prompt
+    assert "Do not expose internal field names" in prompt
+    assert "incoming_count becomes 流入交易筆數" in prompt
+    assert "median_holding_seconds becomes 中位停留時間" in prompt
+
+
+def test_prompt_requires_case_timezone_and_no_naive_timezone_assumption():
+    prompt = PromptBuilder().build(source())
+    assert "YYYY-MM-DD HH:mm:ss（UTC+8）" in prompt
+    assert "Never silently assign a timezone to a naive timestamp" in prompt
+
+
+def test_prompt_requires_final_style_self_check():
+    prompt = PromptBuilder().build(source())
+    assert "FINAL_STYLE_CHECK" in prompt
+    assert "must not contain these tokens" in prompt
+    assert "funding_transition_count" in prompt
+    assert "Percentages in prose must use a percent sign" in prompt
+
+
+def test_prompt_keeps_display_hints_out_of_exact_numeric_values():
+    prompt = PromptBuilder().build(source())
+    assert "DETERMINISTIC_DISPLAY_HINTS are prose-only renderings" in prompt
+    assert "Never copy a formatted hint" in prompt
+    assert "numeric_values empty" in prompt
+
+
 def test_compact_snapshot_has_no_secret_or_local_path_fields():
     payload = json.dumps(
         InputCompactor().compact(source(), mode="compact").report_metadata,

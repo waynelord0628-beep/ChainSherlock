@@ -186,7 +186,8 @@ def test_graph_truncated_uses_graph_artifact_as_single_source():
         analysis(), graph=graph(), investigation=investigation()
     )
     facts = section(document, "investigation_facts").tables[0].rows
-    assert next(row for row in facts if row[0] == "graph_truncated")[1] == "True"
+    statement = next(row[0] for row in facts if "交易關係圖" in row[0])
+    assert statement.startswith("有辨識到")
 
 
 def test_provider_truncated_is_not_graph_truncated():
@@ -208,7 +209,8 @@ def test_provider_truncated_is_not_graph_truncated():
         ),
     )
     facts = section(document, "investigation_facts").tables[0].rows
-    assert next(row for row in facts if row[0] == "provider_truncated")[1] == "False"
+    statement = next(row[0] for row in facts if "Provider" in row[0])
+    assert statement.startswith("未辨識到")
 
 
 def test_provider_table_has_only_human_readable_columns():
@@ -251,7 +253,7 @@ def test_dust_and_spam_candidate_move_to_appendix():
     }
     appendix = section(document, "non_material_assets").tables[0]
     assert appendix.rows[0][0] == "DUST"
-    assert appendix.rows[0][4] == "spam candidate"
+    assert appendix.rows[0][4] == "spam／低重要性候選"
 
 
 def test_user_can_include_or_exclude_assets():
@@ -304,7 +306,7 @@ def test_hash_unavailable_is_limitation_not_verified():
         analysis(), investigation=investigation()
     )
     evidence_text = " ".join(section(document, "evidence_index").content_blocks)
-    assert "hash unavailable" in evidence_text
+    assert "雜湊不可用" in evidence_text
     assert "verified" not in evidence_text
     assert any(
         item.code == "evidence_hash_unavailable"

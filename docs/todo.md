@@ -187,3 +187,10 @@ Future work must be approved and delivered one milestone at a time.
 - The one permitted AI request ended at the 1,800-token completion limit and safely
   fell back. Do not retry automatically. A future approved iteration may further
   reduce structured output requirements or deliberately raise the one-call limit.
+
+## V8 正式報告後續限制
+
+- Windows 實際 100%／125%／150% 系統 DPI 驗收仍需在可切換 DPI 的互動環境完成。
+- Address Registry 因保存完整地址而增加技術附錄頁數；後續可加入使用者選擇的 registry 範圍。
+- Spam／Dust 的人工接受、撤銷與強制保留 UI 尚未納入本輪；目前 metadata 與報告介面已保留。
+- 不開始 V9 或 Windows 打包，等待下一個 Prompt。

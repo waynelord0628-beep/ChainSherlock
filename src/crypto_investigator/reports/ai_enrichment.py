@@ -1,4 +1,6 @@
 from dataclasses import replace
+from dataclasses import asdict, is_dataclass
+import json
 import re
 
 from crypto_investigator.reports.formatting import redact
@@ -48,6 +50,19 @@ IDENTIFIER_PATTERN = (
 )
 
 
+def _formalize_ai_text(value) -> str:
+    text = redact(value)
+    text = re.sub(r"\b(\d+)\s+days?\b", r"\1 天", text, flags=re.IGNORECASE)
+    text = re.sub(r"\b(\d+)\s+hours?\b", r"\1 小時", text, flags=re.IGNORECASE)
+    text = re.sub(r"\b(\d+)\s+minutes?\b", r"\1 分鐘", text, flags=re.IGNORECASE)
+    text = re.sub(r"\s*\(UTC\+8\)", "（UTC+8）", text)
+    return re.sub(
+        r"\s+(?:(?:IF|E)\d+)(?:[\s,、]+(?:IF|E)\d+)*\s*$",
+        "",
+        text,
+    )
+
+
 class AIReportIntegrator:
     """Add validated narrative sections without replacing the base report."""
 
@@ -59,8 +74,11 @@ class AIReportIntegrator:
         narrative,
         *,
         fallback_baseline=None,
+        validation_source=None,
     ) -> ReportDocument:
-        failure = self._failure_reason(base, narrative, fallback_baseline)
+        failure = self._failure_reason(
+            base, narrative, fallback_baseline, validation_source
+        )
         if failure:
             return self.fallback(base, narrative, failure)
 
@@ -148,7 +166,9 @@ class AIReportIntegrator:
             warnings=tuple((*base.warnings, warning)),
         )
 
-    def _failure_reason(self, base, narrative, fallback_baseline):
+    def _failure_reason(
+        self, base, narrative, fallback_baseline, validation_source=None
+    ):
         section_ids = {item.section_id for item in base.sections}
         missing = sorted(REQUIRED_DETERMINISTIC_SECTIONS - section_ids)
         if missing:
@@ -214,6 +234,28 @@ class AIReportIntegrator:
         known_observations = self._first_column(
             base, "investigation_observations"
         )
+        known_facts.update(
+            ref for section in base.sections for ref in section.fact_refs
+        )
+        known_observations.update(
+            ref for section in base.sections for ref in section.observation_refs
+        )
+        source_value = (
+            asdict(validation_source)
+            if is_dataclass(validation_source)
+            else validation_source
+        )
+        if isinstance(source_value, dict):
+            known_facts.update(
+                str(item.get("fact_code"))
+                for item in source_value.get("conclusion_facts", ())
+                if isinstance(item, dict) and item.get("fact_code")
+            )
+            known_observations.update(
+                str(item.get("code"))
+                for item in source_value.get("observations", ())
+                if isinstance(item, dict) and item.get("code")
+            )
         for claim in narrative.claims:
             if not (
                 claim.fact_codes
@@ -235,6 +277,13 @@ class AIReportIntegrator:
         allowed_numbers = set(
             re.findall(r"(?<![A-Za-z])\d+(?:\.\d+)?", self._base_text(base))
         )
+        if source_value is not None:
+            allowed_numbers.update(
+                re.findall(
+                    r"(?<![A-Za-z])\d+(?:\.\d+)?",
+                    json.dumps(source_value, ensure_ascii=False, default=str),
+                )
+            )
         for claim in narrative.claims:
             if not set(claim.numeric_values).issubset(allowed_numbers):
                 return f"unknown numeric value: {claim.claim_id}"
@@ -335,20 +384,21 @@ class AIReportIntegrator:
             epistemic = []
             for claim in claims:
                 label = {
-                    "factual": "Confirmed Fact",
-                    "observation": "Deterministic Observation",
-                    "candidate": "Candidate Interpretation",
-                    "question": "Unresolved Question",
-                    "recommendation": "Recommended Follow-up",
-                }.get(claim.claim_type, "Candidate Interpretation")
-                epistemic.append(f"{label}：{redact(claim.statement)}")
+                    "factual": "已確認資料事實",
+                    "observation": "規則式觀察",
+                    "candidate": "候選解釋",
+                    "question": "尚待查證",
+                    "recommendation": "後續調查建議",
+                }.get(claim.claim_type, "候選解釋")
+                epistemic.append(f"{label}：{_formalize_ai_text(claim.statement)}")
             result.append(
                 ReportSection(
                     section_id=f"ai_{name}",
                     title=f"AI 專業綜合：{redact(section.title)}",
                     order=20 + index,
                     content_blocks=tuple(
-                        redact(paragraph.text) for paragraph in section.paragraphs
+                        _formalize_ai_text(paragraph.text)
+                        for paragraph in section.paragraphs
                     )
                     + tuple(epistemic),
                     evidence_refs=refs,

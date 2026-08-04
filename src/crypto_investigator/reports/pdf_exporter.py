@@ -8,7 +8,14 @@ from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.lib.units import mm
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
-from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
+from reportlab.platypus import (
+    PageBreak,
+    Paragraph,
+    SimpleDocTemplate,
+    Spacer,
+    Table,
+    TableStyle,
+)
 from reportlab.lib import colors
 
 from crypto_investigator.reports.errors import PdfExportError
@@ -53,14 +60,47 @@ class PdfReportExporter:
     @staticmethod
     def _pdf_cell(value: str, column: str) -> str:
         key = column.casefold()
-        if any(marker in key for marker in ("address", "地址", "tx hash", "tx_hash")):
+        if column != "完整地址" and any(
+            marker in key for marker in ("address", "地址", "tx hash", "tx_hash")
+        ):
             return abbreviate_identifier(str(value))
         return str(value)
+
+    @staticmethod
+    def _column_widths(columns, available_width):
+        weights = []
+        for column in columns:
+            key = column.casefold()
+            if column in {"Evidence ID"}:
+                weight = 0.85
+            elif column in {"檔名"}:
+                weight = 2.5
+            elif column in {"類型"}:
+                weight = 1.1
+            elif column in {"SHA-256"}:
+                weight = 1.5
+            elif column in {"備註"}:
+                weight = 1.6
+            elif column in {"排名", "信心", "方向", "資產", "完整度", "截斷"}:
+                weight = 0.7
+            elif any(item in key for item in ("時間", "首次", "最後", "開始", "結束")):
+                weight = 1.65
+            elif any(item in key for item in ("地址", "來源", "去向", "sha-256")):
+                weight = 1.8
+            elif any(item in key for item in ("限制", "原因", "警告", "備註", "觀察", "事實")):
+                weight = 2.1
+            else:
+                weight = 1.0
+            weights.append(weight)
+        total = sum(weights) or 1
+        return tuple(available_width * mm * item / total for item in weights)
 
     def _page_number(self, canvas, doc) -> None:
         canvas.saveState()
         canvas.setFont(self._latin_font_name, 9)
+        canvas.drawString(18 * mm, 12 * mm, self._report_id)
         canvas.drawCentredString(A4[0] / 2, 12 * mm, f"{doc.page}")
+        canvas.drawRightString(A4[0] - 18 * mm, 12 * mm, "UTC+8")
         canvas.restoreState()
 
     @staticmethod
@@ -103,23 +143,18 @@ class PdfReportExporter:
             self._table_font_name = self._register_optional_windows_font(
                 "consola.ttf", "ChainSherlockConsolas", "Courier"
             )
+            self._report_id = document.metadata.report_id
             styles = getSampleStyleSheet()
             for name in ("Title", "Heading1", "Heading2", "BodyText"):
                 styles[name].fontName = font_name
-            story = [
-                Paragraph(
-                    self._styled_text(document.title, self._latin_font_name),
-                    styles["Title"],
-                ),
-                Paragraph(
-                    self._styled_text(
-                        f"報告編號：{document.metadata.report_id}",
-                        self._latin_font_name,
-                    ),
-                    styles["BodyText"],
-                ),
-                Spacer(1, 5 * mm),
-            ]
+            styles["BodyText"].fontSize = 8
+            styles["BodyText"].leading = 10
+            styles["BodyText"].splitLongWords = False
+            styles["Heading1"].keepWithNext = True
+            styles["Heading2"].keepWithNext = True
+            styles["BodyText"].allowWidows = False
+            styles["BodyText"].allowOrphans = False
+            story = []
             for section in document.sections:
                 story.append(
                     Paragraph(
@@ -127,14 +162,38 @@ class PdfReportExporter:
                         styles["Heading1"],
                     )
                 )
-                for block in section.content_blocks:
+                for block_index, block in enumerate(section.content_blocks):
+                    block_style = styles["BodyText"]
+                    if (
+                        section.tables
+                        and block_index == len(section.content_blocks) - 1
+                    ):
+                        block_style = styles["BodyText"].clone(
+                            f"Lead-{section.section_id}"
+                        )
+                        block_style.keepWithNext = True
                     story.append(
                         Paragraph(
                             self._styled_text(block, self._latin_font_name),
-                            styles["BodyText"],
+                            block_style,
                         )
                     )
                 for table in section.tables:
+                    story.append(
+                        Paragraph(
+                            self._styled_text(table.title, self._latin_font_name),
+                            styles["Heading2"],
+                        )
+                    )
+                    table_cell_style = styles["BodyText"].clone(
+                        f"TableCell-{section.section_id}-{table.table_id}"
+                    )
+                    table_cell_style.fontSize = (
+                        8 if section.section_id == "appendix" else 8.5
+                    )
+                    table_cell_style.leading = (
+                        9.5 if section.section_id == "appendix" else 10
+                    )
                     data = [
                         list(table.columns),
                         *[
@@ -145,42 +204,65 @@ class PdfReportExporter:
                             for row in table.rows
                         ],
                     ]
-                    available_width = 252 if len(table.columns) > 5 else 165
-                    widths = tuple(
-                        available_width * mm / len(table.columns)
-                        for _ in table.columns
+                    available_width = 252 if len(table.columns) > 8 else 165
+                    widths = self._column_widths(
+                        table.columns, available_width
                     )
                     data = [
                         [
                             Paragraph(
                                 self._styled_text(str(value), self._table_font_name),
-                                styles["BodyText"],
+                                table_cell_style,
                             )
                             for value in row
                         ]
                         for row in data
                     ]
                     if data and data[0]:
-                        rendered = Table(data, repeatRows=1, colWidths=widths)
-                        rendered.setStyle(
-                            TableStyle(
-                                [
+                        rendered = Table(
+                            data,
+                            repeatRows=1,
+                            colWidths=widths,
+                            splitByRow=1,
+                            splitInRow=0,
+                        )
+                        commands = [
                                     ("FONTNAME", (0, 0), (-1, -1), font_name),
                                     ("GRID", (0, 0), (-1, -1), 0.25, colors.grey),
                                     ("BACKGROUND", (0, 0), (-1, 0), colors.lightgrey),
-                                    ("FONTSIZE", (0, 0), (-1, -1), 7),
-                                ]
-                            )
-                        )
+                                    (
+                                        "FONTSIZE",
+                                        (0, 0),
+                                        (-1, -1),
+                                        table_cell_style.fontSize,
+                                    ),
+                                    ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+                                    ("TOPPADDING", (0, 0), (-1, -1), 4),
+                                    ("BOTTOMPADDING", (0, 0), (-1, -1), 4),
+                        ]
+                        for index, column in enumerate(table.columns):
+                            if any(
+                                marker in column
+                                for marker in (
+                                    "金額", "筆數", "交易數", "比例", "占比",
+                                    "事件數", "取得筆數",
+                                )
+                            ):
+                                commands.append(
+                                    ("ALIGN", (index, 1), (index, -1), "RIGHT")
+                                )
+                        rendered.setStyle(TableStyle(commands))
                         story.append(rendered)
                 story.append(Spacer(1, 3 * mm))
+                if section.section_id == "cover":
+                    story.append(PageBreak())
             path.parent.mkdir(parents=True, exist_ok=True)
             SimpleDocTemplate(
                 str(path),
                 pagesize=(
                     landscape(A4)
                     if any(
-                        len(table.columns) > 5
+                        len(table.columns) > 8
                         for item in document.sections
                         for table in item.tables
                     )

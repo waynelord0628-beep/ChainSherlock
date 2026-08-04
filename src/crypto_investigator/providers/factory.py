@@ -7,6 +7,7 @@ from crypto_investigator.providers.ethereum.blockscout import BlockscoutProvider
 from crypto_investigator.providers.ethereum.etherscan import EtherscanProvider
 from crypto_investigator.providers.http import ProviderHttpClient
 from crypto_investigator.providers.pagination import PaginationLimits
+from crypto_investigator.providers.rate_limit import AsyncRateLimiter
 from crypto_investigator.providers.registry import ProviderRegistry
 from crypto_investigator.providers.tron.trongrid import TronGridProvider
 
@@ -69,6 +70,9 @@ class ProviderFactory:
             read_timeout=settings.http.read_timeout_seconds,
             total_timeout=settings.http.total_timeout_seconds,
             retries=settings.http.retries,
+            rate_limiter=AsyncRateLimiter(
+                1.0 if name == "trongrid" else 5.0
+            ),
             cache=(
                 FileCache(
                     settings.cache.directory,

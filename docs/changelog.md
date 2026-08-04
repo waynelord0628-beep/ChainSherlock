@@ -229,6 +229,14 @@
 
 ## V7.3 bounded AI output
 
+## V8 正式鑑識報告呈現
+
+- 正式主表移除工程欄位，統一中文欄名、百分比、金額、停留時間與 UTC+8 顯示。
+- 加入 Address Registry、artifact-level Evidence Index 與低重要性／Spam Candidate 附錄。
+- PDF 與 DOCX 支援重複表頭、禁止列跨頁、標題接續內容及獨立封面。
+- 修正正式 Full History 不沿用 preview 上限，並保存 pagination checkpoint 與 scope metadata。
+- AI 專業綜合改為 deterministic report enrichment，且位於 Evidence Index 前。
+
 - Bounded compact facts, output paragraphs, claims and grounding references.
 - Replaced the legacy 1,800/2,000-token assumption with a live-validated
   3,000–8,000 completion policy and 3,500 default.

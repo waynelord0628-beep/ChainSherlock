@@ -54,6 +54,7 @@ async def paginate(
         except ProviderError as error:
             errors.append(error)
             warnings.append("Pagination stopped after a provider error")
+            available_more = True
             break
         pages += 1
         remaining = (

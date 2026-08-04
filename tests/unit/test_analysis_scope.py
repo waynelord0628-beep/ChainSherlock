@@ -29,6 +29,7 @@ from crypto_investigator.providers.models import (
     ProviderResult,
 )
 from crypto_investigator.providers.pagination import PaginationLimits, paginate
+from crypto_investigator.providers.errors import ProviderRateLimitError
 
 
 START = datetime(2026, 1, 1, tzinfo=UTC)
@@ -292,6 +293,36 @@ async def test_max_records_is_partial():
     assert len(result.records) == 1
     assert result.truncation_reason == "max_records"
     assert result.pagination.has_more is True
+
+
+@pytest.mark.asyncio
+async def test_rate_limit_preserves_resume_cursor():
+    calls = 0
+
+    async def fetch(cursor, size):
+        nonlocal calls
+        calls += 1
+        if calls == 1:
+            return ProviderPage((record(1),), "resume-fingerprint")
+        raise ProviderRateLimitError(
+            provider="fixture",
+            chain=Chain.TRON,
+            capability=ProviderCapability.ADDRESS_TRANSACTIONS,
+            safe_message="rate limited",
+            status_code=429,
+            retryable=True,
+        )
+
+    result = await paginate(
+        provider="fixture",
+        chain=Chain.TRON,
+        capability=ProviderCapability.ADDRESS_TRANSACTIONS,
+        fetch_page=fetch,
+        limits=PaginationLimits(max_pages=None, max_records=None, page_size=1),
+    )
+    assert result.pagination.pagination_complete is False
+    assert result.pagination.has_more is True
+    assert result.pagination.next_cursor == "resume-fingerprint"
 
 
 @pytest.mark.asyncio

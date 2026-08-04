@@ -93,6 +93,22 @@ def format_amount(value: Any, *, maximum_decimals: int = 18) -> str:
     return rendered or "0"
 
 
+def format_duration(value: Any) -> str:
+    if value in (None, "", "—"):
+        return "—"
+    total_minutes = int(Decimal(str(value)) // Decimal("60"))
+    days, remainder = divmod(total_minutes, 24 * 60)
+    hours, minutes = divmod(remainder, 60)
+    parts = []
+    if days:
+        parts.append(f"{days} 天")
+    if hours:
+        parts.append(f"{hours} 小時")
+    if minutes or not parts:
+        parts.append(f"{minutes} 分")
+    return " ".join(parts)
+
+
 def abbreviate_identifier(value: str, *, head: int = 8, tail: int = 6) -> str:
     safe = redact(value)
     if len(safe) <= head + tail + 1:

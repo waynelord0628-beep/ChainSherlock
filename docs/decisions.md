@@ -507,3 +507,18 @@ model-generated cross-reference without weakening validation.
 Pre-scope public artifacts may be labelled `legacy_partial_period` only when they
 retain explicit from/to values. This never implies Full History and adds a visible
 warning. Missing periods remain unavailable.
+
+## ADR-048: 正式報告使用獨立呈現模型
+
+`report_data.json` 保存原始精度與 ISO 8601 artifact；Markdown、HTML、DOCX、PDF
+共用 display transformation，僅於顯示層轉換 Asia/Taipei、金額、比例、地址及表格欄位。
+
+## ADR-049: 地址完整值以 Address Registry 保存
+
+高密度主表可使用 Address ID，但同一份正式報告的技術附錄必須保存完整地址。
+顯示換行不得改變原始地址，Evidence 與完整雜湊亦不得因排版而被覆寫。
+
+## ADR-050: Spam／Dust 為可逆候選
+
+Deterministic materiality rule 先產生候選；AI 僅可補充說明。候選不得刪除原始交易、
+修改 Evidence 或被描述為已確認垃圾項目，並必須保留排除理由及人工覆核狀態。

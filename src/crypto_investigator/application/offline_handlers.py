@@ -381,7 +381,9 @@ class OfflineStepHandler:
 
     def _execute_generate_report(self, case, step, context, token):
         token.raise_if_cancelled()
-        result = CaseArtifactAggregator(self.repository).aggregate(case.case_id)
+        result = CaseArtifactAggregator(self.repository).aggregate(
+            case.case_id, execution_id=context.execution.execution_id
+        )
         prior_failures = [
             item
             for item in context.execution.steps

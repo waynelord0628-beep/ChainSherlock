@@ -19,6 +19,11 @@ from crypto_investigator.detection.identifier import detect_identifier
 from crypto_investigator.exceptions import ConfigurationError, InvalidIdentifierError
 from crypto_investigator.importers.mapping import ColumnMappingError
 from crypto_investigator.domain.transaction import Chain
+from crypto_investigator.domain.scope import (
+    AnalysisScope,
+    PaginationPolicy,
+    ScopeType,
+)
 from crypto_investigator.providers.factory import ProviderFactory
 from crypto_investigator.providers.service import analyze_provider_identifier
 from crypto_investigator.analyzers.models import FlowEdge, FlowNode, FlowResult
@@ -42,6 +47,33 @@ from crypto_investigator.reports.offline import OfflineReportComposer
 from crypto_investigator.reports.json_exporter import read_report_data
 
 app = typer.Typer(help="ChainSherlock: local-first blockchain transaction investigation toolkit.")
+
+
+def _provider_scope(
+    scope_type: ScopeType,
+    max_pages: int | None,
+    max_records: int | None,
+    *,
+    timezone: str,
+    settings,
+) -> AnalysisScope:
+    if scope_type is ScopeType.QUICK_PREVIEW:
+        return AnalysisScope(
+            scope_type=scope_type,
+            timezone=timezone,
+            pagination_policy=PaginationPolicy.BOUNDED,
+            max_pages=max_pages or settings.pagination.max_pages,
+            max_records=max_records or settings.pagination.max_records,
+        )
+    if max_pages is not None or max_records is not None:
+        raise typer.BadParameter(
+            "--max-pages/--max-records are only valid with --scope-type quick_preview"
+        )
+    return AnalysisScope(
+        scope_type=scope_type,
+        timezone=timezone,
+        pagination_policy=PaginationPolicy.TO_PROVIDER_END,
+    )
 
 
 def _case_repository(case_root: Path):
@@ -190,15 +222,18 @@ def _run_provider_cli(
     kind: str,
     provider: str | None,
     output: Path,
-    max_pages: int,
-    max_records: int,
+    max_pages: int | None,
+    max_records: int | None,
     cache_ttl: int,
     refresh: bool,
+    scope_type: ScopeType = ScopeType.FULL_HISTORY,
+    timezone: str = "UTC",
 ) -> None:
     settings = load_config()
-    settings.pagination.max_pages = max_pages
-    settings.pagination.max_records = max_records
     settings.cache.ttl_seconds = cache_ttl
+    scope = _provider_scope(
+        scope_type, max_pages, max_records, timezone=timezone, settings=settings
+    )
     try:
         paths = asyncio.run(
             analyze_provider_identifier(
@@ -210,6 +245,7 @@ def _run_provider_cli(
                 provider=provider,
                 refresh=refresh,
                 cache_ttl=cache_ttl,
+                analysis_scope=scope,
             )
         )
     except (ValueError, KeyError) as error:
@@ -226,8 +262,10 @@ def analyze_address(
     provider: str | None = typer.Option(None, "--provider"),
     refresh: bool = typer.Option(False, "--refresh"),
     cache_ttl: int = typer.Option(86400, "--cache-ttl", min=1),
-    max_pages: int = typer.Option(100, "--max-pages", min=1),
-    max_records: int = typer.Option(100000, "--max-records", min=1),
+    scope_type: ScopeType = typer.Option(ScopeType.FULL_HISTORY, "--scope-type"),
+    max_pages: int | None = typer.Option(None, "--max-pages", min=1),
+    max_records: int | None = typer.Option(None, "--max-records", min=1),
+    timezone: str = typer.Option("Asia/Taipei", "--timezone"),
     output: Path = typer.Option(Path("output/provider"), "--output"),
 ) -> None:
     """Collect an address through providers, V2 Pipeline, and V3 Analysis."""
@@ -247,6 +285,8 @@ def analyze_address(
         max_records,
         cache_ttl,
         refresh,
+        scope_type,
+        timezone,
     )
 
 
@@ -1172,7 +1212,7 @@ def report_file(
     output: Path | None = typer.Option(None, "--output"),
     include_graph: bool = typer.Option(True, "--include-graph/--no-graph"),
     top_counterparties: int = typer.Option(20, "--top-counterparties", min=0),
-    timezone: str = typer.Option("UTC", "--timezone"),
+    timezone: str = typer.Option("Asia/Taipei", "--timezone"),
 ) -> None:
     """Create a V6 report from a CSV or Excel transaction file."""
     transactions = _domain_transactions(file)
@@ -1217,8 +1257,8 @@ def _provider_report(
     provider: str | None,
     refresh: bool,
     cache_ttl: int,
-    max_pages: int,
-    max_records: int,
+    max_pages: int | None,
+    max_records: int | None,
     output: Path,
     requested_format: str,
     language: str,
@@ -1227,10 +1267,12 @@ def _provider_report(
     include_graph: bool,
     top_counterparties: int,
     timezone: str,
+    scope_type: ScopeType = ScopeType.FULL_HISTORY,
 ) -> None:
     settings = load_config()
-    settings.pagination.max_pages = max_pages
-    settings.pagination.max_records = max_records
+    scope = _provider_scope(
+        scope_type, max_pages, max_records, timezone=timezone, settings=settings
+    )
     asyncio.run(
         analyze_provider_identifier(
             identifier=identifier,
@@ -1241,6 +1283,7 @@ def _provider_report(
             provider=provider,
             refresh=refresh,
             cache_ttl=cache_ttl,
+            analysis_scope=scope,
         )
     )
     graph_analysis = _analysis_from_json(output / "analysis.json")
@@ -1279,8 +1322,9 @@ def report_address(
     provider: str | None = typer.Option(None, "--provider"),
     refresh: bool = typer.Option(False, "--refresh"),
     cache_ttl: int = typer.Option(86400, "--cache-ttl", min=1),
-    max_pages: int = typer.Option(100, "--max-pages", min=1),
-    max_records: int = typer.Option(100000, "--max-records", min=1),
+    scope_type: ScopeType = typer.Option(ScopeType.FULL_HISTORY, "--scope-type"),
+    max_pages: int | None = typer.Option(None, "--max-pages", min=1),
+    max_records: int | None = typer.Option(None, "--max-records", min=1),
     format: str = typer.Option("all", "--format"),
     language: str = typer.Option("zh-TW", "--language"),
     title: str = typer.Option("ChainSherlock 區塊鏈幣流分析報告", "--title"),
@@ -1288,14 +1332,14 @@ def report_address(
     output: Path = typer.Option(Path("output/address_report"), "--output"),
     include_graph: bool = typer.Option(True, "--include-graph/--no-graph"),
     top_counterparties: int = typer.Option(20, "--top-counterparties", min=0),
-    timezone: str = typer.Option("UTC", "--timezone"),
+    timezone: str = typer.Option("Asia/Taipei", "--timezone"),
 ) -> None:
     """Create a V6 report from the existing provider workflow."""
     detected = detect_identifier(address)
     _provider_report(
         detected.value, chain or Chain(detected.chain.value), "address", provider,
         refresh, cache_ttl, max_pages, max_records, output, format, language,
-        title, report_id, include_graph, top_counterparties, timezone,
+        title, report_id, include_graph, top_counterparties, timezone, scope_type,
     )
 
 
