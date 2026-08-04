@@ -92,3 +92,9 @@
 - Fixed Markdown table line breaks, DOCX/PDF page numbering, mixed-script fonts,
   and wide-table overflow.
 - Hardened report text against event-handler, script, formula and traversal payloads.
+# V7
+
+- 新增 grounded AI Investigation Narrative Engine。
+- 新增 deterministic fallback、privacy/redaction、cache 與 usage contract。
+- 報告新增經驗證且標記為「AI 輔助敘事」的可選章節。
+- 新增三個 `narrate-*` CLI 指令與 V7 benchmark。

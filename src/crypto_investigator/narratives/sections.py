@@ -1,0 +1,31 @@
+DEFAULT_SECTIONS = (
+    "executive_summary",
+    "target_profile",
+    "funding_narrative",
+    "outgoing_narrative",
+    "stage_narrative",
+    "dormancy_narrative",
+    "holding_time_narrative",
+    "pattern_narrative",
+    "counterparty_narrative",
+    "alternative_explanations",
+    "investigative_leads",
+    "limitations",
+    "conclusion",
+)
+
+SECTION_TITLES = {
+    "executive_summary": "調查摘要",
+    "target_profile": "分析標的概況",
+    "funding_narrative": "資金來源分析",
+    "outgoing_narrative": "資金去向分析",
+    "stage_narrative": "運作階段",
+    "dormancy_narrative": "休眠與恢復",
+    "holding_time_narrative": "資金停留與快速轉出",
+    "pattern_narrative": "批次及固定金額模式",
+    "counterparty_narrative": "交易對手角色候選",
+    "alternative_explanations": "替代解釋",
+    "investigative_leads": "後續調查建議",
+    "limitations": "資料限制",
+    "conclusion": "綜合結論",
+}

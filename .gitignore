@@ -3,6 +3,8 @@ __pycache__/
 *.py[cod]
 .pytest_cache/
 .venv/
+.venv-v7-validation/
+.ai_cache/
 output/
 data/cache/
 

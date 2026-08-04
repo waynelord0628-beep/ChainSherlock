@@ -241,3 +241,16 @@ local evidence -> SHA-256 manifest -> citations -> Evidence Index
 Composer 是唯一的內容組裝邊界；Exporter 只呈現同一份 `ReportDocument`，不重新分析交易或建立圖。Report Layer 不依賴 Provider、Importer、Normalizer、HTTP、AI、Risk 或 Cross-chain internals。
 
 輸出路徑限制在指定目錄，HTML 不可信內容強制 escape，秘密與絕對路徑在進入文件前遮罩。PDF 字體是明確的環境設定邊界；缺少 CJK 字體只使 PDF 失敗，其他格式保留並回報 partial。
+# V7 AI Narrative Boundary
+
+V7 的唯一 AI 輸入是由 V6.5 `InvestigationResult` 建立的 bounded `NarrativeInput`。
+資料依序通過 deterministic compaction、privacy/redaction、分區 Prompt、structured
+response parser、claim/citation/numeric/hallucination validation，再成為
+`NarrativeResult`。任何失敗均轉入 deterministic fallback，既有 Report exporter
+仍負責 HTML/DOCX/PDF escaping。
+
+AI Provider 位於獨立 protocol boundary，Narrative Engine 不依賴鏈上 Provider、raw
+transaction 或商業風險服務。Prompt 將所有標籤、地址、metadata 與 notes 放在
+`UNTRUSTED_DATA_JSON` 邊界；cache key 不含 API key。Privacy mode 在 provider boundary
+前執行。AI 與 deterministic facts 在 Report 中分章呈現，且 Human Review 預設為
+`not_reviewed`。

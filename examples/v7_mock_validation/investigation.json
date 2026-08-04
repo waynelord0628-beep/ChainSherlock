@@ -1,0 +1,3262 @@
+{
+  "__type__": "InvestigationResult",
+  "funding": {
+    "__type__": "FundingAnalysis",
+    "sources": {
+      "__tuple__": [
+        {
+          "__type__": "FundingSource",
+          "address": "0x2222222222222222222222222222222222222222",
+          "transaction_count": 5,
+          "transaction_ratio": {
+            "__decimal__": "1"
+          },
+          "amounts_by_asset": {
+            "ETH": {
+              "__decimal__": "18.5"
+            },
+            "USDT": {
+              "__decimal__": "9.0"
+            }
+          },
+          "first_funding": {
+            "__datetime__": "2026-01-01T00:00:00+00:00"
+          },
+          "last_funding": {
+            "__datetime__": "2026-09-09T08:00:00+00:00"
+          },
+          "rank": 1,
+          "chain": null,
+          "label": null,
+          "category": null,
+          "assets": {
+            "__tuple__": [
+              "ETH",
+              "USDT"
+            ]
+          },
+          "incoming_count": 5,
+          "share_by_asset": {
+            "ETH": {
+              "__decimal__": "1"
+            },
+            "USDT": {
+              "__decimal__": "1"
+            }
+          },
+          "active_days": 5,
+          "average_amount_by_asset": {
+            "ETH": {
+              "__decimal__": "6.166666666666666666666666667"
+            },
+            "USDT": {
+              "__decimal__": "4.5"
+            }
+          },
+          "median_amount_by_asset": {
+            "ETH": {
+              "__decimal__": "5.5"
+            },
+            "USDT": {
+              "__decimal__": "4.5"
+            }
+          },
+          "maximum_amount_by_asset": {
+            "ETH": {
+              "__decimal__": "9.5"
+            },
+            "USDT": {
+              "__decimal__": "7.5"
+            }
+          },
+          "evidence_transaction_hashes": {
+            "__tuple__": [
+              "0x0000000000000000000000000000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000000000000000000000000002",
+              "0x0000000000000000000000000000000000000000000000000000000000000004",
+              "0x0000000000000000000000000000000000000000000000000000000000000006",
+              "0x0000000000000000000000000000000000000000000000000000000000000008"
+            ]
+          }
+        }
+      ]
+    },
+    "periods": {
+      "__tuple__": [
+        {
+          "__type__": "FundingPeriod",
+          "period": "2026-03",
+          "main_source": "0x2222222222222222222222222222222222222222",
+          "source_count": 1,
+          "transaction_count": 1,
+          "concentration": {
+            "__decimal__": "1"
+          },
+          "asset": "ETH"
+        },
+        {
+          "__type__": "FundingPeriod",
+          "period": "2026-05",
+          "main_source": "0x2222222222222222222222222222222222222222",
+          "source_count": 1,
+          "transaction_count": 1,
+          "concentration": {
+            "__decimal__": "1"
+          },
+          "asset": "ETH"
+        },
+        {
+          "__type__": "FundingPeriod",
+          "period": "2026-09",
+          "main_source": "0x2222222222222222222222222222222222222222",
+          "source_count": 1,
+          "transaction_count": 1,
+          "concentration": {
+            "__decimal__": "1"
+          },
+          "asset": "ETH"
+        },
+        {
+          "__type__": "FundingPeriod",
+          "period": "2026-01",
+          "main_source": "0x2222222222222222222222222222222222222222",
+          "source_count": 1,
+          "transaction_count": 1,
+          "concentration": {
+            "__decimal__": "1"
+          },
+          "asset": "USDT"
+        },
+        {
+          "__type__": "FundingPeriod",
+          "period": "2026-07",
+          "main_source": "0x2222222222222222222222222222222222222222",
+          "source_count": 1,
+          "transaction_count": 1,
+          "concentration": {
+            "__decimal__": "1"
+          },
+          "asset": "USDT"
+        }
+      ]
+    },
+    "transitions": {
+      "__tuple__": []
+    },
+    "concentration": {
+      "__decimal__": "1"
+    },
+    "concentration_by_asset": {
+      "ETH": {
+        "__decimal__": "1"
+      },
+      "USDT": {
+        "__decimal__": "1"
+      }
+    },
+    "top_sources_by_asset": {
+      "ETH": {
+        "__tuple__": [
+          "0x2222222222222222222222222222222222222222"
+        ]
+      },
+      "USDT": {
+        "__tuple__": [
+          "0x2222222222222222222222222222222222222222"
+        ]
+      }
+    },
+    "first_source_by_asset": {
+      "ETH": "0x2222222222222222222222222222222222222222",
+      "USDT": "0x2222222222222222222222222222222222222222"
+    },
+    "latest_source_by_asset": {
+      "ETH": "0x2222222222222222222222222222222222222222",
+      "USDT": "0x2222222222222222222222222222222222222222"
+    }
+  },
+  "stages": {
+    "__tuple__": [
+      {
+        "__type__": "OperationStage",
+        "stage": "dormant",
+        "started_at": {
+          "__datetime__": "2026-01-01T00:00:00+00:00"
+        },
+        "ended_at": {
+          "__datetime__": "2026-02-02T01:00:00+00:00"
+        },
+        "transaction_count": 0,
+        "transaction_frequency": {
+          "__decimal__": "0"
+        },
+        "concentration": {
+          "__decimal__": "1"
+        },
+        "assets": {
+          "__tuple__": [
+            "ETH",
+            "USDT"
+          ]
+        },
+        "dominant_funding_sources": {
+          "__tuple__": [
+            "0x2222222222222222222222222222222222222222"
+          ]
+        },
+        "dominant_outgoing_counterparties": {
+          "__tuple__": [
+            "0x2222222222222222222222222222222222222222"
+          ]
+        },
+        "reason_codes": {
+          "__tuple__": [
+            "transaction_gap_exceeds_threshold"
+          ]
+        },
+        "evidence_refs": {
+          "__tuple__": [
+            "IF0"
+          ]
+        },
+        "confidence": "medium"
+      },
+      {
+        "__type__": "OperationStage",
+        "stage": "startup",
+        "started_at": {
+          "__datetime__": "2026-01-01T00:00:00+00:00"
+        },
+        "ended_at": {
+          "__datetime__": "2026-02-02T01:00:00+00:00"
+        },
+        "transaction_count": 2,
+        "transaction_frequency": {
+          "__decimal__": "0.06060606060606060606060606061"
+        },
+        "concentration": {
+          "__decimal__": "1"
+        },
+        "assets": {
+          "__tuple__": [
+            "ETH",
+            "USDT"
+          ]
+        },
+        "dominant_funding_sources": {
+          "__tuple__": [
+            "0x2222222222222222222222222222222222222222"
+          ]
+        },
+        "dominant_outgoing_counterparties": {
+          "__tuple__": [
+            "0x2222222222222222222222222222222222222222"
+          ]
+        },
+        "reason_codes": {
+          "__tuple__": [
+            "first_sample_window"
+          ]
+        },
+        "evidence_refs": {
+          "__tuple__": [
+            "IF0"
+          ]
+        },
+        "confidence": "medium"
+      },
+      {
+        "__type__": "OperationStage",
+        "stage": "recovery",
+        "started_at": {
+          "__datetime__": "2026-02-02T01:00:00+00:00"
+        },
+        "ended_at": {
+          "__datetime__": "2026-10-10T09:00:00+00:00"
+        },
+        "transaction_count": 9,
+        "transaction_frequency": {
+          "__decimal__": "0.06666666666666666666666666667"
+        },
+        "concentration": {
+          "__decimal__": "1"
+        },
+        "assets": {
+          "__tuple__": [
+            "ETH",
+            "USDT"
+          ]
+        },
+        "dominant_funding_sources": {
+          "__tuple__": [
+            "0x2222222222222222222222222222222222222222"
+          ]
+        },
+        "dominant_outgoing_counterparties": {
+          "__tuple__": [
+            "0x2222222222222222222222222222222222222222"
+          ]
+        },
+        "reason_codes": {
+          "__tuple__": [
+            "activity_after_dormancy"
+          ]
+        },
+        "evidence_refs": {
+          "__tuple__": [
+            "IF0"
+          ]
+        },
+        "confidence": "medium"
+      },
+      {
+        "__type__": "OperationStage",
+        "stage": "dominant",
+        "started_at": {
+          "__datetime__": "2026-03-03T02:00:00+00:00"
+        },
+        "ended_at": {
+          "__datetime__": "2026-10-10T09:00:00+00:00"
+        },
+        "transaction_count": 8,
+        "transaction_frequency": {
+          "__decimal__": "0.03603603603603603603603603604"
+        },
+        "concentration": {
+          "__decimal__": "1"
+        },
+        "assets": {
+          "__tuple__": [
+            "ETH",
+            "USDT"
+          ]
+        },
+        "dominant_funding_sources": {
+          "__tuple__": [
+            "0x2222222222222222222222222222222222222222"
+          ]
+        },
+        "dominant_outgoing_counterparties": {
+          "__tuple__": [
+            "0x2222222222222222222222222222222222222222"
+          ]
+        },
+        "reason_codes": {
+          "__tuple__": [
+            "funding_concentration_threshold"
+          ]
+        },
+        "evidence_refs": {
+          "__tuple__": [
+            "IF0"
+          ]
+        },
+        "confidence": "medium"
+      },
+      {
+        "__type__": "OperationStage",
+        "stage": "dormant",
+        "started_at": {
+          "__datetime__": "2026-03-03T02:00:00+00:00"
+        },
+        "ended_at": {
+          "__datetime__": "2026-04-04T03:00:00+00:00"
+        },
+        "transaction_count": 0,
+        "transaction_frequency": {
+          "__decimal__": "0"
+        },
+        "concentration": {
+          "__decimal__": "1"
+        },
+        "assets": {
+          "__tuple__": [
+            "ETH",
+            "USDT"
+          ]
+        },
+        "dominant_funding_sources": {
+          "__tuple__": [
+            "0x2222222222222222222222222222222222222222"
+          ]
+        },
+        "dominant_outgoing_counterparties": {
+          "__tuple__": [
+            "0x2222222222222222222222222222222222222222"
+          ]
+        },
+        "reason_codes": {
+          "__tuple__": [
+            "transaction_gap_exceeds_threshold"
+          ]
+        },
+        "evidence_refs": {
+          "__tuple__": [
+            "IF0"
+          ]
+        },
+        "confidence": "medium"
+      },
+      {
+        "__type__": "OperationStage",
+        "stage": "dormant",
+        "started_at": {
+          "__datetime__": "2026-04-04T03:00:00+00:00"
+        },
+        "ended_at": {
+          "__datetime__": "2026-05-05T04:00:00+00:00"
+        },
+        "transaction_count": 0,
+        "transaction_frequency": {
+          "__decimal__": "0"
+        },
+        "concentration": {
+          "__decimal__": "1"
+        },
+        "assets": {
+          "__tuple__": [
+            "ETH",
+            "USDT"
+          ]
+        },
+        "dominant_funding_sources": {
+          "__tuple__": [
+            "0x2222222222222222222222222222222222222222"
+          ]
+        },
+        "dominant_outgoing_counterparties": {
+          "__tuple__": [
+            "0x2222222222222222222222222222222222222222"
+          ]
+        },
+        "reason_codes": {
+          "__tuple__": [
+            "transaction_gap_exceeds_threshold"
+          ]
+        },
+        "evidence_refs": {
+          "__tuple__": [
+            "IF0"
+          ]
+        },
+        "confidence": "medium"
+      },
+      {
+        "__type__": "OperationStage",
+        "stage": "recovery",
+        "started_at": {
+          "__datetime__": "2026-04-04T03:00:00+00:00"
+        },
+        "ended_at": {
+          "__datetime__": "2026-10-10T09:00:00+00:00"
+        },
+        "transaction_count": 7,
+        "transaction_frequency": {
+          "__decimal__": "0.03333333333333333333333333333"
+        },
+        "concentration": {
+          "__decimal__": "1"
+        },
+        "assets": {
+          "__tuple__": [
+            "ETH",
+            "USDT"
+          ]
+        },
+        "dominant_funding_sources": {
+          "__tuple__": [
+            "0x2222222222222222222222222222222222222222"
+          ]
+        },
+        "dominant_outgoing_counterparties": {
+          "__tuple__": [
+            "0x2222222222222222222222222222222222222222"
+          ]
+        },
+        "reason_codes": {
+          "__tuple__": [
+            "activity_after_dormancy"
+          ]
+        },
+        "evidence_refs": {
+          "__tuple__": [
+            "IF0"
+          ]
+        },
+        "confidence": "medium"
+      },
+      {
+        "__type__": "OperationStage",
+        "stage": "dormant",
+        "started_at": {
+          "__datetime__": "2026-05-05T04:00:00+00:00"
+        },
+        "ended_at": {
+          "__datetime__": "2026-06-06T05:00:00+00:00"
+        },
+        "transaction_count": 0,
+        "transaction_frequency": {
+          "__decimal__": "0"
+        },
+        "concentration": {
+          "__decimal__": "1"
+        },
+        "assets": {
+          "__tuple__": [
+            "ETH",
+            "USDT"
+          ]
+        },
+        "dominant_funding_sources": {
+          "__tuple__": [
+            "0x2222222222222222222222222222222222222222"
+          ]
+        },
+        "dominant_outgoing_counterparties": {
+          "__tuple__": [
+            "0x2222222222222222222222222222222222222222"
+          ]
+        },
+        "reason_codes": {
+          "__tuple__": [
+            "transaction_gap_exceeds_threshold"
+          ]
+        },
+        "evidence_refs": {
+          "__tuple__": [
+            "IF0"
+          ]
+        },
+        "confidence": "medium"
+      },
+      {
+        "__type__": "OperationStage",
+        "stage": "recovery",
+        "started_at": {
+          "__datetime__": "2026-05-05T04:00:00+00:00"
+        },
+        "ended_at": {
+          "__datetime__": "2026-10-10T09:00:00+00:00"
+        },
+        "transaction_count": 6,
+        "transaction_frequency": {
+          "__decimal__": "0.03333333333333333333333333333"
+        },
+        "concentration": {
+          "__decimal__": "1"
+        },
+        "assets": {
+          "__tuple__": [
+            "ETH",
+            "USDT"
+          ]
+        },
+        "dominant_funding_sources": {
+          "__tuple__": [
+            "0x2222222222222222222222222222222222222222"
+          ]
+        },
+        "dominant_outgoing_counterparties": {
+          "__tuple__": [
+            "0x2222222222222222222222222222222222222222"
+          ]
+        },
+        "reason_codes": {
+          "__tuple__": [
+            "activity_after_dormancy"
+          ]
+        },
+        "evidence_refs": {
+          "__tuple__": [
+            "IF0"
+          ]
+        },
+        "confidence": "medium"
+      },
+      {
+        "__type__": "OperationStage",
+        "stage": "dormant",
+        "started_at": {
+          "__datetime__": "2026-06-06T05:00:00+00:00"
+        },
+        "ended_at": {
+          "__datetime__": "2026-07-07T06:00:00+00:00"
+        },
+        "transaction_count": 0,
+        "transaction_frequency": {
+          "__decimal__": "0"
+        },
+        "concentration": {
+          "__decimal__": "1"
+        },
+        "assets": {
+          "__tuple__": [
+            "ETH",
+            "USDT"
+          ]
+        },
+        "dominant_funding_sources": {
+          "__tuple__": [
+            "0x2222222222222222222222222222222222222222"
+          ]
+        },
+        "dominant_outgoing_counterparties": {
+          "__tuple__": [
+            "0x2222222222222222222222222222222222222222"
+          ]
+        },
+        "reason_codes": {
+          "__tuple__": [
+            "transaction_gap_exceeds_threshold"
+          ]
+        },
+        "evidence_refs": {
+          "__tuple__": [
+            "IF0"
+          ]
+        },
+        "confidence": "medium"
+      },
+      {
+        "__type__": "OperationStage",
+        "stage": "recovery",
+        "started_at": {
+          "__datetime__": "2026-06-06T05:00:00+00:00"
+        },
+        "ended_at": {
+          "__datetime__": "2026-10-10T09:00:00+00:00"
+        },
+        "transaction_count": 5,
+        "transaction_frequency": {
+          "__decimal__": "0.03333333333333333333333333333"
+        },
+        "concentration": {
+          "__decimal__": "1"
+        },
+        "assets": {
+          "__tuple__": [
+            "ETH",
+            "USDT"
+          ]
+        },
+        "dominant_funding_sources": {
+          "__tuple__": [
+            "0x2222222222222222222222222222222222222222"
+          ]
+        },
+        "dominant_outgoing_counterparties": {
+          "__tuple__": [
+            "0x2222222222222222222222222222222222222222"
+          ]
+        },
+        "reason_codes": {
+          "__tuple__": [
+            "activity_after_dormancy"
+          ]
+        },
+        "evidence_refs": {
+          "__tuple__": [
+            "IF0"
+          ]
+        },
+        "confidence": "medium"
+      },
+      {
+        "__type__": "OperationStage",
+        "stage": "dormant",
+        "started_at": {
+          "__datetime__": "2026-07-07T06:00:00+00:00"
+        },
+        "ended_at": {
+          "__datetime__": "2026-08-08T07:00:00+00:00"
+        },
+        "transaction_count": 0,
+        "transaction_frequency": {
+          "__decimal__": "0"
+        },
+        "concentration": {
+          "__decimal__": "1"
+        },
+        "assets": {
+          "__tuple__": [
+            "ETH",
+            "USDT"
+          ]
+        },
+        "dominant_funding_sources": {
+          "__tuple__": [
+            "0x2222222222222222222222222222222222222222"
+          ]
+        },
+        "dominant_outgoing_counterparties": {
+          "__tuple__": [
+            "0x2222222222222222222222222222222222222222"
+          ]
+        },
+        "reason_codes": {
+          "__tuple__": [
+            "transaction_gap_exceeds_threshold"
+          ]
+        },
+        "evidence_refs": {
+          "__tuple__": [
+            "IF0"
+          ]
+        },
+        "confidence": "medium"
+      },
+      {
+        "__type__": "OperationStage",
+        "stage": "recovery",
+        "started_at": {
+          "__datetime__": "2026-07-07T06:00:00+00:00"
+        },
+        "ended_at": {
+          "__datetime__": "2026-10-10T09:00:00+00:00"
+        },
+        "transaction_count": 4,
+        "transaction_frequency": {
+          "__decimal__": "0.03333333333333333333333333333"
+        },
+        "concentration": {
+          "__decimal__": "1"
+        },
+        "assets": {
+          "__tuple__": [
+            "ETH",
+            "USDT"
+          ]
+        },
+        "dominant_funding_sources": {
+          "__tuple__": [
+            "0x2222222222222222222222222222222222222222"
+          ]
+        },
+        "dominant_outgoing_counterparties": {
+          "__tuple__": [
+            "0x2222222222222222222222222222222222222222"
+          ]
+        },
+        "reason_codes": {
+          "__tuple__": [
+            "activity_after_dormancy"
+          ]
+        },
+        "evidence_refs": {
+          "__tuple__": [
+            "IF0"
+          ]
+        },
+        "confidence": "medium"
+      },
+      {
+        "__type__": "OperationStage",
+        "stage": "dormant",
+        "started_at": {
+          "__datetime__": "2026-08-08T07:00:00+00:00"
+        },
+        "ended_at": {
+          "__datetime__": "2026-09-09T08:00:00+00:00"
+        },
+        "transaction_count": 0,
+        "transaction_frequency": {
+          "__decimal__": "0"
+        },
+        "concentration": {
+          "__decimal__": "1"
+        },
+        "assets": {
+          "__tuple__": [
+            "ETH",
+            "USDT"
+          ]
+        },
+        "dominant_funding_sources": {
+          "__tuple__": [
+            "0x2222222222222222222222222222222222222222"
+          ]
+        },
+        "dominant_outgoing_counterparties": {
+          "__tuple__": [
+            "0x2222222222222222222222222222222222222222"
+          ]
+        },
+        "reason_codes": {
+          "__tuple__": [
+            "transaction_gap_exceeds_threshold"
+          ]
+        },
+        "evidence_refs": {
+          "__tuple__": [
+            "IF0"
+          ]
+        },
+        "confidence": "medium"
+      },
+      {
+        "__type__": "OperationStage",
+        "stage": "recovery",
+        "started_at": {
+          "__datetime__": "2026-08-08T07:00:00+00:00"
+        },
+        "ended_at": {
+          "__datetime__": "2026-10-10T09:00:00+00:00"
+        },
+        "transaction_count": 3,
+        "transaction_frequency": {
+          "__decimal__": "0.03333333333333333333333333333"
+        },
+        "concentration": {
+          "__decimal__": "1"
+        },
+        "assets": {
+          "__tuple__": [
+            "ETH",
+            "USDT"
+          ]
+        },
+        "dominant_funding_sources": {
+          "__tuple__": [
+            "0x2222222222222222222222222222222222222222"
+          ]
+        },
+        "dominant_outgoing_counterparties": {
+          "__tuple__": [
+            "0x2222222222222222222222222222222222222222"
+          ]
+        },
+        "reason_codes": {
+          "__tuple__": [
+            "activity_after_dormancy"
+          ]
+        },
+        "evidence_refs": {
+          "__tuple__": [
+            "IF0"
+          ]
+        },
+        "confidence": "medium"
+      },
+      {
+        "__type__": "OperationStage",
+        "stage": "dormant",
+        "started_at": {
+          "__datetime__": "2026-09-09T08:00:00+00:00"
+        },
+        "ended_at": {
+          "__datetime__": "2026-10-10T09:00:00+00:00"
+        },
+        "transaction_count": 0,
+        "transaction_frequency": {
+          "__decimal__": "0"
+        },
+        "concentration": {
+          "__decimal__": "1"
+        },
+        "assets": {
+          "__tuple__": [
+            "ETH",
+            "USDT"
+          ]
+        },
+        "dominant_funding_sources": {
+          "__tuple__": [
+            "0x2222222222222222222222222222222222222222"
+          ]
+        },
+        "dominant_outgoing_counterparties": {
+          "__tuple__": [
+            "0x2222222222222222222222222222222222222222"
+          ]
+        },
+        "reason_codes": {
+          "__tuple__": [
+            "transaction_gap_exceeds_threshold"
+          ]
+        },
+        "evidence_refs": {
+          "__tuple__": [
+            "IF0"
+          ]
+        },
+        "confidence": "medium"
+      },
+      {
+        "__type__": "OperationStage",
+        "stage": "recovery",
+        "started_at": {
+          "__datetime__": "2026-09-09T08:00:00+00:00"
+        },
+        "ended_at": {
+          "__datetime__": "2026-10-10T09:00:00+00:00"
+        },
+        "transaction_count": 2,
+        "transaction_frequency": {
+          "__decimal__": "0.03333333333333333333333333333"
+        },
+        "concentration": {
+          "__decimal__": "1"
+        },
+        "assets": {
+          "__tuple__": [
+            "ETH",
+            "USDT"
+          ]
+        },
+        "dominant_funding_sources": {
+          "__tuple__": [
+            "0x2222222222222222222222222222222222222222"
+          ]
+        },
+        "dominant_outgoing_counterparties": {
+          "__tuple__": [
+            "0x2222222222222222222222222222222222222222"
+          ]
+        },
+        "reason_codes": {
+          "__tuple__": [
+            "activity_after_dormancy"
+          ]
+        },
+        "evidence_refs": {
+          "__tuple__": [
+            "IF0"
+          ]
+        },
+        "confidence": "medium"
+      },
+      {
+        "__type__": "OperationStage",
+        "stage": "recovery",
+        "started_at": {
+          "__datetime__": "2026-10-10T09:00:00+00:00"
+        },
+        "ended_at": {
+          "__datetime__": "2026-10-10T09:00:00+00:00"
+        },
+        "transaction_count": 1,
+        "transaction_frequency": {
+          "__decimal__": "0.03333333333333333333333333333"
+        },
+        "concentration": {
+          "__decimal__": "1"
+        },
+        "assets": {
+          "__tuple__": [
+            "ETH",
+            "USDT"
+          ]
+        },
+        "dominant_funding_sources": {
+          "__tuple__": [
+            "0x2222222222222222222222222222222222222222"
+          ]
+        },
+        "dominant_outgoing_counterparties": {
+          "__tuple__": [
+            "0x2222222222222222222222222222222222222222"
+          ]
+        },
+        "reason_codes": {
+          "__tuple__": [
+            "activity_after_dormancy"
+          ]
+        },
+        "evidence_refs": {
+          "__tuple__": [
+            "IF0"
+          ]
+        },
+        "confidence": "medium"
+      }
+    ]
+  },
+  "dormant_periods": {
+    "__tuple__": [
+      {
+        "__type__": "DormantPeriod",
+        "started_at": {
+          "__datetime__": "2026-01-01T00:00:00+00:00"
+        },
+        "ended_at": {
+          "__datetime__": "2026-02-02T01:00:00+00:00"
+        },
+        "dormant_days": 32,
+        "reactivated": true,
+        "post_recovery_average_amount_by_asset": {
+          "ETH": {
+            "__decimal__": "3.0"
+          }
+        },
+        "post_recovery_daily_frequency": {
+          "__decimal__": "0.06666666666666666666666666667"
+        },
+        "behavior_changed": false
+      },
+      {
+        "__type__": "DormantPeriod",
+        "started_at": {
+          "__datetime__": "2026-03-03T02:00:00+00:00"
+        },
+        "ended_at": {
+          "__datetime__": "2026-04-04T03:00:00+00:00"
+        },
+        "dormant_days": 32,
+        "reactivated": true,
+        "post_recovery_average_amount_by_asset": {
+          "USDT": {
+            "__decimal__": "4.5"
+          }
+        },
+        "post_recovery_daily_frequency": {
+          "__decimal__": "0.03333333333333333333333333333"
+        },
+        "behavior_changed": false
+      },
+      {
+        "__type__": "DormantPeriod",
+        "started_at": {
+          "__datetime__": "2026-04-04T03:00:00+00:00"
+        },
+        "ended_at": {
+          "__datetime__": "2026-05-05T04:00:00+00:00"
+        },
+        "dormant_days": 31,
+        "reactivated": true,
+        "post_recovery_average_amount_by_asset": {
+          "ETH": {
+            "__decimal__": "5.5"
+          }
+        },
+        "post_recovery_daily_frequency": {
+          "__decimal__": "0.03333333333333333333333333333"
+        },
+        "behavior_changed": false
+      },
+      {
+        "__type__": "DormantPeriod",
+        "started_at": {
+          "__datetime__": "2026-05-05T04:00:00+00:00"
+        },
+        "ended_at": {
+          "__datetime__": "2026-06-06T05:00:00+00:00"
+        },
+        "dormant_days": 32,
+        "reactivated": true,
+        "post_recovery_average_amount_by_asset": {
+          "ETH": {
+            "__decimal__": "6.5"
+          }
+        },
+        "post_recovery_daily_frequency": {
+          "__decimal__": "0.03333333333333333333333333333"
+        },
+        "behavior_changed": false
+      },
+      {
+        "__type__": "DormantPeriod",
+        "started_at": {
+          "__datetime__": "2026-06-06T05:00:00+00:00"
+        },
+        "ended_at": {
+          "__datetime__": "2026-07-07T06:00:00+00:00"
+        },
+        "dormant_days": 31,
+        "reactivated": true,
+        "post_recovery_average_amount_by_asset": {
+          "USDT": {
+            "__decimal__": "7.5"
+          }
+        },
+        "post_recovery_daily_frequency": {
+          "__decimal__": "0.03333333333333333333333333333"
+        },
+        "behavior_changed": false
+      },
+      {
+        "__type__": "DormantPeriod",
+        "started_at": {
+          "__datetime__": "2026-07-07T06:00:00+00:00"
+        },
+        "ended_at": {
+          "__datetime__": "2026-08-08T07:00:00+00:00"
+        },
+        "dormant_days": 32,
+        "reactivated": true,
+        "post_recovery_average_amount_by_asset": {
+          "ETH": {
+            "__decimal__": "8.5"
+          }
+        },
+        "post_recovery_daily_frequency": {
+          "__decimal__": "0.03333333333333333333333333333"
+        },
+        "behavior_changed": false
+      },
+      {
+        "__type__": "DormantPeriod",
+        "started_at": {
+          "__datetime__": "2026-08-08T07:00:00+00:00"
+        },
+        "ended_at": {
+          "__datetime__": "2026-09-09T08:00:00+00:00"
+        },
+        "dormant_days": 32,
+        "reactivated": true,
+        "post_recovery_average_amount_by_asset": {
+          "ETH": {
+            "__decimal__": "9.5"
+          }
+        },
+        "post_recovery_daily_frequency": {
+          "__decimal__": "0.03333333333333333333333333333"
+        },
+        "behavior_changed": false
+      },
+      {
+        "__type__": "DormantPeriod",
+        "started_at": {
+          "__datetime__": "2026-09-09T08:00:00+00:00"
+        },
+        "ended_at": {
+          "__datetime__": "2026-10-10T09:00:00+00:00"
+        },
+        "dormant_days": 31,
+        "reactivated": true,
+        "post_recovery_average_amount_by_asset": {
+          "USDT": {
+            "__decimal__": "10.5"
+          }
+        },
+        "post_recovery_daily_frequency": {
+          "__decimal__": "0.03333333333333333333333333333"
+        },
+        "behavior_changed": false
+      }
+    ]
+  },
+  "counterparty_concentration": {
+    "__type__": "ConcentrationMetrics",
+    "top10_ratio": {
+      "__decimal__": "1"
+    },
+    "top20_ratio": {
+      "__decimal__": "1"
+    },
+    "top50_ratio": {
+      "__decimal__": "1"
+    },
+    "herfindahl_index": {
+      "__decimal__": "1"
+    },
+    "gini": {
+      "__decimal__": "0"
+    },
+    "entropy": {
+      "__decimal__": "-0.0"
+    },
+    "top1_ratio": {
+      "__decimal__": "1"
+    },
+    "top3_ratio": {
+      "__decimal__": "1"
+    },
+    "top5_ratio": {
+      "__decimal__": "1"
+    },
+    "normalized_herfindahl_index": {
+      "__decimal__": "1"
+    },
+    "effective_counterparty_count": {
+      "__decimal__": "1"
+    },
+    "by_asset_direction": {}
+  },
+  "services": {
+    "__tuple__": []
+  },
+  "distribution": {
+    "__type__": "DistributionMetrics",
+    "matched_transfer_count": 4,
+    "average_holding_seconds": {
+      "__decimal__": "8175600.0"
+    },
+    "median_holding_seconds": {
+      "__decimal__": "8218800.0"
+    }
+  },
+  "transfer_patterns": {
+    "__type__": "TransferPattern",
+    "fixed_amounts": {
+      "ETH": {
+        "__tuple__": []
+      },
+      "USDT": {
+        "__tuple__": []
+      }
+    },
+    "integer_amount_ratio": {
+      "__decimal__": "0"
+    },
+    "amount_suffix_counts": {
+      "5": 10
+    },
+    "batch_outgoing_count": 0,
+    "batch_incoming_count": 0
+  },
+  "relationships": {
+    "__type__": "RelationshipResult",
+    "common_counterparties": {},
+    "common_sources": {},
+    "common_destinations": {}
+  },
+  "behavior": {
+    "__type__": "BehaviorSummary",
+    "funding_pattern": "concentrated",
+    "distribution_pattern": "forwarding",
+    "frequency": {
+      "__decimal__": "1.0"
+    },
+    "counterparty_pattern": "concentrated",
+    "activity_pattern": "intermittent",
+    "operation_stages": {
+      "__tuple__": [
+        "dormant",
+        "startup",
+        "recovery",
+        "dominant",
+        "dormant",
+        "dormant",
+        "recovery",
+        "dormant",
+        "recovery",
+        "dormant",
+        "recovery",
+        "dormant",
+        "recovery",
+        "dormant",
+        "recovery",
+        "dormant",
+        "recovery",
+        "recovery"
+      ]
+    },
+    "dormant": true,
+    "recovery": true
+  },
+  "observations": {
+    "__tuple__": [
+      {
+        "__type__": "Observation",
+        "code": "dormant_reactivation",
+        "occurred_at": {
+          "__datetime__": "2026-02-02T01:00:00+00:00"
+        },
+        "facts": {
+          "dormant_days": 32,
+          "reactivated": true
+        },
+        "factual_statement": "目前樣本顯示連續 32 天沒有交易，之後出現交易。",
+        "metrics": {
+          "dormant_days": 32
+        },
+        "reason_codes": {
+          "__tuple__": [
+            "transaction_gap_exceeds_threshold"
+          ]
+        },
+        "evidence_refs": {
+          "__tuple__": [
+            "IF0"
+          ]
+        },
+        "confidence": "medium",
+        "limitations": {
+          "__tuple__": []
+        }
+      },
+      {
+        "__type__": "Observation",
+        "code": "dormant_reactivation",
+        "occurred_at": {
+          "__datetime__": "2026-04-04T03:00:00+00:00"
+        },
+        "facts": {
+          "dormant_days": 32,
+          "reactivated": true
+        },
+        "factual_statement": "目前樣本顯示連續 32 天沒有交易，之後出現交易。",
+        "metrics": {
+          "dormant_days": 32
+        },
+        "reason_codes": {
+          "__tuple__": [
+            "transaction_gap_exceeds_threshold"
+          ]
+        },
+        "evidence_refs": {
+          "__tuple__": [
+            "IF0"
+          ]
+        },
+        "confidence": "medium",
+        "limitations": {
+          "__tuple__": []
+        }
+      },
+      {
+        "__type__": "Observation",
+        "code": "dormant_reactivation",
+        "occurred_at": {
+          "__datetime__": "2026-05-05T04:00:00+00:00"
+        },
+        "facts": {
+          "dormant_days": 31,
+          "reactivated": true
+        },
+        "factual_statement": "目前樣本顯示連續 31 天沒有交易，之後出現交易。",
+        "metrics": {
+          "dormant_days": 31
+        },
+        "reason_codes": {
+          "__tuple__": [
+            "transaction_gap_exceeds_threshold"
+          ]
+        },
+        "evidence_refs": {
+          "__tuple__": [
+            "IF0"
+          ]
+        },
+        "confidence": "medium",
+        "limitations": {
+          "__tuple__": []
+        }
+      },
+      {
+        "__type__": "Observation",
+        "code": "dormant_reactivation",
+        "occurred_at": {
+          "__datetime__": "2026-06-06T05:00:00+00:00"
+        },
+        "facts": {
+          "dormant_days": 32,
+          "reactivated": true
+        },
+        "factual_statement": "目前樣本顯示連續 32 天沒有交易，之後出現交易。",
+        "metrics": {
+          "dormant_days": 32
+        },
+        "reason_codes": {
+          "__tuple__": [
+            "transaction_gap_exceeds_threshold"
+          ]
+        },
+        "evidence_refs": {
+          "__tuple__": [
+            "IF0"
+          ]
+        },
+        "confidence": "medium",
+        "limitations": {
+          "__tuple__": []
+        }
+      },
+      {
+        "__type__": "Observation",
+        "code": "dormant_reactivation",
+        "occurred_at": {
+          "__datetime__": "2026-07-07T06:00:00+00:00"
+        },
+        "facts": {
+          "dormant_days": 31,
+          "reactivated": true
+        },
+        "factual_statement": "目前樣本顯示連續 31 天沒有交易，之後出現交易。",
+        "metrics": {
+          "dormant_days": 31
+        },
+        "reason_codes": {
+          "__tuple__": [
+            "transaction_gap_exceeds_threshold"
+          ]
+        },
+        "evidence_refs": {
+          "__tuple__": [
+            "IF0"
+          ]
+        },
+        "confidence": "medium",
+        "limitations": {
+          "__tuple__": []
+        }
+      },
+      {
+        "__type__": "Observation",
+        "code": "dormant_reactivation",
+        "occurred_at": {
+          "__datetime__": "2026-08-08T07:00:00+00:00"
+        },
+        "facts": {
+          "dormant_days": 32,
+          "reactivated": true
+        },
+        "factual_statement": "目前樣本顯示連續 32 天沒有交易，之後出現交易。",
+        "metrics": {
+          "dormant_days": 32
+        },
+        "reason_codes": {
+          "__tuple__": [
+            "transaction_gap_exceeds_threshold"
+          ]
+        },
+        "evidence_refs": {
+          "__tuple__": [
+            "IF0"
+          ]
+        },
+        "confidence": "medium",
+        "limitations": {
+          "__tuple__": []
+        }
+      },
+      {
+        "__type__": "Observation",
+        "code": "dormant_reactivation",
+        "occurred_at": {
+          "__datetime__": "2026-09-09T08:00:00+00:00"
+        },
+        "facts": {
+          "dormant_days": 32,
+          "reactivated": true
+        },
+        "factual_statement": "目前樣本顯示連續 32 天沒有交易，之後出現交易。",
+        "metrics": {
+          "dormant_days": 32
+        },
+        "reason_codes": {
+          "__tuple__": [
+            "transaction_gap_exceeds_threshold"
+          ]
+        },
+        "evidence_refs": {
+          "__tuple__": [
+            "IF0"
+          ]
+        },
+        "confidence": "medium",
+        "limitations": {
+          "__tuple__": []
+        }
+      },
+      {
+        "__type__": "Observation",
+        "code": "dormant_reactivation",
+        "occurred_at": {
+          "__datetime__": "2026-10-10T09:00:00+00:00"
+        },
+        "facts": {
+          "dormant_days": 31,
+          "reactivated": true
+        },
+        "factual_statement": "目前樣本顯示連續 31 天沒有交易，之後出現交易。",
+        "metrics": {
+          "dormant_days": 31
+        },
+        "reason_codes": {
+          "__tuple__": [
+            "transaction_gap_exceeds_threshold"
+          ]
+        },
+        "evidence_refs": {
+          "__tuple__": [
+            "IF0"
+          ]
+        },
+        "confidence": "medium",
+        "limitations": {
+          "__tuple__": []
+        }
+      }
+    ]
+  },
+  "conclusion_facts": {
+    "__type__": "ConclusionFacts",
+    "funding_source_changed": false,
+    "dormant_days": 32,
+    "main_counterparty_ratio": {
+      "__decimal__": "1"
+    },
+    "top_provider_changed": false,
+    "batch_distribution": false,
+    "funding_concentration": {
+      "__decimal__": "1"
+    },
+    "reactivated": true
+  },
+  "metadata": {
+    "engine_version": "6.5",
+    "deterministic": true,
+    "target_address": "0x1111111111111111111111111111111111111111",
+    "analysis_completeness": "complete",
+    "settings": {
+      "dormant_days": 30,
+      "batch_window_minutes": 5,
+      "batch_minimum_count": 3,
+      "fixed_amount_minimum_count": 3,
+      "funding_window_days": 30,
+      "minimum_funding_transactions": 2,
+      "minimum_funding_amount": {
+        "__decimal__": "0"
+      },
+      "dominant_source_min_share": {
+        "__decimal__": "0.50"
+      },
+      "transition_persistence_days": 7,
+      "timezone": "Asia/Taipei"
+    }
+  },
+  "direction_reconciliation": {
+    "__type__": "DirectionReconciliation",
+    "transaction_count": 10,
+    "incoming_count": 5,
+    "outgoing_count": 5,
+    "self_transfer_count": 0,
+    "neutral_count": 0,
+    "unclassified_direction_count": 0,
+    "failed_transaction_count": 0,
+    "duplicate_removed_count": 0,
+    "reconciled": true
+  },
+  "structured_metadata": {
+    "__type__": "InvestigationMetadata",
+    "target_address": "0x1111111111111111111111111111111111111111",
+    "chain": null,
+    "generated_at": {
+      "__datetime__": "2026-10-10T09:00:00+00:00"
+    },
+    "source_transaction_count": 10,
+    "analysis_completeness": "complete",
+    "graph_completeness": "not_provided",
+    "source_date_from": {
+      "__datetime__": "2026-01-01T00:00:00+00:00"
+    },
+    "source_date_to": {
+      "__datetime__": "2026-10-10T09:00:00+00:00"
+    },
+    "assets": {
+      "__tuple__": [
+        "ETH",
+        "USDT"
+      ]
+    },
+    "settings_snapshot": {
+      "dormant_days": 30,
+      "batch_window_minutes": 5,
+      "batch_minimum_count": 3,
+      "fixed_amount_minimum_count": 3,
+      "funding_window_days": 30,
+      "minimum_funding_transactions": 2,
+      "minimum_funding_amount": {
+        "__decimal__": "0"
+      },
+      "dominant_source_min_share": {
+        "__decimal__": "0.50"
+      },
+      "transition_persistence_days": 7,
+      "timezone": "Asia/Taipei"
+    },
+    "investigation_version": "6.5"
+  },
+  "warnings": {
+    "__tuple__": []
+  },
+  "evidence_refs": {
+    "__tuple__": [
+      {
+        "__type__": "InvestigationEvidenceRef",
+        "evidence_id": "IF0",
+        "feature": "analysis_scope",
+        "source_type": "analysis_flow",
+        "source_reference": "AnalysisResult.flow",
+        "tx_hashes": {
+          "__tuple__": [
+            "0x0000000000000000000000000000000000000000000000000000000000000000",
+            "0x0000000000000000000000000000000000000000000000000000000000000001",
+            "0x0000000000000000000000000000000000000000000000000000000000000002",
+            "0x0000000000000000000000000000000000000000000000000000000000000003",
+            "0x0000000000000000000000000000000000000000000000000000000000000004",
+            "0x0000000000000000000000000000000000000000000000000000000000000005",
+            "0x0000000000000000000000000000000000000000000000000000000000000006",
+            "0x0000000000000000000000000000000000000000000000000000000000000007",
+            "0x0000000000000000000000000000000000000000000000000000000000000008",
+            "0x0000000000000000000000000000000000000000000000000000000000000009"
+          ]
+        },
+        "addresses": {
+          "__tuple__": [
+            "0x1111111111111111111111111111111111111111",
+            "0x2222222222222222222222222222222222222222"
+          ]
+        },
+        "calculation": "deterministic feature calculation over public analysis flow",
+        "parameters": {
+          "edge_count": 10
+        },
+        "created_at": {
+          "__datetime__": "2026-10-10T09:00:00+00:00"
+        }
+      },
+      {
+        "__type__": "InvestigationEvidenceRef",
+        "evidence_id": "IF1",
+        "feature": "funding_source",
+        "source_type": "analysis_flow",
+        "source_reference": "AnalysisResult.flow",
+        "tx_hashes": {
+          "__tuple__": [
+            "0x0000000000000000000000000000000000000000000000000000000000000000",
+            "0x0000000000000000000000000000000000000000000000000000000000000002",
+            "0x0000000000000000000000000000000000000000000000000000000000000004",
+            "0x0000000000000000000000000000000000000000000000000000000000000006",
+            "0x0000000000000000000000000000000000000000000000000000000000000008"
+          ]
+        },
+        "addresses": {
+          "__tuple__": [
+            "0x2222222222222222222222222222222222222222"
+          ]
+        },
+        "calculation": "incoming transaction count / all incoming transactions",
+        "parameters": {
+          "rank": 1
+        },
+        "created_at": {
+          "__datetime__": "2026-10-10T09:00:00+00:00"
+        }
+      }
+    ]
+  },
+  "conclusion_fact_items": {
+    "__tuple__": [
+      {
+        "__type__": "ConclusionFact",
+        "fact_code": "dominant_funder_exists",
+        "value": true,
+        "unit": null,
+        "confidence": "high",
+        "reason_codes": {
+          "__tuple__": [
+            "deterministic_rule"
+          ]
+        },
+        "evidence_refs": {
+          "__tuple__": [
+            "IF0"
+          ]
+        },
+        "limitations": {
+          "__tuple__": []
+        }
+      },
+      {
+        "__type__": "ConclusionFact",
+        "fact_code": "dominant_funder_address",
+        "value": {
+          "ETH": "0x2222222222222222222222222222222222222222",
+          "USDT": "0x2222222222222222222222222222222222222222"
+        },
+        "unit": "address_by_asset",
+        "confidence": "high",
+        "reason_codes": {
+          "__tuple__": [
+            "deterministic_rule"
+          ]
+        },
+        "evidence_refs": {
+          "__tuple__": [
+            "IF0"
+          ]
+        },
+        "limitations": {
+          "__tuple__": []
+        }
+      },
+      {
+        "__type__": "ConclusionFact",
+        "fact_code": "dominant_funder_share_by_asset",
+        "value": {
+          "ETH": {
+            "__decimal__": "1"
+          },
+          "USDT": {
+            "__decimal__": "1"
+          }
+        },
+        "unit": "ratio_by_asset",
+        "confidence": "high",
+        "reason_codes": {
+          "__tuple__": [
+            "deterministic_rule"
+          ]
+        },
+        "evidence_refs": {
+          "__tuple__": [
+            "IF0"
+          ]
+        },
+        "limitations": {
+          "__tuple__": []
+        }
+      },
+      {
+        "__type__": "ConclusionFact",
+        "fact_code": "funding_source_changed",
+        "value": false,
+        "unit": null,
+        "confidence": "high",
+        "reason_codes": {
+          "__tuple__": [
+            "deterministic_rule"
+          ]
+        },
+        "evidence_refs": {
+          "__tuple__": [
+            "IF0"
+          ]
+        },
+        "limitations": {
+          "__tuple__": []
+        }
+      },
+      {
+        "__type__": "ConclusionFact",
+        "fact_code": "funding_transition_count",
+        "value": 0,
+        "unit": "count",
+        "confidence": "high",
+        "reason_codes": {
+          "__tuple__": [
+            "deterministic_rule"
+          ]
+        },
+        "evidence_refs": {
+          "__tuple__": [
+            "IF0"
+          ]
+        },
+        "limitations": {
+          "__tuple__": []
+        }
+      },
+      {
+        "__type__": "ConclusionFact",
+        "fact_code": "dormant_period_detected",
+        "value": true,
+        "unit": null,
+        "confidence": "high",
+        "reason_codes": {
+          "__tuple__": [
+            "deterministic_rule"
+          ]
+        },
+        "evidence_refs": {
+          "__tuple__": [
+            "IF0"
+          ]
+        },
+        "limitations": {
+          "__tuple__": []
+        }
+      },
+      {
+        "__type__": "ConclusionFact",
+        "fact_code": "longest_dormant_days",
+        "value": 32,
+        "unit": "days",
+        "confidence": "high",
+        "reason_codes": {
+          "__tuple__": [
+            "deterministic_rule"
+          ]
+        },
+        "evidence_refs": {
+          "__tuple__": [
+            "IF0"
+          ]
+        },
+        "limitations": {
+          "__tuple__": []
+        }
+      },
+      {
+        "__type__": "ConclusionFact",
+        "fact_code": "reactivation_detected",
+        "value": true,
+        "unit": null,
+        "confidence": "high",
+        "reason_codes": {
+          "__tuple__": [
+            "deterministic_rule"
+          ]
+        },
+        "evidence_refs": {
+          "__tuple__": [
+            "IF0"
+          ]
+        },
+        "limitations": {
+          "__tuple__": []
+        }
+      },
+      {
+        "__type__": "ConclusionFact",
+        "fact_code": "batch_incoming_detected",
+        "value": false,
+        "unit": null,
+        "confidence": "high",
+        "reason_codes": {
+          "__tuple__": [
+            "deterministic_rule"
+          ]
+        },
+        "evidence_refs": {
+          "__tuple__": [
+            "IF0"
+          ]
+        },
+        "limitations": {
+          "__tuple__": []
+        }
+      },
+      {
+        "__type__": "ConclusionFact",
+        "fact_code": "batch_outgoing_detected",
+        "value": false,
+        "unit": null,
+        "confidence": "high",
+        "reason_codes": {
+          "__tuple__": [
+            "deterministic_rule"
+          ]
+        },
+        "evidence_refs": {
+          "__tuple__": [
+            "IF0"
+          ]
+        },
+        "limitations": {
+          "__tuple__": []
+        }
+      },
+      {
+        "__type__": "ConclusionFact",
+        "fact_code": "fixed_amount_pattern_detected",
+        "value": false,
+        "unit": null,
+        "confidence": "high",
+        "reason_codes": {
+          "__tuple__": [
+            "deterministic_rule"
+          ]
+        },
+        "evidence_refs": {
+          "__tuple__": [
+            "IF0"
+          ]
+        },
+        "limitations": {
+          "__tuple__": []
+        }
+      },
+      {
+        "__type__": "ConclusionFact",
+        "fact_code": "rapid_pass_through_detected",
+        "value": false,
+        "unit": null,
+        "confidence": "high",
+        "reason_codes": {
+          "__tuple__": [
+            "deterministic_rule"
+          ]
+        },
+        "evidence_refs": {
+          "__tuple__": [
+            "IF0"
+          ]
+        },
+        "limitations": {
+          "__tuple__": []
+        }
+      },
+      {
+        "__type__": "ConclusionFact",
+        "fact_code": "service_candidate_count",
+        "value": 0,
+        "unit": "count",
+        "confidence": "high",
+        "reason_codes": {
+          "__tuple__": [
+            "deterministic_rule"
+          ]
+        },
+        "evidence_refs": {
+          "__tuple__": [
+            "IF0"
+          ]
+        },
+        "limitations": {
+          "__tuple__": []
+        }
+      },
+      {
+        "__type__": "ConclusionFact",
+        "fact_code": "graph_truncated",
+        "value": false,
+        "unit": null,
+        "confidence": "high",
+        "reason_codes": {
+          "__tuple__": [
+            "deterministic_rule"
+          ]
+        },
+        "evidence_refs": {
+          "__tuple__": [
+            "IF0"
+          ]
+        },
+        "limitations": {
+          "__tuple__": []
+        }
+      },
+      {
+        "__type__": "ConclusionFact",
+        "fact_code": "provider_truncated",
+        "value": false,
+        "unit": null,
+        "confidence": "high",
+        "reason_codes": {
+          "__tuple__": [
+            "deterministic_rule"
+          ]
+        },
+        "evidence_refs": {
+          "__tuple__": [
+            "IF0"
+          ]
+        },
+        "limitations": {
+          "__tuple__": []
+        }
+      },
+      {
+        "__type__": "ConclusionFact",
+        "fact_code": "analysis_partial",
+        "value": false,
+        "unit": null,
+        "confidence": "high",
+        "reason_codes": {
+          "__tuple__": [
+            "deterministic_rule"
+          ]
+        },
+        "evidence_refs": {
+          "__tuple__": [
+            "IF0"
+          ]
+        },
+        "limitations": {
+          "__tuple__": []
+        }
+      },
+      {
+        "__type__": "ConclusionFact",
+        "fact_code": "unknown_direction_count",
+        "value": 0,
+        "unit": "count",
+        "confidence": "high",
+        "reason_codes": {
+          "__tuple__": [
+            "deterministic_rule"
+          ]
+        },
+        "evidence_refs": {
+          "__tuple__": [
+            "IF0"
+          ]
+        },
+        "limitations": {
+          "__tuple__": []
+        }
+      }
+    ]
+  },
+  "label_matches": {
+    "__tuple__": []
+  },
+  "distribution_analysis": {
+    "__type__": "DistributionAnalysis",
+    "policy": "fifo_approximation",
+    "supported": true,
+    "statistics_by_asset": {
+      "ETH": {
+        "__type__": "HoldingTimeStatistics",
+        "asset": "ETH",
+        "matched_incoming_amount": {
+          "__decimal__": "9.0"
+        },
+        "matched_outgoing_amount": {
+          "__decimal__": "9.0"
+        },
+        "unmatched_incoming_amount": {
+          "__decimal__": "9.5"
+        },
+        "unmatched_outgoing_amount": {
+          "__decimal__": "8.5"
+        },
+        "average_holding_seconds": {
+          "__decimal__": "6402000.0"
+        },
+        "median_holding_seconds": {
+          "__decimal__": "8218800.0"
+        },
+        "minimum_holding_seconds": {
+          "__decimal__": "2768400.0"
+        },
+        "maximum_holding_seconds": {
+          "__decimal__": "8218800.0"
+        },
+        "within_5_minutes_ratio": {
+          "__decimal__": "0"
+        },
+        "within_1_hour_ratio": {
+          "__decimal__": "0"
+        },
+        "within_24_hours_ratio": {
+          "__decimal__": "0"
+        },
+        "within_7_days_ratio": {
+          "__decimal__": "0"
+        },
+        "pass_through_event_count": 3
+      },
+      "USDT": {
+        "__type__": "HoldingTimeStatistics",
+        "asset": "USDT",
+        "matched_incoming_amount": {
+          "__decimal__": "9.0"
+        },
+        "matched_outgoing_amount": {
+          "__decimal__": "9.0"
+        },
+        "unmatched_incoming_amount": {
+          "__decimal__": "0"
+        },
+        "unmatched_outgoing_amount": {
+          "__decimal__": "6.0"
+        },
+        "average_holding_seconds": {
+          "__decimal__": "8132400.0"
+        },
+        "median_holding_seconds": {
+          "__decimal__": "8132400.0"
+        },
+        "minimum_holding_seconds": {
+          "__decimal__": "8046000.0"
+        },
+        "maximum_holding_seconds": {
+          "__decimal__": "8218800.0"
+        },
+        "within_5_minutes_ratio": {
+          "__decimal__": "0"
+        },
+        "within_1_hour_ratio": {
+          "__decimal__": "0"
+        },
+        "within_24_hours_ratio": {
+          "__decimal__": "0"
+        },
+        "within_7_days_ratio": {
+          "__decimal__": "0"
+        },
+        "pass_through_event_count": 2
+      }
+    },
+    "pass_through_events": {
+      "__tuple__": [
+        {
+          "__type__": "PassThroughEvent",
+          "asset": "USDT",
+          "incoming_tx_hash": "0x0000000000000000000000000000000000000000000000000000000000000000",
+          "outgoing_tx_hashes": {
+            "__tuple__": [
+              "0x0000000000000000000000000000000000000000000000000000000000000003"
+            ]
+          },
+          "incoming_time": {
+            "__datetime__": "2026-01-01T00:00:00+00:00"
+          },
+          "first_outgoing_time": {
+            "__datetime__": "2026-04-04T03:00:00+00:00"
+          },
+          "elapsed_seconds": {
+            "__decimal__": "8046000.0"
+          },
+          "incoming_amount": {
+            "__decimal__": "1.5"
+          },
+          "matched_amount": {
+            "__decimal__": "1.5"
+          },
+          "match_method": "fifo_approximation",
+          "evidence_refs": {
+            "__tuple__": [
+              "0x0000000000000000000000000000000000000000000000000000000000000000",
+              "0x0000000000000000000000000000000000000000000000000000000000000003"
+            ]
+          }
+        },
+        {
+          "__type__": "PassThroughEvent",
+          "asset": "ETH",
+          "incoming_tx_hash": "0x0000000000000000000000000000000000000000000000000000000000000002",
+          "outgoing_tx_hashes": {
+            "__tuple__": [
+              "0x0000000000000000000000000000000000000000000000000000000000000005"
+            ]
+          },
+          "incoming_time": {
+            "__datetime__": "2026-03-03T02:00:00+00:00"
+          },
+          "first_outgoing_time": {
+            "__datetime__": "2026-06-06T05:00:00+00:00"
+          },
+          "elapsed_seconds": {
+            "__decimal__": "8218800.0"
+          },
+          "incoming_amount": {
+            "__decimal__": "3.5"
+          },
+          "matched_amount": {
+            "__decimal__": "3.5"
+          },
+          "match_method": "fifo_approximation",
+          "evidence_refs": {
+            "__tuple__": [
+              "0x0000000000000000000000000000000000000000000000000000000000000002",
+              "0x0000000000000000000000000000000000000000000000000000000000000005"
+            ]
+          }
+        },
+        {
+          "__type__": "PassThroughEvent",
+          "asset": "ETH",
+          "incoming_tx_hash": "0x0000000000000000000000000000000000000000000000000000000000000004",
+          "outgoing_tx_hashes": {
+            "__tuple__": [
+              "0x0000000000000000000000000000000000000000000000000000000000000005"
+            ]
+          },
+          "incoming_time": {
+            "__datetime__": "2026-05-05T04:00:00+00:00"
+          },
+          "first_outgoing_time": {
+            "__datetime__": "2026-06-06T05:00:00+00:00"
+          },
+          "elapsed_seconds": {
+            "__decimal__": "2768400.0"
+          },
+          "incoming_amount": {
+            "__decimal__": "5.5"
+          },
+          "matched_amount": {
+            "__decimal__": "3.0"
+          },
+          "match_method": "fifo_approximation",
+          "evidence_refs": {
+            "__tuple__": [
+              "0x0000000000000000000000000000000000000000000000000000000000000004",
+              "0x0000000000000000000000000000000000000000000000000000000000000005"
+            ]
+          }
+        },
+        {
+          "__type__": "PassThroughEvent",
+          "asset": "ETH",
+          "incoming_tx_hash": "0x0000000000000000000000000000000000000000000000000000000000000004",
+          "outgoing_tx_hashes": {
+            "__tuple__": [
+              "0x0000000000000000000000000000000000000000000000000000000000000007"
+            ]
+          },
+          "incoming_time": {
+            "__datetime__": "2026-05-05T04:00:00+00:00"
+          },
+          "first_outgoing_time": {
+            "__datetime__": "2026-08-08T07:00:00+00:00"
+          },
+          "elapsed_seconds": {
+            "__decimal__": "8218800.0"
+          },
+          "incoming_amount": {
+            "__decimal__": "5.5"
+          },
+          "matched_amount": {
+            "__decimal__": "2.5"
+          },
+          "match_method": "fifo_approximation",
+          "evidence_refs": {
+            "__tuple__": [
+              "0x0000000000000000000000000000000000000000000000000000000000000004",
+              "0x0000000000000000000000000000000000000000000000000000000000000007"
+            ]
+          }
+        },
+        {
+          "__type__": "PassThroughEvent",
+          "asset": "USDT",
+          "incoming_tx_hash": "0x0000000000000000000000000000000000000000000000000000000000000006",
+          "outgoing_tx_hashes": {
+            "__tuple__": [
+              "0x0000000000000000000000000000000000000000000000000000000000000009"
+            ]
+          },
+          "incoming_time": {
+            "__datetime__": "2026-07-07T06:00:00+00:00"
+          },
+          "first_outgoing_time": {
+            "__datetime__": "2026-10-10T09:00:00+00:00"
+          },
+          "elapsed_seconds": {
+            "__decimal__": "8218800.0"
+          },
+          "incoming_amount": {
+            "__decimal__": "7.5"
+          },
+          "matched_amount": {
+            "__decimal__": "7.5"
+          },
+          "match_method": "fifo_approximation",
+          "evidence_refs": {
+            "__tuple__": [
+              "0x0000000000000000000000000000000000000000000000000000000000000006",
+              "0x0000000000000000000000000000000000000000000000000000000000000009"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  "counterparty_analysis": null,
+  "activity": {
+    "__type__": "ActivityAnalysis",
+    "daily": {
+      "__tuple__": [
+        {
+          "__type__": "ActivityPeriod",
+          "period": "2026-01-01",
+          "transaction_count": 1
+        },
+        {
+          "__type__": "ActivityPeriod",
+          "period": "2026-02-02",
+          "transaction_count": 1
+        },
+        {
+          "__type__": "ActivityPeriod",
+          "period": "2026-03-03",
+          "transaction_count": 1
+        },
+        {
+          "__type__": "ActivityPeriod",
+          "period": "2026-04-04",
+          "transaction_count": 1
+        },
+        {
+          "__type__": "ActivityPeriod",
+          "period": "2026-05-05",
+          "transaction_count": 1
+        },
+        {
+          "__type__": "ActivityPeriod",
+          "period": "2026-06-06",
+          "transaction_count": 1
+        },
+        {
+          "__type__": "ActivityPeriod",
+          "period": "2026-07-07",
+          "transaction_count": 1
+        },
+        {
+          "__type__": "ActivityPeriod",
+          "period": "2026-08-08",
+          "transaction_count": 1
+        },
+        {
+          "__type__": "ActivityPeriod",
+          "period": "2026-09-09",
+          "transaction_count": 1
+        },
+        {
+          "__type__": "ActivityPeriod",
+          "period": "2026-10-10",
+          "transaction_count": 1
+        }
+      ]
+    },
+    "weekly": {
+      "__tuple__": [
+        {
+          "__type__": "ActivityPeriod",
+          "period": "2026-W01",
+          "transaction_count": 1
+        },
+        {
+          "__type__": "ActivityPeriod",
+          "period": "2026-W06",
+          "transaction_count": 1
+        },
+        {
+          "__type__": "ActivityPeriod",
+          "period": "2026-W10",
+          "transaction_count": 1
+        },
+        {
+          "__type__": "ActivityPeriod",
+          "period": "2026-W14",
+          "transaction_count": 1
+        },
+        {
+          "__type__": "ActivityPeriod",
+          "period": "2026-W19",
+          "transaction_count": 1
+        },
+        {
+          "__type__": "ActivityPeriod",
+          "period": "2026-W23",
+          "transaction_count": 1
+        },
+        {
+          "__type__": "ActivityPeriod",
+          "period": "2026-W28",
+          "transaction_count": 1
+        },
+        {
+          "__type__": "ActivityPeriod",
+          "period": "2026-W32",
+          "transaction_count": 1
+        },
+        {
+          "__type__": "ActivityPeriod",
+          "period": "2026-W37",
+          "transaction_count": 1
+        },
+        {
+          "__type__": "ActivityPeriod",
+          "period": "2026-W41",
+          "transaction_count": 1
+        }
+      ]
+    },
+    "monthly": {
+      "__tuple__": [
+        {
+          "__type__": "ActivityPeriod",
+          "period": "2026-01",
+          "transaction_count": 1
+        },
+        {
+          "__type__": "ActivityPeriod",
+          "period": "2026-02",
+          "transaction_count": 1
+        },
+        {
+          "__type__": "ActivityPeriod",
+          "period": "2026-03",
+          "transaction_count": 1
+        },
+        {
+          "__type__": "ActivityPeriod",
+          "period": "2026-04",
+          "transaction_count": 1
+        },
+        {
+          "__type__": "ActivityPeriod",
+          "period": "2026-05",
+          "transaction_count": 1
+        },
+        {
+          "__type__": "ActivityPeriod",
+          "period": "2026-06",
+          "transaction_count": 1
+        },
+        {
+          "__type__": "ActivityPeriod",
+          "period": "2026-07",
+          "transaction_count": 1
+        },
+        {
+          "__type__": "ActivityPeriod",
+          "period": "2026-08",
+          "transaction_count": 1
+        },
+        {
+          "__type__": "ActivityPeriod",
+          "period": "2026-09",
+          "transaction_count": 1
+        },
+        {
+          "__type__": "ActivityPeriod",
+          "period": "2026-10",
+          "transaction_count": 1
+        }
+      ]
+    },
+    "average_interval_seconds": {
+      "__decimal__": "2710800.0"
+    },
+    "median_interval_seconds": {
+      "__decimal__": "2768400.0"
+    },
+    "longest_interval_seconds": {
+      "__decimal__": "2768400.0"
+    },
+    "excluded_missing_timestamp_count": 0,
+    "timezone": "Asia/Taipei"
+  },
+  "stage_analysis": {
+    "__type__": "OperationStageAnalysis",
+    "stages": {
+      "__tuple__": [
+        {
+          "__type__": "OperationStage",
+          "stage": "dormant",
+          "started_at": {
+            "__datetime__": "2026-01-01T00:00:00+00:00"
+          },
+          "ended_at": {
+            "__datetime__": "2026-02-02T01:00:00+00:00"
+          },
+          "transaction_count": 0,
+          "transaction_frequency": {
+            "__decimal__": "0"
+          },
+          "concentration": {
+            "__decimal__": "1"
+          },
+          "assets": {
+            "__tuple__": [
+              "ETH",
+              "USDT"
+            ]
+          },
+          "dominant_funding_sources": {
+            "__tuple__": [
+              "0x2222222222222222222222222222222222222222"
+            ]
+          },
+          "dominant_outgoing_counterparties": {
+            "__tuple__": [
+              "0x2222222222222222222222222222222222222222"
+            ]
+          },
+          "reason_codes": {
+            "__tuple__": [
+              "transaction_gap_exceeds_threshold"
+            ]
+          },
+          "evidence_refs": {
+            "__tuple__": [
+              "IF0"
+            ]
+          },
+          "confidence": "medium"
+        },
+        {
+          "__type__": "OperationStage",
+          "stage": "startup",
+          "started_at": {
+            "__datetime__": "2026-01-01T00:00:00+00:00"
+          },
+          "ended_at": {
+            "__datetime__": "2026-02-02T01:00:00+00:00"
+          },
+          "transaction_count": 2,
+          "transaction_frequency": {
+            "__decimal__": "0.06060606060606060606060606061"
+          },
+          "concentration": {
+            "__decimal__": "1"
+          },
+          "assets": {
+            "__tuple__": [
+              "ETH",
+              "USDT"
+            ]
+          },
+          "dominant_funding_sources": {
+            "__tuple__": [
+              "0x2222222222222222222222222222222222222222"
+            ]
+          },
+          "dominant_outgoing_counterparties": {
+            "__tuple__": [
+              "0x2222222222222222222222222222222222222222"
+            ]
+          },
+          "reason_codes": {
+            "__tuple__": [
+              "first_sample_window"
+            ]
+          },
+          "evidence_refs": {
+            "__tuple__": [
+              "IF0"
+            ]
+          },
+          "confidence": "medium"
+        },
+        {
+          "__type__": "OperationStage",
+          "stage": "recovery",
+          "started_at": {
+            "__datetime__": "2026-02-02T01:00:00+00:00"
+          },
+          "ended_at": {
+            "__datetime__": "2026-10-10T09:00:00+00:00"
+          },
+          "transaction_count": 9,
+          "transaction_frequency": {
+            "__decimal__": "0.06666666666666666666666666667"
+          },
+          "concentration": {
+            "__decimal__": "1"
+          },
+          "assets": {
+            "__tuple__": [
+              "ETH",
+              "USDT"
+            ]
+          },
+          "dominant_funding_sources": {
+            "__tuple__": [
+              "0x2222222222222222222222222222222222222222"
+            ]
+          },
+          "dominant_outgoing_counterparties": {
+            "__tuple__": [
+              "0x2222222222222222222222222222222222222222"
+            ]
+          },
+          "reason_codes": {
+            "__tuple__": [
+              "activity_after_dormancy"
+            ]
+          },
+          "evidence_refs": {
+            "__tuple__": [
+              "IF0"
+            ]
+          },
+          "confidence": "medium"
+        },
+        {
+          "__type__": "OperationStage",
+          "stage": "dominant",
+          "started_at": {
+            "__datetime__": "2026-03-03T02:00:00+00:00"
+          },
+          "ended_at": {
+            "__datetime__": "2026-10-10T09:00:00+00:00"
+          },
+          "transaction_count": 8,
+          "transaction_frequency": {
+            "__decimal__": "0.03603603603603603603603603604"
+          },
+          "concentration": {
+            "__decimal__": "1"
+          },
+          "assets": {
+            "__tuple__": [
+              "ETH",
+              "USDT"
+            ]
+          },
+          "dominant_funding_sources": {
+            "__tuple__": [
+              "0x2222222222222222222222222222222222222222"
+            ]
+          },
+          "dominant_outgoing_counterparties": {
+            "__tuple__": [
+              "0x2222222222222222222222222222222222222222"
+            ]
+          },
+          "reason_codes": {
+            "__tuple__": [
+              "funding_concentration_threshold"
+            ]
+          },
+          "evidence_refs": {
+            "__tuple__": [
+              "IF0"
+            ]
+          },
+          "confidence": "medium"
+        },
+        {
+          "__type__": "OperationStage",
+          "stage": "dormant",
+          "started_at": {
+            "__datetime__": "2026-03-03T02:00:00+00:00"
+          },
+          "ended_at": {
+            "__datetime__": "2026-04-04T03:00:00+00:00"
+          },
+          "transaction_count": 0,
+          "transaction_frequency": {
+            "__decimal__": "0"
+          },
+          "concentration": {
+            "__decimal__": "1"
+          },
+          "assets": {
+            "__tuple__": [
+              "ETH",
+              "USDT"
+            ]
+          },
+          "dominant_funding_sources": {
+            "__tuple__": [
+              "0x2222222222222222222222222222222222222222"
+            ]
+          },
+          "dominant_outgoing_counterparties": {
+            "__tuple__": [
+              "0x2222222222222222222222222222222222222222"
+            ]
+          },
+          "reason_codes": {
+            "__tuple__": [
+              "transaction_gap_exceeds_threshold"
+            ]
+          },
+          "evidence_refs": {
+            "__tuple__": [
+              "IF0"
+            ]
+          },
+          "confidence": "medium"
+        },
+        {
+          "__type__": "OperationStage",
+          "stage": "dormant",
+          "started_at": {
+            "__datetime__": "2026-04-04T03:00:00+00:00"
+          },
+          "ended_at": {
+            "__datetime__": "2026-05-05T04:00:00+00:00"
+          },
+          "transaction_count": 0,
+          "transaction_frequency": {
+            "__decimal__": "0"
+          },
+          "concentration": {
+            "__decimal__": "1"
+          },
+          "assets": {
+            "__tuple__": [
+              "ETH",
+              "USDT"
+            ]
+          },
+          "dominant_funding_sources": {
+            "__tuple__": [
+              "0x2222222222222222222222222222222222222222"
+            ]
+          },
+          "dominant_outgoing_counterparties": {
+            "__tuple__": [
+              "0x2222222222222222222222222222222222222222"
+            ]
+          },
+          "reason_codes": {
+            "__tuple__": [
+              "transaction_gap_exceeds_threshold"
+            ]
+          },
+          "evidence_refs": {
+            "__tuple__": [
+              "IF0"
+            ]
+          },
+          "confidence": "medium"
+        },
+        {
+          "__type__": "OperationStage",
+          "stage": "recovery",
+          "started_at": {
+            "__datetime__": "2026-04-04T03:00:00+00:00"
+          },
+          "ended_at": {
+            "__datetime__": "2026-10-10T09:00:00+00:00"
+          },
+          "transaction_count": 7,
+          "transaction_frequency": {
+            "__decimal__": "0.03333333333333333333333333333"
+          },
+          "concentration": {
+            "__decimal__": "1"
+          },
+          "assets": {
+            "__tuple__": [
+              "ETH",
+              "USDT"
+            ]
+          },
+          "dominant_funding_sources": {
+            "__tuple__": [
+              "0x2222222222222222222222222222222222222222"
+            ]
+          },
+          "dominant_outgoing_counterparties": {
+            "__tuple__": [
+              "0x2222222222222222222222222222222222222222"
+            ]
+          },
+          "reason_codes": {
+            "__tuple__": [
+              "activity_after_dormancy"
+            ]
+          },
+          "evidence_refs": {
+            "__tuple__": [
+              "IF0"
+            ]
+          },
+          "confidence": "medium"
+        },
+        {
+          "__type__": "OperationStage",
+          "stage": "dormant",
+          "started_at": {
+            "__datetime__": "2026-05-05T04:00:00+00:00"
+          },
+          "ended_at": {
+            "__datetime__": "2026-06-06T05:00:00+00:00"
+          },
+          "transaction_count": 0,
+          "transaction_frequency": {
+            "__decimal__": "0"
+          },
+          "concentration": {
+            "__decimal__": "1"
+          },
+          "assets": {
+            "__tuple__": [
+              "ETH",
+              "USDT"
+            ]
+          },
+          "dominant_funding_sources": {
+            "__tuple__": [
+              "0x2222222222222222222222222222222222222222"
+            ]
+          },
+          "dominant_outgoing_counterparties": {
+            "__tuple__": [
+              "0x2222222222222222222222222222222222222222"
+            ]
+          },
+          "reason_codes": {
+            "__tuple__": [
+              "transaction_gap_exceeds_threshold"
+            ]
+          },
+          "evidence_refs": {
+            "__tuple__": [
+              "IF0"
+            ]
+          },
+          "confidence": "medium"
+        },
+        {
+          "__type__": "OperationStage",
+          "stage": "recovery",
+          "started_at": {
+            "__datetime__": "2026-05-05T04:00:00+00:00"
+          },
+          "ended_at": {
+            "__datetime__": "2026-10-10T09:00:00+00:00"
+          },
+          "transaction_count": 6,
+          "transaction_frequency": {
+            "__decimal__": "0.03333333333333333333333333333"
+          },
+          "concentration": {
+            "__decimal__": "1"
+          },
+          "assets": {
+            "__tuple__": [
+              "ETH",
+              "USDT"
+            ]
+          },
+          "dominant_funding_sources": {
+            "__tuple__": [
+              "0x2222222222222222222222222222222222222222"
+            ]
+          },
+          "dominant_outgoing_counterparties": {
+            "__tuple__": [
+              "0x2222222222222222222222222222222222222222"
+            ]
+          },
+          "reason_codes": {
+            "__tuple__": [
+              "activity_after_dormancy"
+            ]
+          },
+          "evidence_refs": {
+            "__tuple__": [
+              "IF0"
+            ]
+          },
+          "confidence": "medium"
+        },
+        {
+          "__type__": "OperationStage",
+          "stage": "dormant",
+          "started_at": {
+            "__datetime__": "2026-06-06T05:00:00+00:00"
+          },
+          "ended_at": {
+            "__datetime__": "2026-07-07T06:00:00+00:00"
+          },
+          "transaction_count": 0,
+          "transaction_frequency": {
+            "__decimal__": "0"
+          },
+          "concentration": {
+            "__decimal__": "1"
+          },
+          "assets": {
+            "__tuple__": [
+              "ETH",
+              "USDT"
+            ]
+          },
+          "dominant_funding_sources": {
+            "__tuple__": [
+              "0x2222222222222222222222222222222222222222"
+            ]
+          },
+          "dominant_outgoing_counterparties": {
+            "__tuple__": [
+              "0x2222222222222222222222222222222222222222"
+            ]
+          },
+          "reason_codes": {
+            "__tuple__": [
+              "transaction_gap_exceeds_threshold"
+            ]
+          },
+          "evidence_refs": {
+            "__tuple__": [
+              "IF0"
+            ]
+          },
+          "confidence": "medium"
+        },
+        {
+          "__type__": "OperationStage",
+          "stage": "recovery",
+          "started_at": {
+            "__datetime__": "2026-06-06T05:00:00+00:00"
+          },
+          "ended_at": {
+            "__datetime__": "2026-10-10T09:00:00+00:00"
+          },
+          "transaction_count": 5,
+          "transaction_frequency": {
+            "__decimal__": "0.03333333333333333333333333333"
+          },
+          "concentration": {
+            "__decimal__": "1"
+          },
+          "assets": {
+            "__tuple__": [
+              "ETH",
+              "USDT"
+            ]
+          },
+          "dominant_funding_sources": {
+            "__tuple__": [
+              "0x2222222222222222222222222222222222222222"
+            ]
+          },
+          "dominant_outgoing_counterparties": {
+            "__tuple__": [
+              "0x2222222222222222222222222222222222222222"
+            ]
+          },
+          "reason_codes": {
+            "__tuple__": [
+              "activity_after_dormancy"
+            ]
+          },
+          "evidence_refs": {
+            "__tuple__": [
+              "IF0"
+            ]
+          },
+          "confidence": "medium"
+        },
+        {
+          "__type__": "OperationStage",
+          "stage": "dormant",
+          "started_at": {
+            "__datetime__": "2026-07-07T06:00:00+00:00"
+          },
+          "ended_at": {
+            "__datetime__": "2026-08-08T07:00:00+00:00"
+          },
+          "transaction_count": 0,
+          "transaction_frequency": {
+            "__decimal__": "0"
+          },
+          "concentration": {
+            "__decimal__": "1"
+          },
+          "assets": {
+            "__tuple__": [
+              "ETH",
+              "USDT"
+            ]
+          },
+          "dominant_funding_sources": {
+            "__tuple__": [
+              "0x2222222222222222222222222222222222222222"
+            ]
+          },
+          "dominant_outgoing_counterparties": {
+            "__tuple__": [
+              "0x2222222222222222222222222222222222222222"
+            ]
+          },
+          "reason_codes": {
+            "__tuple__": [
+              "transaction_gap_exceeds_threshold"
+            ]
+          },
+          "evidence_refs": {
+            "__tuple__": [
+              "IF0"
+            ]
+          },
+          "confidence": "medium"
+        },
+        {
+          "__type__": "OperationStage",
+          "stage": "recovery",
+          "started_at": {
+            "__datetime__": "2026-07-07T06:00:00+00:00"
+          },
+          "ended_at": {
+            "__datetime__": "2026-10-10T09:00:00+00:00"
+          },
+          "transaction_count": 4,
+          "transaction_frequency": {
+            "__decimal__": "0.03333333333333333333333333333"
+          },
+          "concentration": {
+            "__decimal__": "1"
+          },
+          "assets": {
+            "__tuple__": [
+              "ETH",
+              "USDT"
+            ]
+          },
+          "dominant_funding_sources": {
+            "__tuple__": [
+              "0x2222222222222222222222222222222222222222"
+            ]
+          },
+          "dominant_outgoing_counterparties": {
+            "__tuple__": [
+              "0x2222222222222222222222222222222222222222"
+            ]
+          },
+          "reason_codes": {
+            "__tuple__": [
+              "activity_after_dormancy"
+            ]
+          },
+          "evidence_refs": {
+            "__tuple__": [
+              "IF0"
+            ]
+          },
+          "confidence": "medium"
+        },
+        {
+          "__type__": "OperationStage",
+          "stage": "dormant",
+          "started_at": {
+            "__datetime__": "2026-08-08T07:00:00+00:00"
+          },
+          "ended_at": {
+            "__datetime__": "2026-09-09T08:00:00+00:00"
+          },
+          "transaction_count": 0,
+          "transaction_frequency": {
+            "__decimal__": "0"
+          },
+          "concentration": {
+            "__decimal__": "1"
+          },
+          "assets": {
+            "__tuple__": [
+              "ETH",
+              "USDT"
+            ]
+          },
+          "dominant_funding_sources": {
+            "__tuple__": [
+              "0x2222222222222222222222222222222222222222"
+            ]
+          },
+          "dominant_outgoing_counterparties": {
+            "__tuple__": [
+              "0x2222222222222222222222222222222222222222"
+            ]
+          },
+          "reason_codes": {
+            "__tuple__": [
+              "transaction_gap_exceeds_threshold"
+            ]
+          },
+          "evidence_refs": {
+            "__tuple__": [
+              "IF0"
+            ]
+          },
+          "confidence": "medium"
+        },
+        {
+          "__type__": "OperationStage",
+          "stage": "recovery",
+          "started_at": {
+            "__datetime__": "2026-08-08T07:00:00+00:00"
+          },
+          "ended_at": {
+            "__datetime__": "2026-10-10T09:00:00+00:00"
+          },
+          "transaction_count": 3,
+          "transaction_frequency": {
+            "__decimal__": "0.03333333333333333333333333333"
+          },
+          "concentration": {
+            "__decimal__": "1"
+          },
+          "assets": {
+            "__tuple__": [
+              "ETH",
+              "USDT"
+            ]
+          },
+          "dominant_funding_sources": {
+            "__tuple__": [
+              "0x2222222222222222222222222222222222222222"
+            ]
+          },
+          "dominant_outgoing_counterparties": {
+            "__tuple__": [
+              "0x2222222222222222222222222222222222222222"
+            ]
+          },
+          "reason_codes": {
+            "__tuple__": [
+              "activity_after_dormancy"
+            ]
+          },
+          "evidence_refs": {
+            "__tuple__": [
+              "IF0"
+            ]
+          },
+          "confidence": "medium"
+        },
+        {
+          "__type__": "OperationStage",
+          "stage": "dormant",
+          "started_at": {
+            "__datetime__": "2026-09-09T08:00:00+00:00"
+          },
+          "ended_at": {
+            "__datetime__": "2026-10-10T09:00:00+00:00"
+          },
+          "transaction_count": 0,
+          "transaction_frequency": {
+            "__decimal__": "0"
+          },
+          "concentration": {
+            "__decimal__": "1"
+          },
+          "assets": {
+            "__tuple__": [
+              "ETH",
+              "USDT"
+            ]
+          },
+          "dominant_funding_sources": {
+            "__tuple__": [
+              "0x2222222222222222222222222222222222222222"
+            ]
+          },
+          "dominant_outgoing_counterparties": {
+            "__tuple__": [
+              "0x2222222222222222222222222222222222222222"
+            ]
+          },
+          "reason_codes": {
+            "__tuple__": [
+              "transaction_gap_exceeds_threshold"
+            ]
+          },
+          "evidence_refs": {
+            "__tuple__": [
+              "IF0"
+            ]
+          },
+          "confidence": "medium"
+        },
+        {
+          "__type__": "OperationStage",
+          "stage": "recovery",
+          "started_at": {
+            "__datetime__": "2026-09-09T08:00:00+00:00"
+          },
+          "ended_at": {
+            "__datetime__": "2026-10-10T09:00:00+00:00"
+          },
+          "transaction_count": 2,
+          "transaction_frequency": {
+            "__decimal__": "0.03333333333333333333333333333"
+          },
+          "concentration": {
+            "__decimal__": "1"
+          },
+          "assets": {
+            "__tuple__": [
+              "ETH",
+              "USDT"
+            ]
+          },
+          "dominant_funding_sources": {
+            "__tuple__": [
+              "0x2222222222222222222222222222222222222222"
+            ]
+          },
+          "dominant_outgoing_counterparties": {
+            "__tuple__": [
+              "0x2222222222222222222222222222222222222222"
+            ]
+          },
+          "reason_codes": {
+            "__tuple__": [
+              "activity_after_dormancy"
+            ]
+          },
+          "evidence_refs": {
+            "__tuple__": [
+              "IF0"
+            ]
+          },
+          "confidence": "medium"
+        },
+        {
+          "__type__": "OperationStage",
+          "stage": "recovery",
+          "started_at": {
+            "__datetime__": "2026-10-10T09:00:00+00:00"
+          },
+          "ended_at": {
+            "__datetime__": "2026-10-10T09:00:00+00:00"
+          },
+          "transaction_count": 1,
+          "transaction_frequency": {
+            "__decimal__": "0.03333333333333333333333333333"
+          },
+          "concentration": {
+            "__decimal__": "1"
+          },
+          "assets": {
+            "__tuple__": [
+              "ETH",
+              "USDT"
+            ]
+          },
+          "dominant_funding_sources": {
+            "__tuple__": [
+              "0x2222222222222222222222222222222222222222"
+            ]
+          },
+          "dominant_outgoing_counterparties": {
+            "__tuple__": [
+              "0x2222222222222222222222222222222222222222"
+            ]
+          },
+          "reason_codes": {
+            "__tuple__": [
+              "activity_after_dormancy"
+            ]
+          },
+          "evidence_refs": {
+            "__tuple__": [
+              "IF0"
+            ]
+          },
+          "confidence": "medium"
+        }
+      ]
+    }
+  },
+  "transfer_pattern_analysis": null,
+  "relationship_analysis": null,
+  "initial_funding": {
+    "__tuple__": [
+      {
+        "__type__": "InitialFundingCandidate",
+        "asset": "ETH",
+        "amount": {
+          "__decimal__": "3.5"
+        },
+        "source": "0x2222222222222222222222222222222222222222",
+        "occurred_at": {
+          "__datetime__": "2026-03-03T02:00:00+00:00"
+        },
+        "transaction_hash": "0x0000000000000000000000000000000000000000000000000000000000000002",
+        "dust_like": false,
+        "label_exists": false,
+        "confidence": "high"
+      },
+      {
+        "__type__": "InitialFundingCandidate",
+        "asset": "USDT",
+        "amount": {
+          "__decimal__": "1.5"
+        },
+        "source": "0x2222222222222222222222222222222222222222",
+        "occurred_at": {
+          "__datetime__": "2026-01-01T00:00:00+00:00"
+        },
+        "transaction_hash": "0x0000000000000000000000000000000000000000000000000000000000000000",
+        "dust_like": false,
+        "label_exists": false,
+        "confidence": "high"
+      }
+    ]
+  }
+}

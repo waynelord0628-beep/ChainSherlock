@@ -320,3 +320,25 @@ $env:CHAINSHERLOCK_PDF_CJK_FONT="C:\Windows\Fonts\your-cjk-font.ttf"
 未設定字體時 PDF 會明確失敗，但其他成功格式仍保留，整體狀態為 `partial`。報告會揭露資料完整度、Provider 缺口、被拒絕紀錄與證據 SHA-256；不輸出 API Key、Authorization header 或本機絕對路徑。不同資產只分別呈現，不做跨資產加總或估值。
 
 V6 不包含 AI、Risk／AML 評分、Bridge、Cross-chain、OSINT、Web UI 或錢包操作。
+# V7：AI 調查敘事
+
+ChainSherlock V7 新增 grounded、evidence-linked 的調查敘事層。AI 預設關閉，且只接收
+V6.5 `InvestigationResult` 壓縮後的結構化摘要；不讀取原始交易、CSV/Excel 或 Provider
+raw response，也不進行犯罪、洗錢、詐欺、身分或風險判定。
+
+```powershell
+python -m crypto_investigator narrate-investigation investigation.json --output output/narrative
+python -m crypto_investigator narrate-file transactions.csv --target ADDRESS --output output/narrative
+python -m crypto_investigator narrate-address ADDRESS --output output/narrative
+```
+
+只有明確加入 `--ai` 才會呼叫外部 OpenAI-compatible provider。設定 provider/model 時請將
+API key 放入環境變數，不要貼入命令、報告或提交至 Git。可用 `--privacy-mode strict`,
+`standard`（預設）或 `off`；即使為 `off` 仍會遮罩 secrets 與本機絕對路徑。
+
+V7 產生 `narrative_input.json`、`narrative.json`、`narrative_validation.json`、
+`ai_usage.json`、`prompt_manifest.json`、`ai_status.json` 與 `ai_errors.json`。
+無 API key、timeout、無效 JSON、引用或數字驗證失敗時，報告會保留並改用 deterministic
+fallback。AI 內容進入報告前必須通過 schema、claim、citation、numeric 與禁止用語驗證，
+且預設顯示「AI 內容尚未經人工確認」。使用 `--ai-max-tokens` 與
+`--ai-max-input-chars` 控制 token/輸入；未設定價格時 estimated cost 為 `null`。

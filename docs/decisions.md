@@ -179,3 +179,16 @@ The graph compatibility object remains limited to Graph construction. Report com
 ## ADR-036: Report typography and wide tables
 
 DOCX body Chinese uses 標楷體 and Latin text uses Times New Roman. Table Chinese uses 標楷體 and Latin, numbers, addresses and hashes use Consolas. PDF applies the configured CJK font and uses locally available Times New Roman／Consolas for Latin text, with portable built-in fallbacks. Tables wider than five fields render as deterministic field/value records in DOCX and PDF to remain readable on A4 pages.
+# V7 Decisions
+
+- AI 不直接讀 raw transactions；所有內容均源自可驗證的 V6.5 structured facts。
+- AI 預設 disabled，外部呼叫必須由 `--ai` 明確啟用。
+- Structured output 是必要條件；自由文字不得直接進入報告。
+- Factual claims 必須有 Evidence；數字必須精確存在於輸入。
+- Candidate、low-confidence 與 partial-data 語意不得提升為確定或完整。
+- FIFO 僅是近似配對，不代表實際同一筆資金。
+- Hallucination、解析或 provider 失敗一律使用 deterministic fallback。
+- Privacy 預設 standard；off 仍遮罩 secrets，strict 另雜湊地址並移除 tx hashes。
+- Human Review 預設 not_reviewed；AI 不取代人工判斷。
+- Cache key 不包含 API key；寫入必須 atomic 且容許 corruption recovery。
+- 無明確價格設定時 estimated cost 為 null，不猜測成本。

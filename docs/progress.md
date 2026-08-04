@@ -118,3 +118,11 @@ V3 contains no Provider, blockchain API, graph rendering, report, Word/PDF, AI, 
 - DOCX 已用 Microsoft Word 實際開啟與列印渲染；PDF 已逐頁渲染檢查。
 - DOCX、PDF 與 HTML 列印樣式均套用：正文中文標楷體、英文與數字 Times New Roman；表格中文標楷體、英文與數字 Consolas。
 - 寬表格改用可跨頁的欄位／值版面，避免 A4 裁切。
+# V7
+
+- 已完成 AI Provider abstraction、OpenAI-compatible HTTP provider、Mock 與 deterministic fallback。
+- 已完成 bounded NarrativeInput、deterministic compaction、privacy modes 與 prompt injection 防護。
+- 已完成 structured parser、claim/citation/numeric/hallucination validation。
+- 已完成 NarrativeResult round-trip、7 項 artifacts、AI status/usage/prompt manifest。
+- 已完成 `narrate-file`、`narrate-address`、`narrate-investigation` 與可選 Report AI 章節。
+- 已新增 141 項 V7 規則測試；AI 預設關閉，不執行真實外部 API 測試。

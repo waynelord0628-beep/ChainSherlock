@@ -1,0 +1,1862 @@
+{
+  "__type__": "NarrativeInput",
+  "report_metadata": {
+    "investigation_version": "6.5",
+    "transaction_count": 85
+  },
+  "target_address": "TR5WMAhpM9JkpouAT49X9pNHP8NPQkcGAE",
+  "chain": null,
+  "analysis_period": {
+    "from": "2026-07-16T10:28:15+00:00",
+    "to": "2026-08-04T00:29:54+00:00"
+  },
+  "completeness": "partial",
+  "provider_limits": {
+    "__tuple__": []
+  },
+  "asset_summaries": {
+    "__tuple__": [
+      {
+        "asset": "TRX"
+      },
+      {
+        "asset": "USDT"
+      }
+    ]
+  },
+  "direction_reconciliation": {
+    "transaction_count": 85,
+    "incoming_count": 53,
+    "outgoing_count": 32,
+    "self_transfer_count": 0,
+    "neutral_count": 0,
+    "unclassified_direction_count": 0,
+    "failed_transaction_count": 0,
+    "duplicate_removed_count": 0,
+    "reconciled": true
+  },
+  "funding_sources": {
+    "__tuple__": [
+      {
+        "address": "TNJg619GpW92Ff7xBmqc49HYUwU4bUpYsR",
+        "transaction_count": 4,
+        "transaction_ratio": "0.07547169811320754716981132075",
+        "amounts_by_asset": {
+          "USDT": "22356"
+        },
+        "first_funding": "2026-07-22T16:52:12+00:00",
+        "last_funding": "2026-07-25T19:49:27+00:00",
+        "rank": 1,
+        "chain": null,
+        "label": null,
+        "category": null,
+        "assets": {
+          "__tuple__": [
+            "USDT"
+          ]
+        },
+        "incoming_count": 4,
+        "share_by_asset": {
+          "USDT": "0.2094788328554562320796087030"
+        },
+        "active_days": 3,
+        "average_amount_by_asset": {
+          "USDT": "5589"
+        },
+        "median_amount_by_asset": {
+          "USDT": "5520"
+        },
+        "maximum_amount_by_asset": {
+          "USDT": "9316"
+        },
+        "evidence_transaction_hashes": {
+          "__tuple__": [
+            "817802449a336f9406ace8d0467a4ec353a7832606319f6fd8e44d077266c68e",
+            "8290dfc9b719a91fb42d0c43f18df18948c06e8763225b7c35279088fa65a932",
+            "d14155ec6b5f6fa3801fbae083ee0b66da60daaee487293993cecf2bc8a88b3c",
+            "f140ede323d54ea161992f52cfec48e39b32d70a23cab4eb9e17dd90acf6e265"
+          ]
+        }
+      },
+      {
+        "address": "TDsvtW6HTE7Y12huJHogJKVBk9oQv4VZzv",
+        "transaction_count": 3,
+        "transaction_ratio": "0.05660377358490566037735849057",
+        "amounts_by_asset": {
+          "USDT": "35000"
+        },
+        "first_funding": "2026-07-17T14:48:03+00:00",
+        "last_funding": "2026-07-31T15:10:51+00:00",
+        "rank": 2,
+        "chain": null,
+        "label": null,
+        "category": null,
+        "assets": {
+          "__tuple__": [
+            "USDT"
+          ]
+        },
+        "incoming_count": 3,
+        "share_by_asset": {
+          "USDT": "0.3279548734094188639643185098"
+        },
+        "active_days": 3,
+        "average_amount_by_asset": {
+          "USDT": "11666.66666666666666666666667"
+        },
+        "median_amount_by_asset": {
+          "USDT": "11000"
+        },
+        "maximum_amount_by_asset": {
+          "USDT": "13000"
+        },
+        "evidence_transaction_hashes": {
+          "__tuple__": [
+            "042635c10252f5991d70fa8dedd3cc29daaffd496d3f26ab2d96549f8877f4b6",
+            "115e669b408727a7eb4c9550a2988408a05b17b3652b038fde4f713a18c69167",
+            "ba39fb9f1b477bf974784148e61018d94565cab01f3ad4b9302913aba9ad42ea"
+          ]
+        }
+      },
+      {
+        "address": "TBdrxaXKRoANUfU71vm1iSL8gfjq6RXspQ",
+        "transaction_count": 2,
+        "transaction_ratio": "0.03773584905660377358490566038",
+        "amounts_by_asset": {
+          "USDT": "3500"
+        },
+        "first_funding": "2026-07-18T07:35:42+00:00",
+        "last_funding": "2026-07-24T14:41:48+00:00",
+        "rank": 3,
+        "chain": null,
+        "label": null,
+        "category": null,
+        "assets": {
+          "__tuple__": [
+            "USDT"
+          ]
+        },
+        "incoming_count": 2,
+        "share_by_asset": {
+          "USDT": "0.03279548734094188639643185098"
+        },
+        "active_days": 2,
+        "average_amount_by_asset": {
+          "USDT": "1750"
+        },
+        "median_amount_by_asset": {
+          "USDT": "1750"
+        },
+        "maximum_amount_by_asset": {
+          "USDT": "2000"
+        },
+        "evidence_transaction_hashes": {
+          "__tuple__": [
+            "a3b37aacf2ca328c2aa7aa8ff19b880242030c9581e8c9d61322c1b9bc39c3ac",
+            "d3f4ff50f980fb87640a1369df577275407dee8a8c4e1c0dd14a3600837de203"
+          ]
+        }
+      },
+      {
+        "address": "TCPEk4qeGVbn8b5U81DDd2uxipuyny6s4r",
+        "transaction_count": 2,
+        "transaction_ratio": "0.03773584905660377358490566038",
+        "amounts_by_asset": {
+          "USDT": "1162"
+        },
+        "first_funding": "2026-08-02T16:02:51+00:00",
+        "last_funding": "2026-08-03T10:33:51+00:00",
+        "rank": 4,
+        "chain": null,
+        "label": null,
+        "category": null,
+        "assets": {
+          "__tuple__": [
+            "USDT"
+          ]
+        },
+        "incoming_count": 2,
+        "share_by_asset": {
+          "USDT": "0.01088810179719270628361537452"
+        },
+        "active_days": 2,
+        "average_amount_by_asset": {
+          "USDT": "581"
+        },
+        "median_amount_by_asset": {
+          "USDT": "581"
+        },
+        "maximum_amount_by_asset": {
+          "USDT": "774"
+        },
+        "evidence_transaction_hashes": {
+          "__tuple__": [
+            "b17263be753303ece388274d22004cce56475cc2bb132bcdc661bdf18b32ecdf",
+            "dd218d2d7cf2a5795bdc6b00269e8419d315b135acd769e1cf6b4832271ac2e3"
+          ]
+        }
+      },
+      {
+        "address": "TLaGjwhvA8XQYSxFAcAXy7Dvuue9eGYitv",
+        "transaction_count": 2,
+        "transaction_ratio": "0.03773584905660377358490566038",
+        "amounts_by_asset": {
+          "USDT": "11025"
+        },
+        "first_funding": "2026-07-24T08:31:15+00:00",
+        "last_funding": "2026-07-31T10:52:18+00:00",
+        "rank": 5,
+        "chain": null,
+        "label": null,
+        "category": null,
+        "assets": {
+          "__tuple__": [
+            "USDT"
+          ]
+        },
+        "incoming_count": 2,
+        "share_by_asset": {
+          "USDT": "0.1033057851239669421487603306"
+        },
+        "active_days": 2,
+        "average_amount_by_asset": {
+          "USDT": "5512.5"
+        },
+        "median_amount_by_asset": {
+          "USDT": "5512.5"
+        },
+        "maximum_amount_by_asset": {
+          "USDT": "11020"
+        },
+        "evidence_transaction_hashes": {
+          "__tuple__": [
+            "0ca5213ec69bdd4c11fcd54e1eef0dd8ab7c60862bf722026955d89641f9d663",
+            "9ef89110d6d5f316a404a34903b8ef7ae85b35f6a06c229502a1e87aab017f0f"
+          ]
+        }
+      },
+      {
+        "address": "TMJcb5gtU9mnmmMFxwKQpYk7LRxKKqyDkQ",
+        "transaction_count": 2,
+        "transaction_ratio": "0.03773584905660377358490566038",
+        "amounts_by_asset": {
+          "TRX": "0.000004"
+        },
+        "first_funding": "2026-08-01T07:10:06+00:00",
+        "last_funding": "2026-08-02T16:40:42+00:00",
+        "rank": 6,
+        "chain": null,
+        "label": null,
+        "category": null,
+        "assets": {
+          "__tuple__": [
+            "TRX"
+          ]
+        },
+        "incoming_count": 2,
+        "share_by_asset": {
+          "TRX": "5.569866205060291678158286978E-9"
+        },
+        "active_days": 2,
+        "average_amount_by_asset": {
+          "TRX": "0.000002"
+        },
+        "median_amount_by_asset": {
+          "TRX": "0.000002"
+        },
+        "maximum_amount_by_asset": {
+          "TRX": "0.000002"
+        },
+        "evidence_transaction_hashes": {
+          "__tuple__": [
+            "62feb8599e5f1509be7f8191ee809b4f64d22f3fd1274f6b72a6dafb8087b555",
+            "793c6a61e49e0d764955e0c8c23b2b7a0ad5da323210679c778749d20adc3891"
+          ]
+        }
+      },
+      {
+        "address": "TSrRYUUz774oaPKsN7NRZnSqYqr5NwjDkQ",
+        "transaction_count": 2,
+        "transaction_ratio": "0.03773584905660377358490566038",
+        "amounts_by_asset": {
+          "USDT": "148"
+        },
+        "first_funding": "2026-08-01T07:07:54+00:00",
+        "last_funding": "2026-08-02T16:38:30+00:00",
+        "rank": 7,
+        "chain": null,
+        "label": null,
+        "category": null,
+        "assets": {
+          "__tuple__": [
+            "USDT"
+          ]
+        },
+        "incoming_count": 2,
+        "share_by_asset": {
+          "USDT": "0.001386780607559828339049118270"
+        },
+        "active_days": 2,
+        "average_amount_by_asset": {
+          "USDT": "74"
+        },
+        "median_amount_by_asset": {
+          "USDT": "74"
+        },
+        "maximum_amount_by_asset": {
+          "USDT": "74"
+        },
+        "evidence_transaction_hashes": {
+          "__tuple__": [
+            "5cb01fcef3072e4367298484596f1d0edd439f717d30f4529d0c9c2a5b3bfc3e",
+            "e4c5500c6516d4ba38ff21cc1641fc8336370d0dc069684bebf7672b2e272f6e"
+          ]
+        }
+      },
+      {
+        "address": "TW3GGtCsgNUXFYMGqBkyZ6qTcTRHvt3NJk",
+        "transaction_count": 2,
+        "transaction_ratio": "0.03773584905660377358490566038",
+        "amounts_by_asset": {
+          "USDT": "13775"
+        },
+        "first_funding": "2026-07-31T10:10:51+00:00",
+        "last_funding": "2026-07-31T11:12:30+00:00",
+        "rank": 8,
+        "chain": null,
+        "label": null,
+        "category": null,
+        "assets": {
+          "__tuple__": [
+            "USDT"
+          ]
+        },
+        "incoming_count": 2,
+        "share_by_asset": {
+          "USDT": "0.1290736680347069957459567849"
+        },
+        "active_days": 1,
+        "average_amount_by_asset": {
+          "USDT": "6887.5"
+        },
+        "median_amount_by_asset": {
+          "USDT": "6887.5"
+        },
+        "maximum_amount_by_asset": {
+          "USDT": "11020"
+        },
+        "evidence_transaction_hashes": {
+          "__tuple__": [
+            "19aa5ef8994a72543e4d7375c48d7f300e1062168c1d4bb425601ca32e479b8e",
+            "e150420fe011a06359e01e51aa1f8e470f13632016f2e5dc5008b2bd49acaa7e"
+          ]
+        }
+      },
+      {
+        "address": "TAJqGhk4wuGwoRN4vQgHTSfEt5GSyZ5f4r",
+        "transaction_count": 1,
+        "transaction_ratio": "0.01886792452830188679245283019",
+        "amounts_by_asset": {
+          "TRX": "0.000006"
+        },
+        "first_funding": "2026-08-03T10:34:09+00:00",
+        "last_funding": "2026-08-03T10:34:09+00:00",
+        "rank": 9,
+        "chain": null,
+        "label": null,
+        "category": null,
+        "assets": {
+          "__tuple__": [
+            "TRX"
+          ]
+        },
+        "incoming_count": 1,
+        "share_by_asset": {
+          "TRX": "8.354799307590437517237430467E-9"
+        },
+        "active_days": 1,
+        "average_amount_by_asset": {
+          "TRX": "0.000006"
+        },
+        "median_amount_by_asset": {
+          "TRX": "0.000006"
+        },
+        "maximum_amount_by_asset": {
+          "TRX": "0.000006"
+        },
+        "evidence_transaction_hashes": {
+          "__tuple__": [
+            "dcafc9a0a4050fbc77de4ddf5006a498f00baca0e59e885023294f1e2b812a4d"
+          ]
+        }
+      },
+      {
+        "address": "TBMdhFK7zZ78kEn3bWYJk4KFAgAcr1yDkQ",
+        "transaction_count": 1,
+        "transaction_ratio": "0.01886792452830188679245283019",
+        "amounts_by_asset": {
+          "TRX": "0.000007"
+        },
+        "first_funding": "2026-08-01T07:08:03+00:00",
+        "last_funding": "2026-08-01T07:08:03+00:00",
+        "rank": 10,
+        "chain": null,
+        "label": null,
+        "category": null,
+        "assets": {
+          "__tuple__": [
+            "TRX"
+          ]
+        },
+        "incoming_count": 1,
+        "share_by_asset": {
+          "TRX": "9.747265858855510436777002212E-9"
+        },
+        "active_days": 1,
+        "average_amount_by_asset": {
+          "TRX": "0.000007"
+        },
+        "median_amount_by_asset": {
+          "TRX": "0.000007"
+        },
+        "maximum_amount_by_asset": {
+          "TRX": "0.000007"
+        },
+        "evidence_transaction_hashes": {
+          "__tuple__": [
+            "a46993552d0d87a45ca3e42214eb443ce456cb6261bcee0d21d06a29799d6936"
+          ]
+        }
+      }
+    ]
+  },
+  "outgoing_destinations": {
+    "__tuple__": []
+  },
+  "funding_transitions": {
+    "__tuple__": [
+      {
+        "occurred_at": "2026-08-02T16:02:51+00:00",
+        "previous_source": "TNJg619GpW92Ff7xBmqc49HYUwU4bUpYsR",
+        "current_source": "TCPEk4qeGVbn8b5U81DDd2uxipuyny6s4r",
+        "asset": null,
+        "previous_period_start": null,
+        "previous_period_end": null,
+        "new_period_start": null,
+        "old_source_share": "0",
+        "new_source_share": "0",
+        "reason_codes": {
+          "__tuple__": []
+        },
+        "evidence_refs": {
+          "__tuple__": []
+        }
+      }
+    ]
+  },
+  "operation_stages": {
+    "__tuple__": [
+      {
+        "stage": "startup",
+        "started_at": "2026-07-16T10:28:15+00:00",
+        "ended_at": "2026-07-24T12:43:33+00:00",
+        "transaction_count": 17,
+        "transaction_frequency": "1.888888888888888888888888889",
+        "concentration": "0.07547169811320754716981132075",
+        "assets": {
+          "__tuple__": []
+        },
+        "dominant_funding_sources": {
+          "__tuple__": []
+        },
+        "dominant_outgoing_counterparties": {
+          "__tuple__": []
+        },
+        "reason_codes": {
+          "__tuple__": []
+        },
+        "evidence_refs": {
+          "__tuple__": []
+        },
+        "confidence": "medium"
+      },
+      {
+        "stage": "diversification",
+        "started_at": "2026-07-24T12:44:15+00:00",
+        "ended_at": "2026-08-04T00:29:54+00:00",
+        "transaction_count": 68,
+        "transaction_frequency": "6.181818181818181818181818182",
+        "concentration": "0.07547169811320754716981132075",
+        "assets": {
+          "__tuple__": []
+        },
+        "dominant_funding_sources": {
+          "__tuple__": []
+        },
+        "dominant_outgoing_counterparties": {
+          "__tuple__": []
+        },
+        "reason_codes": {
+          "__tuple__": []
+        },
+        "evidence_refs": {
+          "__tuple__": []
+        },
+        "confidence": "medium"
+      }
+    ]
+  },
+  "dormancy": {
+    "__tuple__": []
+  },
+  "holding_time": {
+    "__tuple__": [
+      {
+        "asset": "TRX",
+        "matched_incoming_amount": "8.000034",
+        "matched_outgoing_amount": "8.000034",
+        "unmatched_incoming_amount": "710.150071",
+        "unmatched_outgoing_amount": "3.999966",
+        "average_holding_seconds": "92434.33333333333333333333333",
+        "median_holding_seconds": "76828.5",
+        "minimum_holding_seconds": "42738.0",
+        "maximum_holding_seconds": "165465.0",
+        "within_5_minutes_ratio": "0",
+        "within_1_hour_ratio": "0",
+        "within_24_hours_ratio": "0.5",
+        "within_7_days_ratio": "1",
+        "pass_through_event_count": 18
+      },
+      {
+        "asset": "USDT",
+        "matched_incoming_amount": "83546",
+        "matched_outgoing_amount": "83546",
+        "unmatched_incoming_amount": "23176",
+        "unmatched_outgoing_amount": "9279",
+        "average_holding_seconds": "195619.6153846153846153846154",
+        "median_holding_seconds": "224613.0",
+        "minimum_holding_seconds": "2817.0",
+        "maximum_holding_seconds": "502983.0",
+        "within_5_minutes_ratio": "0",
+        "within_1_hour_ratio": "0.05128205128205128205128205128",
+        "within_24_hours_ratio": "0.2051282051282051282051282051",
+        "within_7_days_ratio": "1",
+        "pass_through_event_count": 39
+      }
+    ]
+  },
+  "transfer_patterns": {
+    "__tuple__": []
+  },
+  "concentration_metrics": {
+    "top10_ratio": "0.3176470588235294117647058824",
+    "top20_ratio": "0.5294117647058823529411764706",
+    "top50_ratio": "0.8823529411764705882352941176",
+    "herfindahl_index": "0.02117647058823529411764705902",
+    "gini": "0.224901960784313725490196078",
+    "entropy": "5.747453730178992",
+    "top1_ratio": "0.04705882352941176470588235294",
+    "top3_ratio": "0.1294117647058823529411764706",
+    "top5_ratio": "0.2",
+    "normalized_herfindahl_index": "0.004586241276171485543369890526",
+    "effective_counterparty_count": "47.22222222222222222222222178",
+    "by_asset_direction": {}
+  },
+  "counterparty_roles": {
+    "__tuple__": []
+  },
+  "label_matches": {
+    "__tuple__": []
+  },
+  "observations": {
+    "__tuple__": [
+      {
+        "code": "funding_source_changed",
+        "occurred_at": "2026-08-02T16:02:51+00:00",
+        "facts": {
+          "previous_source": "TNJg619GpW92Ff7xBmqc49HYUwU4bUpYsR",
+          "current_source": "TCPEk4qeGVbn8b5U81DDd2uxipuyny6s4r"
+        },
+        "factual_statement": "",
+        "metrics": {},
+        "reason_codes": {
+          "__tuple__": []
+        },
+        "evidence_refs": {
+          "__tuple__": []
+        },
+        "confidence": "medium",
+        "limitations": {
+          "__tuple__": []
+        }
+      },
+      {
+        "code": "batch_distribution",
+        "occurred_at": null,
+        "facts": {
+          "batch_count": 4
+        },
+        "factual_statement": "",
+        "metrics": {},
+        "reason_codes": {
+          "__tuple__": []
+        },
+        "evidence_refs": {
+          "__tuple__": []
+        },
+        "confidence": "medium",
+        "limitations": {
+          "__tuple__": []
+        }
+      }
+    ]
+  },
+  "conclusion_facts": {
+    "__tuple__": [
+      {
+        "fact_code": "dominant_funder_exists",
+        "value": true,
+        "unit": null,
+        "confidence": "low",
+        "reason_codes": {
+          "__tuple__": [
+            "deterministic_rule"
+          ]
+        },
+        "evidence_refs": {
+          "__tuple__": []
+        },
+        "limitations": {
+          "__tuple__": []
+        }
+      },
+      {
+        "fact_code": "dominant_funder_address",
+        "value": "TNJg619GpW92Ff7xBmqc49HYUwU4bUpYsR",
+        "unit": null,
+        "confidence": "low",
+        "reason_codes": {
+          "__tuple__": [
+            "deterministic_rule"
+          ]
+        },
+        "evidence_refs": {
+          "__tuple__": []
+        },
+        "limitations": {
+          "__tuple__": []
+        }
+      },
+      {
+        "fact_code": "funding_source_changed",
+        "value": true,
+        "unit": null,
+        "confidence": "low",
+        "reason_codes": {
+          "__tuple__": [
+            "deterministic_rule"
+          ]
+        },
+        "evidence_refs": {
+          "__tuple__": []
+        },
+        "limitations": {
+          "__tuple__": []
+        }
+      },
+      {
+        "fact_code": "funding_transition_count",
+        "value": 1,
+        "unit": "count",
+        "confidence": "low",
+        "reason_codes": {
+          "__tuple__": [
+            "deterministic_rule"
+          ]
+        },
+        "evidence_refs": {
+          "__tuple__": []
+        },
+        "limitations": {
+          "__tuple__": []
+        }
+      },
+      {
+        "fact_code": "dormant_period_detected",
+        "value": false,
+        "unit": null,
+        "confidence": "low",
+        "reason_codes": {
+          "__tuple__": [
+            "deterministic_rule"
+          ]
+        },
+        "evidence_refs": {
+          "__tuple__": []
+        },
+        "limitations": {
+          "__tuple__": []
+        }
+      },
+      {
+        "fact_code": "longest_dormant_days",
+        "value": 0,
+        "unit": "days",
+        "confidence": "low",
+        "reason_codes": {
+          "__tuple__": [
+            "deterministic_rule"
+          ]
+        },
+        "evidence_refs": {
+          "__tuple__": []
+        },
+        "limitations": {
+          "__tuple__": []
+        }
+      },
+      {
+        "fact_code": "reactivation_detected",
+        "value": false,
+        "unit": null,
+        "confidence": "low",
+        "reason_codes": {
+          "__tuple__": [
+            "deterministic_rule"
+          ]
+        },
+        "evidence_refs": {
+          "__tuple__": []
+        },
+        "limitations": {
+          "__tuple__": []
+        }
+      },
+      {
+        "fact_code": "batch_incoming_detected",
+        "value": true,
+        "unit": null,
+        "confidence": "low",
+        "reason_codes": {
+          "__tuple__": [
+            "deterministic_rule"
+          ]
+        },
+        "evidence_refs": {
+          "__tuple__": []
+        },
+        "limitations": {
+          "__tuple__": []
+        }
+      },
+      {
+        "fact_code": "batch_outgoing_detected",
+        "value": true,
+        "unit": null,
+        "confidence": "low",
+        "reason_codes": {
+          "__tuple__": [
+            "deterministic_rule"
+          ]
+        },
+        "evidence_refs": {
+          "__tuple__": []
+        },
+        "limitations": {
+          "__tuple__": []
+        }
+      },
+      {
+        "fact_code": "fixed_amount_pattern_detected",
+        "value": true,
+        "unit": null,
+        "confidence": "low",
+        "reason_codes": {
+          "__tuple__": [
+            "deterministic_rule"
+          ]
+        },
+        "evidence_refs": {
+          "__tuple__": []
+        },
+        "limitations": {
+          "__tuple__": []
+        }
+      },
+      {
+        "fact_code": "rapid_pass_through_detected",
+        "value": false,
+        "unit": null,
+        "confidence": "low",
+        "reason_codes": {
+          "__tuple__": [
+            "deterministic_rule"
+          ]
+        },
+        "evidence_refs": {
+          "__tuple__": []
+        },
+        "limitations": {
+          "__tuple__": []
+        }
+      },
+      {
+        "fact_code": "service_candidate_count",
+        "value": 0,
+        "unit": "count",
+        "confidence": "low",
+        "reason_codes": {
+          "__tuple__": [
+            "deterministic_rule"
+          ]
+        },
+        "evidence_refs": {
+          "__tuple__": []
+        },
+        "limitations": {
+          "__tuple__": []
+        }
+      },
+      {
+        "fact_code": "graph_truncated",
+        "value": false,
+        "unit": null,
+        "confidence": "low",
+        "reason_codes": {
+          "__tuple__": [
+            "deterministic_rule"
+          ]
+        },
+        "evidence_refs": {
+          "__tuple__": []
+        },
+        "limitations": {
+          "__tuple__": []
+        }
+      },
+      {
+        "fact_code": "provider_truncated",
+        "value": false,
+        "unit": null,
+        "confidence": "low",
+        "reason_codes": {
+          "__tuple__": [
+            "deterministic_rule"
+          ]
+        },
+        "evidence_refs": {
+          "__tuple__": []
+        },
+        "limitations": {
+          "__tuple__": []
+        }
+      },
+      {
+        "fact_code": "analysis_partial",
+        "value": true,
+        "unit": null,
+        "confidence": "low",
+        "reason_codes": {
+          "__tuple__": [
+            "deterministic_rule"
+          ]
+        },
+        "evidence_refs": {
+          "__tuple__": []
+        },
+        "limitations": {
+          "__tuple__": []
+        }
+      },
+      {
+        "fact_code": "unknown_direction_count",
+        "value": 0,
+        "unit": "count",
+        "confidence": "low",
+        "reason_codes": {
+          "__tuple__": [
+            "deterministic_rule"
+          ]
+        },
+        "evidence_refs": {
+          "__tuple__": []
+        },
+        "limitations": {
+          "__tuple__": []
+        }
+      }
+    ]
+  },
+  "limitations": {
+    "__tuple__": [
+      "Source analysis is partial; confidence is reduced."
+    ]
+  },
+  "evidence_index": {
+    "__tuple__": [
+      {
+        "evidence_id": "IF1",
+        "feature": "funding_source",
+        "source_type": "analysis_flow",
+        "source_reference": "AnalysisResult.flow",
+        "tx_hashes": {
+          "__tuple__": [
+            "817802449a336f9406ace8d0467a4ec353a7832606319f6fd8e44d077266c68e",
+            "8290dfc9b719a91fb42d0c43f18df18948c06e8763225b7c35279088fa65a932",
+            "d14155ec6b5f6fa3801fbae083ee0b66da60daaee487293993cecf2bc8a88b3c",
+            "f140ede323d54ea161992f52cfec48e39b32d70a23cab4eb9e17dd90acf6e265"
+          ]
+        },
+        "addresses": {
+          "__tuple__": [
+            "TNJg619GpW92Ff7xBmqc49HYUwU4bUpYsR"
+          ]
+        },
+        "calculation": "incoming transaction count / all incoming transactions",
+        "parameters": {
+          "rank": 1
+        },
+        "created_at": "2026-08-04T00:29:54+00:00",
+        "tx_hashes_omitted_count": 0
+      },
+      {
+        "evidence_id": "IF10",
+        "feature": "funding_source",
+        "source_type": "analysis_flow",
+        "source_reference": "AnalysisResult.flow",
+        "tx_hashes": {
+          "__tuple__": [
+            "a46993552d0d87a45ca3e42214eb443ce456cb6261bcee0d21d06a29799d6936"
+          ]
+        },
+        "addresses": {
+          "__tuple__": [
+            "TBMdhFK7zZ78kEn3bWYJk4KFAgAcr1yDkQ"
+          ]
+        },
+        "calculation": "incoming transaction count / all incoming transactions",
+        "parameters": {
+          "rank": 10
+        },
+        "created_at": "2026-08-04T00:29:54+00:00",
+        "tx_hashes_omitted_count": 0
+      },
+      {
+        "evidence_id": "IF11",
+        "feature": "funding_source",
+        "source_type": "analysis_flow",
+        "source_reference": "AnalysisResult.flow",
+        "tx_hashes": {
+          "__tuple__": [
+            "5091804154492c87c31323826aff914585553b87c5d2a177138345a3cca7ac9e"
+          ]
+        },
+        "addresses": {
+          "__tuple__": [
+            "TCETwsANVDgCSfdhkxPQuDp5DL46QWsCUk"
+          ]
+        },
+        "calculation": "incoming transaction count / all incoming transactions",
+        "parameters": {
+          "rank": 11
+        },
+        "created_at": "2026-08-04T00:29:54+00:00",
+        "tx_hashes_omitted_count": 0
+      },
+      {
+        "evidence_id": "IF12",
+        "feature": "funding_source",
+        "source_type": "analysis_flow",
+        "source_reference": "AnalysisResult.flow",
+        "tx_hashes": {
+          "__tuple__": [
+            "8e5bf8439bb0e3487d65bf9ea2e7aa65863e8c8f80410b925e1e56c96eb183e4"
+          ]
+        },
+        "addresses": {
+          "__tuple__": [
+            "TDBsuPYTtfEHzMp8gefe1NNtasMztKqLjx"
+          ]
+        },
+        "calculation": "incoming transaction count / all incoming transactions",
+        "parameters": {
+          "rank": 12
+        },
+        "created_at": "2026-08-04T00:29:54+00:00",
+        "tx_hashes_omitted_count": 0
+      },
+      {
+        "evidence_id": "IF13",
+        "feature": "funding_source",
+        "source_type": "analysis_flow",
+        "source_reference": "AnalysisResult.flow",
+        "tx_hashes": {
+          "__tuple__": [
+            "2c368672a76be6c940c06205d6fd4de46d0f232801dc3e4ce1bfb8d5670d00c0"
+          ]
+        },
+        "addresses": {
+          "__tuple__": [
+            "TDgJQUjpdij2RVFZKYXZKco278MNtnvqjx"
+          ]
+        },
+        "calculation": "incoming transaction count / all incoming transactions",
+        "parameters": {
+          "rank": 13
+        },
+        "created_at": "2026-08-04T00:29:54+00:00",
+        "tx_hashes_omitted_count": 0
+      },
+      {
+        "evidence_id": "IF14",
+        "feature": "funding_source",
+        "source_type": "analysis_flow",
+        "source_reference": "AnalysisResult.flow",
+        "tx_hashes": {
+          "__tuple__": [
+            "db162933e8cb9f5bf96ff1ddd546bf4eeb54b2a7cec6878472957af50b752479"
+          ]
+        },
+        "addresses": {
+          "__tuple__": [
+            "TDMynGnRWYsyXLvcmsYpxefinu7d4xPARz"
+          ]
+        },
+        "calculation": "incoming transaction count / all incoming transactions",
+        "parameters": {
+          "rank": 14
+        },
+        "created_at": "2026-08-04T00:29:54+00:00",
+        "tx_hashes_omitted_count": 0
+      },
+      {
+        "evidence_id": "IF15",
+        "feature": "funding_source",
+        "source_type": "analysis_flow",
+        "source_reference": "AnalysisResult.flow",
+        "tx_hashes": {
+          "__tuple__": [
+            "35e9b253c30f8015f62d69bc7cc0eb3b207f1721754f05e63416ae57c9d23461"
+          ]
+        },
+        "addresses": {
+          "__tuple__": [
+            "TDorvbrv1exyB9cDEDkSRPunUNdVqo1qjx"
+          ]
+        },
+        "calculation": "incoming transaction count / all incoming transactions",
+        "parameters": {
+          "rank": 15
+        },
+        "created_at": "2026-08-04T00:29:54+00:00",
+        "tx_hashes_omitted_count": 0
+      },
+      {
+        "evidence_id": "IF16",
+        "feature": "funding_source",
+        "source_type": "analysis_flow",
+        "source_reference": "AnalysisResult.flow",
+        "tx_hashes": {
+          "__tuple__": [
+            "f8a014c95984b1294a61abbe4b3e685a00013091f18a8746730bb77f9b18905b"
+          ]
+        },
+        "addresses": {
+          "__tuple__": [
+            "TEeDatfHoQpMuosApypU3BUSU2ePN1sxh4"
+          ]
+        },
+        "calculation": "incoming transaction count / all incoming transactions",
+        "parameters": {
+          "rank": 16
+        },
+        "created_at": "2026-08-04T00:29:54+00:00",
+        "tx_hashes_omitted_count": 0
+      },
+      {
+        "evidence_id": "IF17",
+        "feature": "funding_source",
+        "source_type": "analysis_flow",
+        "source_reference": "AnalysisResult.flow",
+        "tx_hashes": {
+          "__tuple__": [
+            "fb32e383786438297104802045bd28b471c15e0c2a8ae86ccd3f1fa2c96bed1c"
+          ]
+        },
+        "addresses": {
+          "__tuple__": [
+            "TEvRZvoWPojaEkD7d2Bt8ffaqwFB3P1bRz"
+          ]
+        },
+        "calculation": "incoming transaction count / all incoming transactions",
+        "parameters": {
+          "rank": 17
+        },
+        "created_at": "2026-08-04T00:29:54+00:00",
+        "tx_hashes_omitted_count": 0
+      },
+      {
+        "evidence_id": "IF18",
+        "feature": "funding_source",
+        "source_type": "analysis_flow",
+        "source_reference": "AnalysisResult.flow",
+        "tx_hashes": {
+          "__tuple__": [
+            "d59144861c68363dfc27cd1f0c7209925534b11581125f2466b429c4a6e01f9d"
+          ]
+        },
+        "addresses": {
+          "__tuple__": [
+            "TF9GXeiYpofE9BzF9qA9bVxQvD1gMh3eWd"
+          ]
+        },
+        "calculation": "incoming transaction count / all incoming transactions",
+        "parameters": {
+          "rank": 18
+        },
+        "created_at": "2026-08-04T00:29:54+00:00",
+        "tx_hashes_omitted_count": 0
+      },
+      {
+        "evidence_id": "IF19",
+        "feature": "funding_source",
+        "source_type": "analysis_flow",
+        "source_reference": "AnalysisResult.flow",
+        "tx_hashes": {
+          "__tuple__": [
+            "460b62bd47daa8e7c156e3c632ba2f5b239ddca212531d5a4db2fbe03ed41a20"
+          ]
+        },
+        "addresses": {
+          "__tuple__": [
+            "TFEX3QuJFW2chgCR4bHBKsCRpx6HWCps4r"
+          ]
+        },
+        "calculation": "incoming transaction count / all incoming transactions",
+        "parameters": {
+          "rank": 19
+        },
+        "created_at": "2026-08-04T00:29:54+00:00",
+        "tx_hashes_omitted_count": 0
+      },
+      {
+        "evidence_id": "IF2",
+        "feature": "funding_source",
+        "source_type": "analysis_flow",
+        "source_reference": "AnalysisResult.flow",
+        "tx_hashes": {
+          "__tuple__": [
+            "042635c10252f5991d70fa8dedd3cc29daaffd496d3f26ab2d96549f8877f4b6",
+            "115e669b408727a7eb4c9550a2988408a05b17b3652b038fde4f713a18c69167",
+            "ba39fb9f1b477bf974784148e61018d94565cab01f3ad4b9302913aba9ad42ea"
+          ]
+        },
+        "addresses": {
+          "__tuple__": [
+            "TDsvtW6HTE7Y12huJHogJKVBk9oQv4VZzv"
+          ]
+        },
+        "calculation": "incoming transaction count / all incoming transactions",
+        "parameters": {
+          "rank": 2
+        },
+        "created_at": "2026-08-04T00:29:54+00:00",
+        "tx_hashes_omitted_count": 0
+      },
+      {
+        "evidence_id": "IF20",
+        "feature": "funding_source",
+        "source_type": "analysis_flow",
+        "source_reference": "AnalysisResult.flow",
+        "tx_hashes": {
+          "__tuple__": [
+            "eb83050fb848e9402cdc0f1440e8a084474bd16cbfbf29105d9d0db1e8604343"
+          ]
+        },
+        "addresses": {
+          "__tuple__": [
+            "TGfxmZiah1ER3o7E9F76kAsnPNgQ5afNMJ"
+          ]
+        },
+        "calculation": "incoming transaction count / all incoming transactions",
+        "parameters": {
+          "rank": 20
+        },
+        "created_at": "2026-08-04T00:29:54+00:00",
+        "tx_hashes_omitted_count": 0
+      },
+      {
+        "evidence_id": "IF21",
+        "feature": "funding_source",
+        "source_type": "analysis_flow",
+        "source_reference": "AnalysisResult.flow",
+        "tx_hashes": {
+          "__tuple__": [
+            "b1df6043fb30ea2bc550c64f67b04ae091237d010a59ca68a79b31a64d663e0f"
+          ]
+        },
+        "addresses": {
+          "__tuple__": [
+            "TH5o3k32Logwahvzt6h9hWJRqxjCkB1y2f"
+          ]
+        },
+        "calculation": "incoming transaction count / all incoming transactions",
+        "parameters": {
+          "rank": 21
+        },
+        "created_at": "2026-08-04T00:29:54+00:00",
+        "tx_hashes_omitted_count": 0
+      },
+      {
+        "evidence_id": "IF22",
+        "feature": "funding_source",
+        "source_type": "analysis_flow",
+        "source_reference": "AnalysisResult.flow",
+        "tx_hashes": {
+          "__tuple__": [
+            "d877377b5686a713ab1837abcf7d572abcebcc4a117a0d4b496c80d5ddbe64b4"
+          ]
+        },
+        "addresses": {
+          "__tuple__": [
+            "TH9t1UAQBKZb54J318rkgaDsyNHQfQBDRz"
+          ]
+        },
+        "calculation": "incoming transaction count / all incoming transactions",
+        "parameters": {
+          "rank": 22
+        },
+        "created_at": "2026-08-04T00:29:54+00:00",
+        "tx_hashes_omitted_count": 0
+      },
+      {
+        "evidence_id": "IF23",
+        "feature": "funding_source",
+        "source_type": "analysis_flow",
+        "source_reference": "AnalysisResult.flow",
+        "tx_hashes": {
+          "__tuple__": [
+            "90d0e62f569147691c2a7e16a0d82c207aff7a7503bc3fd1ec8a7a496a96fbdd"
+          ]
+        },
+        "addresses": {
+          "__tuple__": [
+            "TJkZsDeMWxNfGQJ8sSsvNUGFU6ckEZwxh4"
+          ]
+        },
+        "calculation": "incoming transaction count / all incoming transactions",
+        "parameters": {
+          "rank": 23
+        },
+        "created_at": "2026-08-04T00:29:54+00:00",
+        "tx_hashes_omitted_count": 0
+      },
+      {
+        "evidence_id": "IF24",
+        "feature": "funding_source",
+        "source_type": "analysis_flow",
+        "source_reference": "AnalysisResult.flow",
+        "tx_hashes": {
+          "__tuple__": [
+            "15805b83a1cba97d1a96100407a11410246bdf32b4a49cab9ac1222f00030a6c"
+          ]
+        },
+        "addresses": {
+          "__tuple__": [
+            "TJRt5xRh9c9KSGvMVm3KHHa5KrH4jGwy2f"
+          ]
+        },
+        "calculation": "incoming transaction count / all incoming transactions",
+        "parameters": {
+          "rank": 24
+        },
+        "created_at": "2026-08-04T00:29:54+00:00",
+        "tx_hashes_omitted_count": 0
+      },
+      {
+        "evidence_id": "IF25",
+        "feature": "funding_source",
+        "source_type": "analysis_flow",
+        "source_reference": "AnalysisResult.flow",
+        "tx_hashes": {
+          "__tuple__": [
+            "8da8287dc1e5235bd09928a2fa1084b8eeb8bae7b4c8ccec95e9b5dfca2aea53"
+          ]
+        },
+        "addresses": {
+          "__tuple__": [
+            "TKQNcbT4d3C4DH6VDQEzAPdZKvJaNTddRz"
+          ]
+        },
+        "calculation": "incoming transaction count / all incoming transactions",
+        "parameters": {
+          "rank": 25
+        },
+        "created_at": "2026-08-04T00:29:54+00:00",
+        "tx_hashes_omitted_count": 0
+      },
+      {
+        "evidence_id": "IF26",
+        "feature": "funding_source",
+        "source_type": "analysis_flow",
+        "source_reference": "AnalysisResult.flow",
+        "tx_hashes": {
+          "__tuple__": [
+            "400355e9a9faa5c28fef5ebdb40de1e3b6e3c95d5b6ba9f341efb6690c3e1ead"
+          ]
+        },
+        "addresses": {
+          "__tuple__": [
+            "TMJcK6TgJeYTQbpqCqXjsexLXwwGQqLeWd"
+          ]
+        },
+        "calculation": "incoming transaction count / all incoming transactions",
+        "parameters": {
+          "rank": 26
+        },
+        "created_at": "2026-08-04T00:29:54+00:00",
+        "tx_hashes_omitted_count": 0
+      },
+      {
+        "evidence_id": "IF27",
+        "feature": "funding_source",
+        "source_type": "analysis_flow",
+        "source_reference": "AnalysisResult.flow",
+        "tx_hashes": {
+          "__tuple__": [
+            "e86c60af3c04d37062bd023b4b143d01f12409b63b23ba6961a2af78f226b6dc"
+          ]
+        },
+        "addresses": {
+          "__tuple__": [
+            "TNXJULMxhdLy1MUe5Kx9ZNt5uFfq2XVUpa"
+          ]
+        },
+        "calculation": "incoming transaction count / all incoming transactions",
+        "parameters": {
+          "rank": 27
+        },
+        "created_at": "2026-08-04T00:29:54+00:00",
+        "tx_hashes_omitted_count": 0
+      },
+      {
+        "evidence_id": "IF28",
+        "feature": "funding_source",
+        "source_type": "analysis_flow",
+        "source_reference": "AnalysisResult.flow",
+        "tx_hashes": {
+          "__tuple__": [
+            "85513b01638181752ca2dc452f5425fbbfc3650bd7caa58c426af850634292c0"
+          ]
+        },
+        "addresses": {
+          "__tuple__": [
+            "TPBCxezfd85a95sjQmgPgwAxPZUcaJ3Upa"
+          ]
+        },
+        "calculation": "incoming transaction count / all incoming transactions",
+        "parameters": {
+          "rank": 28
+        },
+        "created_at": "2026-08-04T00:29:54+00:00",
+        "tx_hashes_omitted_count": 0
+      },
+      {
+        "evidence_id": "IF29",
+        "feature": "funding_source",
+        "source_type": "analysis_flow",
+        "source_reference": "AnalysisResult.flow",
+        "tx_hashes": {
+          "__tuple__": [
+            "6d088ca82215cfd58fa1c919564b2ea402d16e96a281dae144faa16f97417204"
+          ]
+        },
+        "addresses": {
+          "__tuple__": [
+            "TPdnHnEAcYbejRwsdMHEdMYD9s6xDmjYpa"
+          ]
+        },
+        "calculation": "incoming transaction count / all incoming transactions",
+        "parameters": {
+          "rank": 29
+        },
+        "created_at": "2026-08-04T00:29:54+00:00",
+        "tx_hashes_omitted_count": 0
+      },
+      {
+        "evidence_id": "IF3",
+        "feature": "funding_source",
+        "source_type": "analysis_flow",
+        "source_reference": "AnalysisResult.flow",
+        "tx_hashes": {
+          "__tuple__": [
+            "a3b37aacf2ca328c2aa7aa8ff19b880242030c9581e8c9d61322c1b9bc39c3ac",
+            "d3f4ff50f980fb87640a1369df577275407dee8a8c4e1c0dd14a3600837de203"
+          ]
+        },
+        "addresses": {
+          "__tuple__": [
+            "TBdrxaXKRoANUfU71vm1iSL8gfjq6RXspQ"
+          ]
+        },
+        "calculation": "incoming transaction count / all incoming transactions",
+        "parameters": {
+          "rank": 3
+        },
+        "created_at": "2026-08-04T00:29:54+00:00",
+        "tx_hashes_omitted_count": 0
+      },
+      {
+        "evidence_id": "IF30",
+        "feature": "funding_source",
+        "source_type": "analysis_flow",
+        "source_reference": "AnalysisResult.flow",
+        "tx_hashes": {
+          "__tuple__": [
+            "ff3a3105450e33d148e2a9652962d9da79a3c5e76f519479f87f1a4021257795"
+          ]
+        },
+        "addresses": {
+          "__tuple__": [
+            "TQdosgTZGmtwd8G6TZe7tCFNX6ishRgDkQ"
+          ]
+        },
+        "calculation": "incoming transaction count / all incoming transactions",
+        "parameters": {
+          "rank": 30
+        },
+        "created_at": "2026-08-04T00:29:54+00:00",
+        "tx_hashes_omitted_count": 0
+      },
+      {
+        "evidence_id": "IF31",
+        "feature": "funding_source",
+        "source_type": "analysis_flow",
+        "source_reference": "AnalysisResult.flow",
+        "tx_hashes": {
+          "__tuple__": [
+            "ee4be80714d19166313b272c423bab828207c5785299990847ad616c3dac366f"
+          ]
+        },
+        "addresses": {
+          "__tuple__": [
+            "TQeV4kBaMYzLYtpG9ujUtPz6tWdyXVm4FV"
+          ]
+        },
+        "calculation": "incoming transaction count / all incoming transactions",
+        "parameters": {
+          "rank": 31
+        },
+        "created_at": "2026-08-04T00:29:54+00:00",
+        "tx_hashes_omitted_count": 0
+      },
+      {
+        "evidence_id": "IF32",
+        "feature": "funding_source",
+        "source_type": "analysis_flow",
+        "source_reference": "AnalysisResult.flow",
+        "tx_hashes": {
+          "__tuple__": [
+            "da4b047fa740ed93b1ce31cd5ffb97f4f0ad6ba859bb1207f3ba2e370da89051"
+          ]
+        },
+        "addresses": {
+          "__tuple__": [
+            "TRome7bffj2FmBKVoVtqazVNvJz93bFvh4"
+          ]
+        },
+        "calculation": "incoming transaction count / all incoming transactions",
+        "parameters": {
+          "rank": 32
+        },
+        "created_at": "2026-08-04T00:29:54+00:00",
+        "tx_hashes_omitted_count": 0
+      },
+      {
+        "evidence_id": "IF33",
+        "feature": "funding_source",
+        "source_type": "analysis_flow",
+        "source_reference": "AnalysisResult.flow",
+        "tx_hashes": {
+          "__tuple__": [
+            "6fa0aaded94196a0e449f80a7aeeb46c114b58fec1019b712714c1a1f5d434e3"
+          ]
+        },
+        "addresses": {
+          "__tuple__": [
+            "TS7eEbQgyZTjqNGewibkCKzEGyFLw4jh4r"
+          ]
+        },
+        "calculation": "incoming transaction count / all incoming transactions",
+        "parameters": {
+          "rank": 33
+        },
+        "created_at": "2026-08-04T00:29:54+00:00",
+        "tx_hashes_omitted_count": 0
+      },
+      {
+        "evidence_id": "IF34",
+        "feature": "funding_source",
+        "source_type": "analysis_flow",
+        "source_reference": "AnalysisResult.flow",
+        "tx_hashes": {
+          "__tuple__": [
+            "be3859f88e3df982bfb5f2796c9c9f6cfed631986418cbcba886c552c141f20b"
+          ]
+        },
+        "addresses": {
+          "__tuple__": [
+            "TSgcCfqsRbMbdN4LuGkvKpXybQSbiKiB7h"
+          ]
+        },
+        "calculation": "incoming transaction count / all incoming transactions",
+        "parameters": {
+          "rank": 34
+        },
+        "created_at": "2026-08-04T00:29:54+00:00",
+        "tx_hashes_omitted_count": 0
+      },
+      {
+        "evidence_id": "IF35",
+        "feature": "funding_source",
+        "source_type": "analysis_flow",
+        "source_reference": "AnalysisResult.flow",
+        "tx_hashes": {
+          "__tuple__": [
+            "0d239ba9bd3fbf9b936278d9932eac95ef602ce9ff5cd73e226fcdfe09554b4b"
+          ]
+        },
+        "addresses": {
+          "__tuple__": [
+            "TSguXpG9Bm8tEBt14uQn6Y4tfXdgnCGe5X"
+          ]
+        },
+        "calculation": "incoming transaction count / all incoming transactions",
+        "parameters": {
+          "rank": 35
+        },
+        "created_at": "2026-08-04T00:29:54+00:00",
+        "tx_hashes_omitted_count": 0
+      },
+      {
+        "evidence_id": "IF36",
+        "feature": "funding_source",
+        "source_type": "analysis_flow",
+        "source_reference": "AnalysisResult.flow",
+        "tx_hashes": {
+          "__tuple__": [
+            "b4ce340516cdd765507736fd1213640a41129d4d3a1c98bccf4128f31e17818a"
+          ]
+        },
+        "addresses": {
+          "__tuple__": [
+            "TTqr4d17ehUsBMWnm4WET5HfPCqPJZLnCn"
+          ]
+        },
+        "calculation": "incoming transaction count / all incoming transactions",
+        "parameters": {
+          "rank": 36
+        },
+        "created_at": "2026-08-04T00:29:54+00:00",
+        "tx_hashes_omitted_count": 0
+      },
+      {
+        "evidence_id": "IF37",
+        "feature": "funding_source",
+        "source_type": "analysis_flow",
+        "source_reference": "AnalysisResult.flow",
+        "tx_hashes": {
+          "__tuple__": [
+            "aa393ad6cf4979c03f00b735d58f8d247d342bf225f8883592c5633dd87afc70"
+          ]
+        },
+        "addresses": {
+          "__tuple__": [
+            "TUbkVYkvQkFM8eMP3AciXevw3v678uaaMJ"
+          ]
+        },
+        "calculation": "incoming transaction count / all incoming transactions",
+        "parameters": {
+          "rank": 37
+        },
+        "created_at": "2026-08-04T00:29:54+00:00",
+        "tx_hashes_omitted_count": 0
+      },
+      {
+        "evidence_id": "IF38",
+        "feature": "funding_source",
+        "source_type": "analysis_flow",
+        "source_reference": "AnalysisResult.flow",
+        "tx_hashes": {
+          "__tuple__": [
+            "5d7c10fc7ae71c5948763e0e4b25aa6ba7c9aad5d6979f48c176e2f90ad658ce"
+          ]
+        },
+        "addresses": {
+          "__tuple__": [
+            "TUevijYD489RDsVY1hYT9XncCG7gmf1DkQ"
+          ]
+        },
+        "calculation": "incoming transaction count / all incoming transactions",
+        "parameters": {
+          "rank": 38
+        },
+        "created_at": "2026-08-04T00:29:54+00:00",
+        "tx_hashes_omitted_count": 0
+      },
+      {
+        "evidence_id": "IF39",
+        "feature": "funding_source",
+        "source_type": "analysis_flow",
+        "source_reference": "AnalysisResult.flow",
+        "tx_hashes": {
+          "__tuple__": [
+            "7adcab622ddc3810155b80a7c4431d4d02fe609eab3a3d58c5ff848ebd0f861d"
+          ]
+        },
+        "addresses": {
+          "__tuple__": [
+            "TUpUFqDmSZtZkWsYoSMuGeaP6AT3fVnNMJ"
+          ]
+        },
+        "calculation": "incoming transaction count / all incoming transactions",
+        "parameters": {
+          "rank": 39
+        },
+        "created_at": "2026-08-04T00:29:54+00:00",
+        "tx_hashes_omitted_count": 0
+      },
+      {
+        "evidence_id": "IF4",
+        "feature": "funding_source",
+        "source_type": "analysis_flow",
+        "source_reference": "AnalysisResult.flow",
+        "tx_hashes": {
+          "__tuple__": [
+            "b17263be753303ece388274d22004cce56475cc2bb132bcdc661bdf18b32ecdf",
+            "dd218d2d7cf2a5795bdc6b00269e8419d315b135acd769e1cf6b4832271ac2e3"
+          ]
+        },
+        "addresses": {
+          "__tuple__": [
+            "TCPEk4qeGVbn8b5U81DDd2uxipuyny6s4r"
+          ]
+        },
+        "calculation": "incoming transaction count / all incoming transactions",
+        "parameters": {
+          "rank": 4
+        },
+        "created_at": "2026-08-04T00:29:54+00:00",
+        "tx_hashes_omitted_count": 0
+      },
+      {
+        "evidence_id": "IF40",
+        "feature": "funding_source",
+        "source_type": "analysis_flow",
+        "source_reference": "AnalysisResult.flow",
+        "tx_hashes": {
+          "__tuple__": [
+            "29bd1f218208190d3f496b1a83bf7092c1e6613fc797b056a4b3aa30cdf77644"
+          ]
+        },
+        "addresses": {
+          "__tuple__": [
+            "TVwi2hVANZ2WiGJpNQXgEe1isAGRDvPNMJ"
+          ]
+        },
+        "calculation": "incoming transaction count / all incoming transactions",
+        "parameters": {
+          "rank": 40
+        },
+        "created_at": "2026-08-04T00:29:54+00:00",
+        "tx_hashes_omitted_count": 0
+      },
+      {
+        "evidence_id": "IF41",
+        "feature": "funding_source",
+        "source_type": "analysis_flow",
+        "source_reference": "AnalysisResult.flow",
+        "tx_hashes": {
+          "__tuple__": [
+            "64ede349b199f1b7678292d43335d4c6800bc617b50a5e7040976a74bf4f23ad"
+          ]
+        },
+        "addresses": {
+          "__tuple__": [
+            "TXQAF8uk4zWuLrVywpkAVssdZULejXXXCn"
+          ]
+        },
+        "calculation": "incoming transaction count / all incoming transactions",
+        "parameters": {
+          "rank": 41
+        },
+        "created_at": "2026-08-04T00:29:54+00:00",
+        "tx_hashes_omitted_count": 0
+      },
+      {
+        "evidence_id": "IF42",
+        "feature": "funding_source",
+        "source_type": "analysis_flow",
+        "source_reference": "AnalysisResult.flow",
+        "tx_hashes": {
+          "__tuple__": [
+            "077d7b012ea7bf112d449f08a07cc4f81fd7acc8e38d493a7117df14ec132533"
+          ]
+        },
+        "addresses": {
+          "__tuple__": [
+            "TYBthuusLuoBykoJfxVp43UrBu7A3twqjx"
+          ]
+        },
+        "calculation": "incoming transaction count / all incoming transactions",
+        "parameters": {
+          "rank": 42
+        },
+        "created_at": "2026-08-04T00:29:54+00:00",
+        "tx_hashes_omitted_count": 0
+      },
+      {
+        "evidence_id": "IF5",
+        "feature": "funding_source",
+        "source_type": "analysis_flow",
+        "source_reference": "AnalysisResult.flow",
+        "tx_hashes": {
+          "__tuple__": [
+            "0ca5213ec69bdd4c11fcd54e1eef0dd8ab7c60862bf722026955d89641f9d663",
+            "9ef89110d6d5f316a404a34903b8ef7ae85b35f6a06c229502a1e87aab017f0f"
+          ]
+        },
+        "addresses": {
+          "__tuple__": [
+            "TLaGjwhvA8XQYSxFAcAXy7Dvuue9eGYitv"
+          ]
+        },
+        "calculation": "incoming transaction count / all incoming transactions",
+        "parameters": {
+          "rank": 5
+        },
+        "created_at": "2026-08-04T00:29:54+00:00",
+        "tx_hashes_omitted_count": 0
+      },
+      {
+        "evidence_id": "IF6",
+        "feature": "funding_source",
+        "source_type": "analysis_flow",
+        "source_reference": "AnalysisResult.flow",
+        "tx_hashes": {
+          "__tuple__": [
+            "62feb8599e5f1509be7f8191ee809b4f64d22f3fd1274f6b72a6dafb8087b555",
+            "793c6a61e49e0d764955e0c8c23b2b7a0ad5da323210679c778749d20adc3891"
+          ]
+        },
+        "addresses": {
+          "__tuple__": [
+            "TMJcb5gtU9mnmmMFxwKQpYk7LRxKKqyDkQ"
+          ]
+        },
+        "calculation": "incoming transaction count / all incoming transactions",
+        "parameters": {
+          "rank": 6
+        },
+        "created_at": "2026-08-04T00:29:54+00:00",
+        "tx_hashes_omitted_count": 0
+      },
+      {
+        "evidence_id": "IF7",
+        "feature": "funding_source",
+        "source_type": "analysis_flow",
+        "source_reference": "AnalysisResult.flow",
+        "tx_hashes": {
+          "__tuple__": [
+            "5cb01fcef3072e4367298484596f1d0edd439f717d30f4529d0c9c2a5b3bfc3e",
+            "e4c5500c6516d4ba38ff21cc1641fc8336370d0dc069684bebf7672b2e272f6e"
+          ]
+        },
+        "addresses": {
+          "__tuple__": [
+            "TSrRYUUz774oaPKsN7NRZnSqYqr5NwjDkQ"
+          ]
+        },
+        "calculation": "incoming transaction count / all incoming transactions",
+        "parameters": {
+          "rank": 7
+        },
+        "created_at": "2026-08-04T00:29:54+00:00",
+        "tx_hashes_omitted_count": 0
+      },
+      {
+        "evidence_id": "IF8",
+        "feature": "funding_source",
+        "source_type": "analysis_flow",
+        "source_reference": "AnalysisResult.flow",
+        "tx_hashes": {
+          "__tuple__": [
+            "19aa5ef8994a72543e4d7375c48d7f300e1062168c1d4bb425601ca32e479b8e",
+            "e150420fe011a06359e01e51aa1f8e470f13632016f2e5dc5008b2bd49acaa7e"
+          ]
+        },
+        "addresses": {
+          "__tuple__": [
+            "TW3GGtCsgNUXFYMGqBkyZ6qTcTRHvt3NJk"
+          ]
+        },
+        "calculation": "incoming transaction count / all incoming transactions",
+        "parameters": {
+          "rank": 8
+        },
+        "created_at": "2026-08-04T00:29:54+00:00",
+        "tx_hashes_omitted_count": 0
+      },
+      {
+        "evidence_id": "IF9",
+        "feature": "funding_source",
+        "source_type": "analysis_flow",
+        "source_reference": "AnalysisResult.flow",
+        "tx_hashes": {
+          "__tuple__": [
+            "dcafc9a0a4050fbc77de4ddf5006a498f00baca0e59e885023294f1e2b812a4d"
+          ]
+        },
+        "addresses": {
+          "__tuple__": [
+            "TAJqGhk4wuGwoRN4vQgHTSfEt5GSyZ5f4r"
+          ]
+        },
+        "calculation": "incoming transaction count / all incoming transactions",
+        "parameters": {
+          "rank": 9
+        },
+        "created_at": "2026-08-04T00:29:54+00:00",
+        "tx_hashes_omitted_count": 0
+      }
+    ]
+  },
+  "language": "zh-TW",
+  "tone": "professional",
+  "requested_sections": {
+    "__tuple__": [
+      "executive_summary",
+      "target_profile",
+      "funding_narrative",
+      "outgoing_narrative",
+      "stage_narrative",
+      "dormancy_narrative",
+      "holding_time_narrative",
+      "pattern_narrative",
+      "counterparty_narrative",
+      "alternative_explanations",
+      "investigative_leads",
+      "limitations",
+      "conclusion"
+    ]
+  },
+  "omitted_counts": {
+    "funding_sources": 32,
+    "outgoing_destinations": 0,
+    "transfer_patterns": 0,
+    "observations": 0,
+    "counterparty_roles": 0,
+    "evidence_index": 0
+  },
+  "schema_version": "7.0"
+}

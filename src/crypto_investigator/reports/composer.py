@@ -27,6 +27,7 @@ class ReportComposer:
         *,
         graph=None,
         investigation=None,
+        narrative=None,
         target_address: str | None = None,
         chain: str | None = None,
         source_type: str = "file",
@@ -113,6 +114,11 @@ class ReportComposer:
             chain,
             investigation_data,
         )
+        if narrative is not None:
+            sections = tuple(sorted(
+                (*sections, *self._narrative_sections(narrative)),
+                key=lambda item: (item.order, item.section_id),
+            ))
         conclusion = self._conclusion(
             completeness, len(provider_errors), rejected_count, investigation_data
         )
@@ -156,6 +162,45 @@ class ReportComposer:
             limitations=limitations,
             conclusion=conclusion,
         )
+
+    @staticmethod
+    def _narrative_sections(narrative):
+        if not getattr(narrative, "validation", None) or not narrative.validation.valid:
+            return ()
+        metadata = narrative.metadata
+        review = getattr(narrative.review_status, "value", narrative.review_status)
+        header = (
+            "AI 輔助敘事；"
+            f"provider={redact(metadata.provider)}；model={redact(metadata.model)}；"
+            f"prompt={redact(metadata.prompt_version)}；validation=passed；"
+            f"fallback={metadata.fallback_used}。"
+        )
+        if review == "not_reviewed":
+            header += " AI 內容尚未經人工確認。"
+        result = []
+        order = 20
+        names = (
+            "executive_summary", "funding_narrative", "outgoing_narrative",
+            "stage_narrative", "pattern_narrative", "alternative_explanations",
+            "investigative_leads", "conclusion",
+        )
+        for name in names:
+            section = getattr(narrative, name, None)
+            if section:
+                refs = tuple(
+                    citation.evidence_id
+                    for citation in narrative.citations
+                    if citation.section in {name, section.section_id}
+                )
+                result.append(ReportSection(
+                    f"ai_{name}", f"AI 輔助敘事：{redact(section.title)}", order,
+                    ((header,) if not result else ()) + tuple(
+                        redact(paragraph.text) for paragraph in section.paragraphs
+                    ),
+                    evidence_refs=refs,
+                ))
+                order += 1
+        return tuple(result)
 
     @classmethod
     def _namespace_to_mapping(cls, value):

@@ -81,3 +81,8 @@ Future work must be approved and delivered one milestone at a time.
 
 - V6 acceptance is complete. Do not begin V7 without an explicit prompt.
 - Keep the locally configured CJK font requirement documented; no font files are bundled.
+# V7 Known Follow-ups
+
+- 真實 AI integration test 僅在使用者明確同意且提供有效環境變數後執行。
+- `narrate-investigation --report` 需要對應 AnalysisResult 才能重新組成完整 V6 報告。
+- V7 不包含任何 V8、cross-chain、risk/AML 或商業 intelligence API 功能。

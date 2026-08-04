@@ -33,6 +33,8 @@ from crypto_investigator.investigation.feature_engine import InvestigationFeatur
 from crypto_investigator.investigation.investigation_result import InvestigationSettings
 from crypto_investigator.investigation.export import InvestigationExporter
 from crypto_investigator.labels.registry import LabelRegistry
+from crypto_investigator.ai.settings import AISettings
+from crypto_investigator.narratives.engine import NarrativeEngine
 
 app = typer.Typer(help="ChainSherlock: local-first blockchain transaction investigation toolkit.")
 
@@ -475,6 +477,7 @@ def _export_report(
     report_id: str | None = None,
     timezone: str = "UTC",
     investigation=None,
+    narrative=None,
 ) -> None:
     evidence_paths = (
         *source_files,
@@ -484,12 +487,26 @@ def _export_report(
             "provider_status.json",
             "provider_errors.json",
             "rejected_records.json",
+            *(
+                (
+                    "narrative_input.json",
+                    "narrative.json",
+                    "narrative_validation.json",
+                    "ai_usage.json",
+                    "prompt_manifest.json",
+                    "ai_status.json",
+                    "ai_errors.json",
+                )
+                if narrative is not None
+                else ()
+            ),
         )),
     )
     document = ReportComposer().compose(
         analysis,
         graph=graph,
         investigation=investigation,
+        narrative=narrative,
         target_address=target,
         chain=chain.value,
         source_type=report_type,
@@ -720,6 +737,172 @@ def investigate_tx(
         output,
         _investigation_settings(dormant_days, funding_window_days, batch_window_minutes, timezone),
         _investigation_labels(label_file), report, format,
+    )
+
+
+def _ai_settings(ai, provider, model, max_tokens, max_input_chars, privacy_mode):
+    base = AISettings.from_env()
+    return AISettings(
+        enabled=bool(ai),
+        provider=provider or base.provider,
+        model=model or base.model,
+        api_key=base.api_key,
+        base_url=base.base_url,
+        timeout_seconds=base.timeout_seconds,
+        max_output_tokens=max_tokens,
+        max_input_characters=max_input_chars,
+        privacy_mode=privacy_mode,
+    )
+
+
+def _run_narrative(
+    investigation,
+    output,
+    *,
+    ai,
+    ai_provider,
+    ai_model,
+    ai_max_tokens,
+    ai_max_input_chars,
+    privacy_mode,
+    language,
+    tone,
+    section,
+    save_prompt,
+    ai_refresh=False,
+    ai_no_cache=False,
+):
+    result = NarrativeEngine().run(
+        investigation,
+        output,
+        settings=_ai_settings(
+            ai, ai_provider, ai_model, ai_max_tokens, ai_max_input_chars, privacy_mode
+        ),
+        requested=ai,
+        language=language,
+        tone=tone,
+        sections=tuple(section),
+        save_prompt=save_prompt,
+        use_cache=not ai_no_cache,
+        refresh=ai_refresh,
+    )
+    typer.echo(f"Narrative: {output / 'narrative.json'}")
+    return result
+
+
+@app.command("narrate-investigation")
+def narrate_investigation(
+    investigation_json: Path = typer.Argument(..., exists=True, dir_okay=False),
+    ai: bool = typer.Option(False, "--ai/--no-ai"),
+    ai_provider: str | None = typer.Option(None, "--ai-provider"),
+    ai_model: str | None = typer.Option(None, "--ai-model"),
+    ai_refresh: bool = typer.Option(False, "--ai-refresh"),
+    ai_no_cache: bool = typer.Option(False, "--ai-no-cache"),
+    ai_max_tokens: int = typer.Option(2000, "--ai-max-tokens", min=1, max=8000),
+    ai_max_input_chars: int = typer.Option(100000, "--ai-max-input-chars", min=1000, max=500000),
+    privacy_mode: str = typer.Option("standard", "--privacy-mode"),
+    language: str = typer.Option("zh-TW", "--language"),
+    tone: str = typer.Option("professional", "--tone"),
+    section: list[str] = typer.Option([], "--section"),
+    save_prompt: bool = typer.Option(False, "--save-prompt"),
+    output: Path = typer.Option(Path("output/narrative"), "--output"),
+    report: bool = typer.Option(False, "--report"),
+    format: str = typer.Option("all", "--format"),
+) -> None:
+    """Generate a grounded narrative from an existing InvestigationResult."""
+    del format
+    investigation = InvestigationExporter().read(investigation_json)
+    _run_narrative(
+        investigation, output, ai=ai, ai_provider=ai_provider, ai_model=ai_model,
+        ai_max_tokens=ai_max_tokens, ai_max_input_chars=ai_max_input_chars,
+        privacy_mode=privacy_mode, language=language, tone=tone, section=section,
+        save_prompt=save_prompt,
+        ai_refresh=ai_refresh, ai_no_cache=ai_no_cache,
+    )
+    if report:
+        typer.echo("Report requires the corresponding AnalysisResult; narrative artifacts were preserved.")
+
+
+@app.command("narrate-file")
+def narrate_file(
+    file: Path = typer.Argument(..., exists=True, dir_okay=False, readable=True),
+    target: str = typer.Option(..., "--target"),
+    chain: Chain | None = typer.Option(None, "--chain"),
+    ai: bool = typer.Option(False, "--ai/--no-ai"),
+    ai_provider: str | None = typer.Option(None, "--ai-provider"),
+    ai_model: str | None = typer.Option(None, "--ai-model"),
+    ai_refresh: bool = typer.Option(False, "--ai-refresh"),
+    ai_no_cache: bool = typer.Option(False, "--ai-no-cache"),
+    ai_max_tokens: int = typer.Option(2000, "--ai-max-tokens", min=1, max=8000),
+    ai_max_input_chars: int = typer.Option(100000, "--ai-max-input-chars", min=1000, max=500000),
+    privacy_mode: str = typer.Option("standard", "--privacy-mode"),
+    language: str = typer.Option("zh-TW", "--language"),
+    tone: str = typer.Option("professional", "--tone"),
+    section: list[str] = typer.Option([], "--section"),
+    save_prompt: bool = typer.Option(False, "--save-prompt"),
+    output: Path = typer.Option(Path("output/narrative_file"), "--output"),
+    report: bool = typer.Option(False, "--report"),
+    format: str = typer.Option("all", "--format"),
+) -> None:
+    """Run file investigation and generate a grounded narrative."""
+    transactions = _domain_transactions(file)
+    selected_chain = chain or (transactions[0].chain if transactions else Chain(detect_identifier(target).chain.value))
+    analysis = AnalysisEngine().analyze(transactions, target)
+    investigation = InvestigationFeatureEngine().analyze(analysis, target)
+    InvestigationExporter().export_all(investigation, output)
+    narrative = _run_narrative(
+        investigation, output, ai=ai, ai_provider=ai_provider, ai_model=ai_model,
+        ai_max_tokens=ai_max_tokens, ai_max_input_chars=ai_max_input_chars,
+        privacy_mode=privacy_mode, language=language, tone=tone, section=section,
+        save_prompt=save_prompt,
+        ai_refresh=ai_refresh, ai_no_cache=ai_no_cache,
+    )
+    if report:
+        AnalysisExporter().export_all(analysis, output)
+        graph = _report_graph(analysis, selected_chain, target, output, 20)
+        _export_report(
+            analysis, graph, report_type="file", target=target, chain=selected_chain,
+            output=output, source_files=(file,), requested_format=format,
+            language=language, investigation=investigation, narrative=narrative,
+        )
+
+
+@app.command("narrate-address")
+def narrate_address(
+    address: str = typer.Argument(...),
+    chain: Chain | None = typer.Option(None, "--chain"),
+    provider: str | None = typer.Option(None, "--provider"),
+    ai: bool = typer.Option(False, "--ai/--no-ai"),
+    ai_provider: str | None = typer.Option(None, "--ai-provider"),
+    ai_model: str | None = typer.Option(None, "--ai-model"),
+    ai_refresh: bool = typer.Option(False, "--ai-refresh"),
+    ai_no_cache: bool = typer.Option(False, "--ai-no-cache"),
+    ai_max_tokens: int = typer.Option(2000, "--ai-max-tokens", min=1, max=8000),
+    ai_max_input_chars: int = typer.Option(100000, "--ai-max-input-chars", min=1000, max=500000),
+    privacy_mode: str = typer.Option("standard", "--privacy-mode"),
+    language: str = typer.Option("zh-TW", "--language"),
+    tone: str = typer.Option("professional", "--tone"),
+    section: list[str] = typer.Option([], "--section"),
+    save_prompt: bool = typer.Option(False, "--save-prompt"),
+    output: Path = typer.Option(Path("output/narrative_address"), "--output"),
+    report: bool = typer.Option(False, "--report"),
+    format: str = typer.Option("all", "--format"),
+) -> None:
+    """Run Provider investigation and generate a grounded narrative."""
+    del report, format
+    detected = detect_identifier(address)
+    selected_chain = chain or Chain(detected.chain.value)
+    _investigate_provider(
+        detected.value, selected_chain, "address", provider, ai_refresh, 100, 100000,
+        output, InvestigationSettings(), (), False, "all",
+    )
+    investigation = InvestigationExporter().read(output / "investigation.json")
+    _run_narrative(
+        investigation, output, ai=ai, ai_provider=ai_provider, ai_model=ai_model,
+        ai_max_tokens=ai_max_tokens, ai_max_input_chars=ai_max_input_chars,
+        privacy_mode=privacy_mode, language=language, tone=tone, section=section,
+        save_prompt=save_prompt,
+        ai_refresh=ai_refresh, ai_no_cache=ai_no_cache,
     )
 
 

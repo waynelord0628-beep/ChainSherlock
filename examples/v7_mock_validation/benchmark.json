@@ -1,0 +1,14 @@
+{
+  "narrative_input_build_seconds": 0.019702999998116866,
+  "compaction_seconds": 0.0003805000160355121,
+  "prompt_build_seconds": 0.014850000006845221,
+  "response_parse_seconds": 0.0009783999994397163,
+  "validation_seconds": 0.00413220000336878,
+  "fallback_seconds": 0.000314799981424585,
+  "report_integration_seconds": null,
+  "peak_memory_bytes": 300486,
+  "input_artifact_bytes": 37113,
+  "prompt_character_count": 35299,
+  "validation_passed": true,
+  "real_api_latency_excluded": true
+}
