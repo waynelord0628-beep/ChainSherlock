@@ -1,12 +1,20 @@
 # Planned Work
 
-The following items are intentionally deferred and are not part of V1.1:
+## V2 approved scope
 
-- CSV and Excel import.
+- CSV Importer.
+- Transaction Normalizer.
+- Canonical Domain Transaction output.
+- JSON Exporter.
+
+Target flow: `CSV -> Importer -> Normalizer -> Domain Transaction -> JSON Export`.
+
+## Explicitly deferred
+
+- Excel import.
 - Blockchain providers and API integrations.
-- Transaction normalization and analysis.
+- Counterparty analysis, timeline, and graph analysis.
 - Reports, caching, graphs, labels, and heuristics.
 - Concrete plugins and tools.
 
 Future work must be approved and delivered one milestone at a time.
-

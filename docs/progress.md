@@ -2,7 +2,7 @@
 
 ## Current version
 
-V1.1 — architecture foundation.
+V1.2 — framework-independent Domain Layer.
 
 ## Completed
 
@@ -13,6 +13,8 @@ V1.1 — architecture foundation.
 - Tool Protocol and Registry, with no tools registered.
 - Core `Application`, `Context`, and `Settings` composition layer.
 - Reserved `shared` and `constants` packages.
+- Domain entities for addresses, transactions, assets, counterparties, and cases.
+- Shared chain, direction, and transaction-type enums owned by the Domain Layer.
 
 ## Validation
 
@@ -22,5 +24,4 @@ V1.1 — architecture foundation.
 
 ## Scope guard
 
-V1.1 adds no CSV import, providers, transaction analysis, reporting, or other business functionality.
-
+V1.2 adds no CSV import, providers, transaction analysis, reporting, or other business functionality. V2 is limited to `CSV -> Importer -> Normalizer -> Domain Transaction -> JSON Export`.

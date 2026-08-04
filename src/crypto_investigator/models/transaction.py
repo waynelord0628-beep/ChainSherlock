@@ -1,34 +1,10 @@
 from datetime import datetime
 from decimal import Decimal
-from enum import StrEnum
 from typing import Any
 
 from pydantic import BaseModel, Field
 
-
-class Chain(StrEnum):
-    ETHEREUM = "ethereum"
-    TRON = "tron"
-    BITCOIN = "bitcoin"
-
-
-class Direction(StrEnum):
-    INCOMING = "incoming"
-    OUTGOING = "outgoing"
-    SELF = "self"
-    UNKNOWN = "unknown"
-
-
-class TransactionType(StrEnum):
-    NATIVE_TRANSFER = "native_transfer"
-    TOKEN_TRANSFER = "token_transfer"
-    INTERNAL_TRANSFER = "internal_transfer"
-    CONTRACT_CALL = "contract_call"
-    SWAP = "swap"
-    NFT_TRANSFER = "nft_transfer"
-    COINBASE = "coinbase"
-    UTXO_TRANSFER = "utxo_transfer"
-    UNKNOWN = "unknown"
+from crypto_investigator.domain.transaction import Chain, Direction, TransactionType
 
 
 class Transaction(BaseModel):
@@ -49,4 +25,3 @@ class Transaction(BaseModel):
     direction: Direction = Direction.UNKNOWN
     source_provider: str | None = None
     metadata: dict[str, Any] = Field(default_factory=dict)
-
