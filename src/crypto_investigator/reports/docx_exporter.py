@@ -94,6 +94,30 @@ class DocxReportExporter:
             self._add_page_number(footer)
             footer.add_run(" | UTC+8")
             for report_section in document.sections:
+                if report_section.section_id == "cover":
+                    output.add_paragraph()
+                    output.add_paragraph()
+                    title = output.add_paragraph()
+                    title.alignment = WD_ALIGN_PARAGRAPH.CENTER
+                    run = title.add_run("ChainSherlock 調查分析報告")
+                    run.bold = True
+                    run.font.size = Pt(26)
+                    self._set_run_font(run)
+                    subtitle = output.add_paragraph()
+                    subtitle.alignment = WD_ALIGN_PARAGRAPH.CENTER
+                    run = subtitle.add_run(
+                        "Blockchain Fund Flow Investigation Report"
+                    )
+                    run.font.size = Pt(15)
+                    self._set_run_font(run)
+                    output.add_paragraph()
+                    for block in report_section.content_blocks:
+                        paragraph = output.add_paragraph(block)
+                        paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER
+                    output.add_page_break()
+                    continue
+                if report_section.section_id.startswith("asset_analysis_"):
+                    output.add_page_break()
                 heading = output.add_heading(report_section.title, level=1)
                 heading.paragraph_format.keep_with_next = True
                 for block in report_section.content_blocks:
@@ -162,7 +186,7 @@ class DocxReportExporter:
                         current.page_height = Mm(297)
                         current.top_margin = current.bottom_margin = Mm(20)
                         current.left_margin = current.right_margin = Mm(22)
-                if report_section.section_id == "cover":
+                if report_section.section_id == "table_of_contents":
                     output.add_page_break()
             path.parent.mkdir(parents=True, exist_ok=True)
             output.save(path)

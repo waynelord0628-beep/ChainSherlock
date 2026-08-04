@@ -1,4 +1,5 @@
 from dataclasses import replace
+from copy import deepcopy
 from datetime import UTC, datetime
 from decimal import Decimal
 from types import SimpleNamespace
@@ -9,6 +10,7 @@ import pytest
 from crypto_investigator.cli import _provider_scope
 from crypto_investigator.domain.scope import PaginationPolicy, ScopeType
 from crypto_investigator.reports.docx_exporter import DocxReportExporter
+from crypto_investigator.reports.export import ReportExportCoordinator
 from crypto_investigator.reports.html_exporter import HtmlReportExporter
 from crypto_investigator.reports.composer import ReportComposer
 from crypto_investigator.reports.formatting import (
@@ -30,6 +32,7 @@ from crypto_investigator.reports.presentation import (
 
 ADDRESS = "TR5WMAhpM9JkpouAT49X9pNHP8NPQkcGAE"
 OTHER = "TGxVDjGujrUXQGZtWgNcdeawkPYeoE4Frv"
+THIRD = "TJMUadmxstaJsnsK6my4vEDGCDiXMh3eWd"
 
 
 def _analysis():
@@ -185,17 +188,54 @@ def test_03_counterparty_table_has_no_duplicate_count_columns():
 
 def test_04_main_address_has_registry_id_and_full_value():
     display = prepare_report_for_display(_document())
-    row = _section(display, "outgoing_distribution").tables[0].rows[0]
+    row = next(
+        table
+        for table in _section(display, "asset_analysis_usdt").tables
+        if table.table_id == "outgoing_rank_usdt"
+    ).rows[0]
     assert row[1].startswith("ADDR-")
-    assert row[2] == OTHER
+    assert row[2] == abbreviate_identifier(OTHER)
 
 
 def test_05_full_address_is_preserved_in_appendix():
     display = prepare_report_for_display(_document())
     table = next(
         table
-        for table in _section(display, "appendix").tables
+        for table in _section(display, "address_registry").tables
         if table.table_id == "address_registry_identity"
+    )
+
+
+def _two_asset_document():
+    analysis = deepcopy(_analysis())
+    analysis["statistics"]["incoming_amount"]["TRX"] = Decimal("5000")
+    analysis["statistics"]["outgoing_amount"]["TRX"] = Decimal("4112")
+    analysis["statistics"]["asset_breakdown"]["TRX"] = {"transaction_count": 684}
+    analysis["counterparties"].append({
+        "address": THIRD,
+        "incoming_count": 0,
+        "outgoing_count": 684,
+        "interaction_count": 684,
+        "incoming_amount_by_asset": {"TRX": Decimal("0")},
+        "outgoing_amount_by_asset": {"TRX": Decimal("4112")},
+        "first_seen": "2025-06-02T09:21:48+00:00",
+        "last_seen": "2026-08-04T10:24:57+00:00",
+    })
+    investigation = deepcopy(_investigation())
+    investigation["structured_metadata"]["assets"].append("TRX")
+    investigation["funding"]["sources"].append({
+        "address": THIRD,
+        "amounts_by_asset": {"TRX": "5000"},
+        "share_by_asset": {"TRX": "0.75"},
+        "first_funding": "2025-06-02T09:21:48+00:00",
+        "last_funding": "2026-08-04T10:24:57+00:00",
+    })
+    investigation["funding"]["top_sources_by_asset"]["TRX"] = [THIRD]
+    return ReportComposer().compose(
+        analysis,
+        investigation=investigation,
+        target_address=ADDRESS,
+        chain="tron",
     )
     assert any(OTHER in row for row in table.rows)
 
@@ -430,3 +470,165 @@ def test_33_evidence_index_remains_artifact_level_and_compact():
     table = _section(_document(), "evidence_index").tables[0]
     assert len(table.rows) < 10
     assert all(not row[0].startswith("IF") for row in table.rows)
+
+
+def test_34_booklet_starts_with_cover_then_contents():
+    ids = [item.section_id for item in prepare_report_for_display(_document()).sections]
+    assert ids[:2] == ["cover", "table_of_contents"]
+
+
+def test_35_asset_analysis_precedes_address_rankings():
+    ids = [item.section_id for item in prepare_report_for_display(_two_asset_document()).sections]
+    assert ids.index("asset_analysis_usdt") < ids.index("address_rankings")
+    assert ids.index("asset_analysis_trx") < ids.index("address_rankings")
+
+
+def test_36_usdt_and_trx_are_separate_chapters():
+    display = prepare_report_for_display(_two_asset_document())
+    assert _section(display, "asset_analysis_usdt").title == "USDT 分析"
+    assert _section(display, "asset_analysis_trx").title == "TRX 分析"
+
+
+@pytest.mark.parametrize("asset", ("usdt", "trx"))
+def test_37_each_asset_has_three_distinct_rankings(asset):
+    table_ids = {
+        table.table_id
+        for table in _section(
+            prepare_report_for_display(_two_asset_document()),
+            f"asset_analysis_{asset}",
+        ).tables
+    }
+    assert {
+        f"funding_rank_{asset}",
+        f"outgoing_rank_{asset}",
+        f"frequency_rank_{asset}",
+    } <= table_ids
+
+
+def test_38_ranking_titles_state_the_basis():
+    display = prepare_report_for_display(_two_asset_document())
+    titles = [
+        table.title
+        for asset in ("usdt", "trx")
+        for table in _section(display, f"asset_analysis_{asset}").tables
+    ]
+    assert any("依流入金額" in title for title in titles)
+    assert any("依流出金額" in title for title in titles)
+    assert any("依交易次數" in title for title in titles)
+
+
+def test_39_ranking_tables_never_mix_assets():
+    display = prepare_report_for_display(_two_asset_document())
+    for asset in ("USDT", "TRX"):
+        section = _section(display, f"asset_analysis_{asset.casefold()}")
+        assert all(
+            other not in table.title
+            for table in section.tables
+            for other in ({"USDT", "TRX"} - {asset})
+        )
+
+
+def test_40_main_ranking_addresses_are_abbreviated():
+    table = next(
+        table
+        for table in _section(
+            prepare_report_for_display(_two_asset_document()),
+            "asset_analysis_trx",
+        ).tables
+        if table.table_id == "outgoing_rank_trx"
+    )
+    assert table.rows[0][2] == abbreviate_identifier(THIRD)
+    assert table.rows[0][2] != THIRD
+
+
+def test_41_address_ids_are_stable_across_sections():
+    display = prepare_report_for_display(_two_asset_document())
+    registry = next(
+        table for table in _section(display, "address_registry").tables
+        if table.table_id == "address_registry_identity"
+    )
+    known = {row[2]: row[0] for row in registry.rows}
+    key = _section(display, "key_addresses").tables[0]
+    for row in key.rows:
+        assert row[1] == known[next(
+            address for address in known
+            if abbreviate_identifier(address) == row[2]
+        )]
+
+
+def test_42_key_address_summary_is_early():
+    ids = [item.section_id for item in prepare_report_for_display(_two_asset_document()).sections]
+    assert ids.index("key_addresses") < ids.index("asset_analysis_usdt")
+
+
+def test_43_fund_flow_path_section_exists():
+    section = _section(prepare_report_for_display(_two_asset_document()), "fund_flow_paths")
+    assert section.tables[0].rows
+    assert all(row[3] == "candidate" for row in section.tables[1].rows)
+
+
+def test_44_ai_sections_follow_deterministic_facts():
+    document = prepare_report_for_display(_document())
+    ids = [item.section_id for item in document.sections]
+    ai = [index for index, value in enumerate(ids) if value.startswith("ai_")]
+    assert not ai or ids.index("investigation_facts") < min(ai)
+
+
+def test_45_address_registry_is_after_evidence():
+    ids = [item.section_id for item in prepare_report_for_display(_document()).sections]
+    assert ids.index("evidence_index") < ids.index("address_registry")
+
+
+def test_46_address_registry_csv_contains_complete_values(tmp_path):
+    result = ReportExportCoordinator().export(
+        _two_asset_document(), tmp_path, requested_format="markdown"
+    )
+    content = (tmp_path / result.files["address_registry"]).read_text(
+        encoding="utf-8-sig"
+    )
+    assert ADDRESS in content
+    assert THIRD in content
+
+
+def test_47_cover_and_contents_are_forced_to_separate_docx_pages(tmp_path):
+    path = DocxReportExporter().write(
+        prepare_report_for_display(_document()), tmp_path / "report.docx"
+    )
+    with zipfile.ZipFile(path) as archive:
+        xml = archive.read("word/document.xml").decode("utf-8")
+    assert xml.count('<w:br w:type="page"') >= 2
+
+
+def test_48_html_has_booklet_page_breaks(tmp_path):
+    path = HtmlReportExporter().write(
+        prepare_report_for_display(_document()), tmp_path / "report.html"
+    )
+    content = path.read_text(encoding="utf-8")
+    assert "#cover" in content and "#table_of_contents" in content
+    assert "page-break-after:always" in content
+
+
+def test_49_primary_tables_are_bounded():
+    display = prepare_report_for_display(_two_asset_document())
+    assert all(
+        len(table.rows) <= 10
+        for section in display.sections
+        if section.section_id.startswith("asset_analysis_")
+        for table in section.tables
+    )
+
+
+def test_50_engineering_tables_are_not_in_the_booklet_body():
+    ids = {item.section_id for item in prepare_report_for_display(_document()).sections}
+    assert "data_pipeline" not in ids
+    assert "provider_status" not in ids
+    assert "rejected_records" not in ids
+
+
+def test_51_asset_chapter_begins_with_narrative():
+    section = _section(
+        prepare_report_for_display(_two_asset_document()),
+        "asset_analysis_usdt",
+    )
+    assert "共納入" in section.content_blocks[0]
+    assert "最大資金來源" in " ".join(section.content_blocks)

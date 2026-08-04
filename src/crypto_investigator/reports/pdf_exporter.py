@@ -156,6 +156,39 @@ class PdfReportExporter:
             styles["BodyText"].allowOrphans = False
             story = []
             for section in document.sections:
+                if section.section_id == "cover":
+                    story.append(Spacer(1, 45 * mm))
+                    story.append(
+                        Paragraph(
+                            self._styled_text(
+                                "ChainSherlock 調查分析報告",
+                                self._latin_font_name,
+                            ),
+                            styles["Title"],
+                        )
+                    )
+                    story.append(
+                        Paragraph(
+                            self._styled_text(
+                                "Blockchain Fund Flow Investigation Report",
+                                self._latin_font_name,
+                            ),
+                            styles["Heading2"],
+                        )
+                    )
+                    story.append(Spacer(1, 20 * mm))
+                    for block in section.content_blocks:
+                        story.append(
+                            Paragraph(
+                                self._styled_text(block, self._latin_font_name),
+                                styles["BodyText"],
+                            )
+                        )
+                        story.append(Spacer(1, 2 * mm))
+                    story.append(PageBreak())
+                    continue
+                if section.section_id.startswith("asset_analysis_"):
+                    story.append(PageBreak())
                 story.append(
                     Paragraph(
                         self._styled_text(section.title, self._latin_font_name),
@@ -254,7 +287,7 @@ class PdfReportExporter:
                         rendered.setStyle(TableStyle(commands))
                         story.append(rendered)
                 story.append(Spacer(1, 3 * mm))
-                if section.section_id == "cover":
+                if section.section_id == "table_of_contents":
                     story.append(PageBreak())
             path.parent.mkdir(parents=True, exist_ok=True)
             SimpleDocTemplate(

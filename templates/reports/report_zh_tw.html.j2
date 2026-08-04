@@ -5,7 +5,7 @@
 <title>{{ document.title }}</title>
 <style>
 body{font-family:"Times New Roman","標楷體","DFKai-SB",serif;margin:2rem;color:#172033;line-height:1.65}
-h1,h2,h3{color:#16213e;break-after:avoid-page;page-break-after:avoid}section{margin:1.5rem 0}#cover{min-height:90vh;break-after:page;page-break-after:always}
+h1,h2,h3{color:#16213e;break-after:avoid-page;page-break-after:avoid}section{margin:1.5rem 0}#cover{min-height:90vh;display:flex;flex-direction:column;justify-content:center;text-align:center;break-after:page;page-break-after:always}#cover h1{font-size:2.4rem;margin:0 0 .5rem}#cover .subtitle{font-size:1.2rem;letter-spacing:.04em;margin-bottom:3rem}#table_of_contents{min-height:90vh;break-after:page;page-break-after:always}#table_of_contents p{margin:.3rem 0}section[id^="asset_analysis_"]{break-before:page;page-break-before:always}
 table{border-collapse:collapse;width:100%;font-family:Consolas,"標楷體","DFKai-SB",monospace;font-size:.88rem;table-layout:auto}thead{display:table-header-group}tr{break-inside:avoid-page;page-break-inside:avoid}th,td{border:1px solid #cbd5e1;padding:.45rem;text-align:left;vertical-align:middle;overflow-wrap:anywhere}th{white-space:nowrap;word-break:keep-all;overflow-wrap:normal;background:#f1f5f9}
 .meta,.notice{background:#f1f5f9;padding:1rem;border-radius:.5rem}.notice{border-left:4px solid #f59e0b}
 iframe{width:100%;height:720px;border:1px solid #cbd5e1}@media print{iframe{display:none}a{color:#000}p{orphans:2;widows:2}.ai-claim{break-inside:avoid-page}}
@@ -13,7 +13,7 @@ iframe{width:100%;height:720px;border:1px solid #cbd5e1}@media print{iframe{disp
 </head>
 <body>
 {% for section in document.sections %}
-<section id="{{ section.section_id }}"><h2>{{ section.title }}</h2>
+<section id="{{ section.section_id }}">{% if section.section_id == "cover" %}<h1>ChainSherlock 調查分析報告</h1><p class="subtitle">Blockchain Fund Flow Investigation Report</p>{% else %}<h2>{{ section.title }}</h2>{% endif %}
 {% for block in section.content_blocks %}<p>{{ block }}</p>{% endfor %}
 {% for table in section.tables %}<h3>{{ table.title }}</h3><table><thead><tr>{% for column in table.columns %}<th>{{ column }}</th>{% endfor %}</tr></thead><tbody>{% for row in table.rows %}<tr>{% for value in row %}<td>{{ value }}</td>{% endfor %}</tr>{% endfor %}</tbody></table>{% endfor %}
 {% if section.section_id == "graph" %}<p><a href="flow.html">開啟離線互動圖</a></p><iframe src="flow.html" title="Transaction graph"></iframe>{% endif %}

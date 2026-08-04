@@ -1,3 +1,4 @@
+import csv
 import json
 from pathlib import Path
 
@@ -13,7 +14,10 @@ from crypto_investigator.reports.pdf_exporter import (
     PdfReportExporter,
     pdf_font_status,
 )
-from crypto_investigator.reports.presentation import prepare_report_for_display
+from crypto_investigator.reports.presentation import (
+    address_registry_rows,
+    prepare_report_for_display,
+)
 
 
 class ReportExportCoordinator:
@@ -44,6 +48,22 @@ class ReportExportCoordinator:
             document.evidence, safe_output_path(root, "evidence_manifest.json")
         )
         files["evidence_manifest"] = manifest_path.name
+        registry_path = safe_output_path(root, "address_registry.csv")
+        with registry_path.open("w", encoding="utf-8-sig", newline="") as stream:
+            writer = csv.writer(stream)
+            writer.writerow(
+                (
+                    "Address ID",
+                    "Chain",
+                    "Full Address",
+                    "Label",
+                    "Candidate Role",
+                    "Evidence／Source",
+                    "Notes",
+                )
+            )
+            writer.writerows(address_registry_rows(document))
+        files["address_registry"] = registry_path.name
         display_document = prepare_report_for_display(document)
 
         for name in selected:

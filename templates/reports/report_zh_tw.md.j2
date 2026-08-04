@@ -1,4 +1,24 @@
 {% for section in document.sections %}
+{% if section.section_id == "cover" %}
+# ChainSherlock 調查分析報告
+
+## Blockchain Fund Flow Investigation Report
+
+{% for block in section.content_blocks %}{{ block }}
+
+{% endfor %}
+<div style="page-break-after: always;"></div>
+{% elif section.section_id == "table_of_contents" %}
+## {{ section.title }}
+
+{% for block in section.content_blocks %}{{ block }}
+
+{% endfor %}
+<div style="page-break-after: always;"></div>
+{% else %}
+{% if section.section_id.startswith("asset_analysis_") %}<div style="page-break-before: always;"></div>
+
+{% endif %}
 ## {{ section.title }}
 
 {% for block in section.content_blocks %}{{ block }}
@@ -14,4 +34,5 @@
 {% endfor %}
 
 {% endfor %}
+{% endif %}
 {% endfor %}
