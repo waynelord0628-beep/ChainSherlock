@@ -1,5 +1,16 @@
 # Changelog
 
+## Unreleased — V3
+
+- Added the Domain-only Analysis Engine and Analyzer Factory.
+- Added Summary, Statistics, Counterparty, Timeline, and data-only Flow Analyzers.
+- Added AnalysisResult, structured analysis models, and target-relative directions.
+- Added asset-separated statistics and counterparty amount aggregation.
+- Added `analysis.json`, `summary.json`, `counterparties.csv`, `timeline.json`, `timeline.csv`, and `flow.json`.
+- Added four analysis CLI commands.
+- Added small, medium, and large fixtures plus a repeatable benchmark baseline.
+- Added no third-party dependencies.
+
 ## Unreleased — V2
 
 - Added a reproducible dependency freeze with the validated Python and package versions.

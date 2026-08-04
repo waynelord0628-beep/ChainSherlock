@@ -5,6 +5,17 @@
 ```text
 src/crypto_investigator/
 ├── cli.py
+├── analyzers/
+│   ├── base.py
+│   ├── counterparty.py
+│   ├── engine.py
+│   ├── export.py
+│   ├── factory.py
+│   ├── flow.py
+│   ├── models.py
+│   ├── statistics.py
+│   ├── summary.py
+│   └── timeline.py
 ├── core/
 │   ├── application.py
 │   ├── context.py
@@ -98,3 +109,52 @@ The following are interfaces for later approved versions, not V2 implementations
 - graph, timeline, counterparty, risk, AI, bridge, and cross-chain modules.
 
 No future interface may bypass validation, normalization, or Domain conversion.
+
+## Analysis layer
+
+The Analysis Layer depends on Domain Transactions and standard-library data structures. It does not import pandas, Importers, Normalizers, Providers, graph libraries, report generators, or AI clients.
+
+The `AnalysisContext` contains an immutable transaction tuple and an optional target address. The target allows direction and counterparty relationships to be evaluated without mutating Domain Transactions.
+
+## Analysis dependency diagram
+
+```text
+CLI
+ ├── V2 DataPipeline -> Domain Transactions
+ └── V3 AnalysisEngine
+      ├── AnalyzerFactory
+      │    ├── SummaryAnalyzer
+      │    ├── StatisticsAnalyzer
+      │    ├── CounterpartyAnalyzer
+      │    ├── TimelineAnalyzer
+      │    └── FlowAnalyzer
+      ├── AnalysisResult
+      └── AnalysisExporter -> JSON/CSV data
+```
+
+## Analyzer flow
+
+```text
+Domain Transactions
+        |
+        v
+AnalysisContext
+        |
+        v
+AnalyzerFactory
+        |
+        +--> Summary
+        +--> Statistics
+        +--> Counterparties
+        +--> Timeline
+        +--> Flow data
+        |
+        v
+AnalysisResult
+        |
+        v
+analysis.json / summary.json / counterparties.csv
+timeline.json / timeline.csv / flow.json
+```
+
+Amounts are never combined across assets. Flow output is structured data and contains no rendered graph representation.

@@ -2,7 +2,7 @@
 
 ## Current version
 
-V2 — Data Pipeline Engine.
+V3 — Analysis Engine.
 
 ## Completed
 
@@ -23,6 +23,14 @@ V2 — Data Pipeline Engine.
 - reusable `Raw -> Import -> Validate -> Normalize -> Domain -> Export` pipeline.
 - `transactions_normalized.csv` and `summary.json` exports.
 - `analyze-file` CLI with six column override options.
+- Domain-only Analyzer Protocol and Analyzer Factory.
+- Summary and Statistics Analyzers.
+- Counterparty aggregation with asset-separated amounts.
+- daily/monthly Timeline and hourly/weekday distributions.
+- Flow node and edge data without graph rendering.
+- complete AnalysisResult with metadata and warnings.
+- JSON/CSV analysis exports and four analysis CLI commands.
+- repeatable small, medium, and large benchmark fixtures.
 
 ## Validation
 
@@ -33,3 +41,4 @@ V2 — Data Pipeline Engine.
 ## Scope guard
 
 V2 contains no Provider, Graph, Timeline, Counterparty analysis, Report, AI, Risk, Cross-chain, Bridge, or on-chain API implementation.
+V3 contains no Provider, blockchain API, graph rendering, report, Word/PDF, AI, Agent, Risk, Cross-chain, Bridge, or OSINT implementation.

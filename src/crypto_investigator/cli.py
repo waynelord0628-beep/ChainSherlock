@@ -3,6 +3,10 @@ import shutil
 
 import typer
 
+from crypto_investigator.analyzers.base import AnalysisContext
+from crypto_investigator.analyzers.engine import AnalysisEngine
+from crypto_investigator.analyzers.export import AnalysisExporter
+from crypto_investigator.analyzers.factory import AnalyzerFactory
 from crypto_investigator.config import load_config
 from crypto_investigator.core.pipeline import DataPipeline, PipelineValidationError
 from crypto_investigator.detection.identifier import detect_identifier
@@ -89,6 +93,76 @@ def analyze_file(
     typer.echo(f"Normalized transactions: {len(result.transactions)}")
     typer.echo(f"CSV: {result.exports.transactions_csv}")
     typer.echo(f"Summary: {result.exports.summary_json}")
+
+
+def _domain_transactions(file: Path):
+    try:
+        return DataPipeline().run(file).transactions
+    except (ColumnMappingError, PipelineValidationError, ValueError) as error:
+        typer.echo(f"Analysis input error: {error}", err=True)
+        raise typer.Exit(code=2) from error
+
+
+def _analysis_output_dir(file: Path) -> Path:
+    return Path("output") / file.stem
+
+
+@app.command("analyze-summary")
+def analyze_summary(
+    file: Path = typer.Argument(..., exists=True, dir_okay=False, readable=True),
+    address: str | None = typer.Option(None, "--address"),
+) -> None:
+    """Run the Summary Analyzer on Domain Transactions."""
+    transactions = _domain_transactions(file)
+    summary = AnalyzerFactory.create("summary").analyze(
+        AnalysisContext(transactions, address)
+    )
+    path = _analysis_output_dir(file) / "summary.json"
+    AnalysisExporter().write_summary(path, summary)
+    typer.echo(f"Summary: {path}")
+
+
+@app.command("analyze-counterparty")
+def analyze_counterparty(
+    file: Path = typer.Argument(..., exists=True, dir_okay=False, readable=True),
+    address: str | None = typer.Option(None, "--address"),
+) -> None:
+    """Run the Counterparty Analyzer on Domain Transactions."""
+    transactions = _domain_transactions(file)
+    counterparties = AnalyzerFactory.create("counterparty").analyze(
+        AnalysisContext(transactions, address)
+    )
+    path = _analysis_output_dir(file) / "counterparties.csv"
+    AnalysisExporter().write_counterparties(path, counterparties)
+    typer.echo(f"Counterparties: {path}")
+
+
+@app.command("analyze-timeline")
+def analyze_timeline(
+    file: Path = typer.Argument(..., exists=True, dir_okay=False, readable=True),
+) -> None:
+    """Run the Timeline Analyzer on Domain Transactions."""
+    transactions = _domain_transactions(file)
+    timeline = AnalyzerFactory.create("timeline").analyze(
+        AnalysisContext(transactions)
+    )
+    output_dir = _analysis_output_dir(file)
+    exporter = AnalysisExporter()
+    exporter.write_timeline_json(output_dir / "timeline.json", timeline)
+    exporter.write_timeline_csv(output_dir / "timeline.csv", timeline)
+    typer.echo(f"Timeline: {output_dir / 'timeline.json'}")
+
+
+@app.command("analyze-all")
+def analyze_all(
+    file: Path = typer.Argument(..., exists=True, dir_okay=False, readable=True),
+    address: str | None = typer.Option(None, "--address"),
+) -> None:
+    """Run the complete V3 Analysis Engine on Domain Transactions."""
+    transactions = _domain_transactions(file)
+    result = AnalysisEngine().analyze(transactions, address)
+    paths = AnalysisExporter().export_all(result, _analysis_output_dir(file))
+    typer.echo(f"Analysis: {paths['analysis']}")
 
 
 if __name__ == "__main__":

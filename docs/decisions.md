@@ -39,3 +39,19 @@ Mapping accepts exact normalized aliases only. When multiple source columns matc
 ## ADR-010: One canonical transaction
 
 All Importers produce canonical raw records, and all Normalizers produce the same Domain Transaction. Future file, API, explorer, and blockchain sources must use this boundary instead of defining source-specific transaction entities.
+
+## ADR-011: Domain-only analyzers
+
+Every V3 Analyzer accepts an `AnalysisContext` containing only Domain Transactions and an optional target address. Analyzers cannot inspect CSV, Excel, DataFrames, Importers, Normalizers, or raw records.
+
+## ADR-012: Analyzer creation through a Factory
+
+The Analysis Engine requests all Analyzer implementations from `AnalyzerFactory`. Selection uses registry lookup rather than analyzer-specific conditional branches.
+
+## ADR-013: Asset separation
+
+Statistics, timeline buckets, and counterparty totals store amounts by asset. Amounts from different assets are never added together. Top asset selection uses transaction count, not incomparable cross-asset value.
+
+## ADR-014: Flow is data only
+
+V3 Flow consists only of nodes and transaction edges. Rendering, graph libraries, HTML, Mermaid, GraphML, and visualization are deferred.
