@@ -91,3 +91,27 @@ Pagination slices an oversized response to the remaining capacity, stops immedia
 ## ADR-023: Provider rejection is record-level
 
 Provider batches may retain valid records and export rejected records with reasons and raw references. File-based V2 ingestion remains strict batch validation.
+
+## ADR-024: Graph Engine consumes V3 Flow Data
+
+Graph construction accepts only the public V3 AnalysisResult and Flow models. It does not inspect Provider, Importer, Normalizer, HTTP, or raw transaction internals.
+
+## ADR-025: Graph Domain and NetworkX are separate
+
+Graph Domain models are standard-library dataclasses. NetworkX is isolated behind an adapter so exports do not become Domain dependencies.
+
+## ADR-026: MultiDiGraph preserves asset scope
+
+V5 uses `MultiDiGraph` because the same directed address pair may have separate ETH, token, or other asset edges. Amounts from different assets are never merged.
+
+## ADR-027: Node identity includes chain
+
+Node IDs use `chain:normalized-address`, preventing addresses from different networks from colliding in later independently approved work.
+
+## ADR-028: Deterministic graph truncation
+
+Nodes and edges are ranked by stable metrics and IDs. Maximum node and edge limits are hard, target nodes are retained, and metadata records excluded counts and reasons.
+
+## ADR-029: HTML is an escaped offline artifact
+
+PyVis assets are embedded inline. Labels and tooltips are escaped and bounded; raw Provider errors, credentials, and unbounded metadata are not rendered.

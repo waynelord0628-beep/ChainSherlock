@@ -180,3 +180,27 @@ A partial primary result triggers fallback only when it declares missing capabil
 Provider pagination applies `max_records` per capability. An oversized page is sliced before records enter the Pipeline, no extra page is requested, and status records truncation details.
 
 Unconfirmed Bitcoin records may retain `timestamp = null` only when source metadata explicitly says `confirmed = false`. Timeline excludes them; Summary, Statistics, Counterparty, and Flow retain them. Provider batch validation is record-level and writes rejected records, while file-based V2 batches remain strict and atomic.
+
+## V5 Graph Layer
+
+```text
+V3 AnalysisResult.flow
+        |
+        v
+GraphBuilder -> GraphResult -> GraphFilter
+        |                         |
+        v                         v
+NetworkX Adapter          deterministic limits
+        |
+        +--> flow_graph.json
+        +--> flow.graphml
+        +--> flow.html
+```
+
+Graph Domain models are standard-library dataclasses and do not depend on NetworkX or PyVis. The NetworkX adapter is an export boundary and produces `MultiDiGraph` so asset-scoped parallel edges remain distinct.
+
+Node identity is `chain + normalized address`. Edge identity is `source + target + direction + asset scope`. Amounts are always stored by asset and never combined across currencies.
+
+Filtering and truncation are deterministic. Target nodes are retained, graph limits are applied before rendering, and excluded counts plus truncation reasons are recorded in metadata. Partial Analysis completeness, missing data, safe Provider error summaries, and rejected record counts propagate into Graph metadata.
+
+HTML rendering uses inline assets, bounded tooltips, escaped labels, and no Provider credentials. GraphML converts datetimes to ISO 8601 and complex values to JSON strings while preserving Decimal text.

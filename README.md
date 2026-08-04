@@ -2,7 +2,7 @@
 
 ChainSherlock 是一套本機優先（local-first）的區塊鏈交易與幣流調查工具。
 
-**目前里程碑：** V4.2 Provider Reliability Fixes
+**目前里程碑：** V5 Graph Engine
 
 **套件版本：** 0.1.2
 
@@ -41,6 +41,7 @@ pytest
 - V3 Analysis Engine：只接受 Domain Transaction，提供摘要、統計、交易對手、時間軸與 Flow 資料分析。
 - V4 Blockchain Provider Engine：透過 Etherscan、Blockscout、TronGrid 與 Blockstream Esplora 取得鏈上資料。
 - V4.2 Reliability Fixes：強化 fallback、分頁硬限制、Bitcoin 未確認交易與部分資料處理。
+- V5 Graph Engine：將 V3 Flow Data 建立為可篩選、可聚合且具安全上限的交易關係圖。
 
 Provider 資料不能直接進入 Analyzer，必須依序通過：
 
@@ -79,6 +80,46 @@ Provider 工作流會額外輸出：
 - `raw/`
 
 `analysis.json` metadata 會以 `complete`、`partial` 或 `failed` 表示資料完整度。
+
+## Graph Engine
+
+Graph Engine 只接受 V3 公開的 `AnalysisResult.flow`，不直接讀取 CSV、Provider Raw Record、Importer 或 Normalizer。
+
+檔案建立圖：
+
+```powershell
+python -m crypto_investigator graph-file transactions.csv `
+  --target 0x0000000000000000000000000000000000000000 `
+  --max-nodes 100 `
+  --max-edges 200
+```
+
+地址建立圖：
+
+```powershell
+python -m crypto_investigator graph-address <ADDRESS> `
+  --chain ethereum `
+  --max-records 1000 `
+  --top-counterparties 30
+```
+
+Graph filter 支援：
+
+- top counterparties 與 minimum transaction count
+- include／exclude asset
+- include／exclude address
+- incoming-only／outgoing-only
+- date range
+- maximum nodes／edges
+- transactions、interactions 或指定資產排序
+
+Graph 輸出：
+
+- `flow_graph.json`：完整 GraphResult，可 round-trip。
+- `flow.graphml`：可由 NetworkX 重新載入，也可供 Gephi 使用。
+- `flow.html`：PyVis inline assets 產生的離線互動圖。
+
+所有圖形輸出都保留不同資產的金額分離。Target node 不會因安全限制被截斷，HTML label 與 tooltip 會先 escape，且 Provider credential 不會寫入 HTML。
 
 ## Data Pipeline
 
@@ -198,6 +239,7 @@ Flow 包含地址節點與交易邊，記錄方向、權重、資產及 timestam
 - `normalizers`：由 Factory 選擇的鏈別正規化。
 - `analyzers`：Domain-only Analyzer、結果模型、Factory、Engine 與資料輸出。
 - `providers`：非同步 Provider contract、Registry、Factory、fallback 與鏈別 adapter。
+- `graphs`：Graph Domain Model、Builder、Filtering、NetworkX adapter 與 JSON／GraphML／HTML export。
 - `cache`：具有安全 key、TTL、atomic write 與損毀恢復的檔案快取。
 - `plugins`：Plugin Protocol、Registry 與明確 Loader。
 - `tools`：預留的 Tool Protocol 與 Registry，目前沒有實作 Tool。
@@ -230,6 +272,7 @@ Domain Layer 不依賴 Provider、HTTP client、Importer、Analyzer、圖形套�
 - V3：Domain-only Summary、Statistics、Counterparty、Timeline 與 Flow 分析。
 - V4：Blockchain Provider Engine，串接既有 V2 Pipeline 與 V3 Analysis。
 - V4.2：Provider fallback、分頁硬限制、Bitcoin mempool timestamp 與部分資料可靠性。
+- V5：Graph Model、Graph Builder、Filtering、GraphML、JSON 與 offline HTML。
 - V5 之後：依核准的獨立 milestone 逐步開發。
 
-目前不包含圖形渲染、報告產生、AI、Risk／AML 評分、Bridge、Cross-chain、OSINT 或錢包操作。
+目前不包含 Markdown／Word／PDF 報告、AI、Risk／AML 評分、Bridge、Cross-chain、OSINT、Web UI 或錢包操作。

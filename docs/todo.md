@@ -1,5 +1,17 @@
 # Planned Work
 
+## V5 completed scope
+
+- Graph Domain Model and GraphBuilder from V3 Flow Data.
+- Graph filtering, aggregation, labels, styling, and deterministic safety limits.
+- NetworkX adapter plus JSON, GraphML, and offline HTML exports.
+- File and Provider address Graph CLI workflows.
+- Security tests, example outputs, benchmark, and documentation.
+
+## Deferred beyond V5
+
+- Markdown／Word／PDF reports, AI／LLM／Agents, Risk／AML scoring, cross-chain correlation, bridge matching, OSINT, Web UI, and wallet operations.
+
 ## V4.2 completed scope
 
 - Capability-scoped fallback for incomplete partial results.

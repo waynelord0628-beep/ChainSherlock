@@ -1,6 +1,10 @@
 from pathlib import Path
 import asyncio
+from datetime import datetime
+from decimal import Decimal
+import json
 import shutil
+from types import SimpleNamespace
 
 import typer
 
@@ -16,6 +20,11 @@ from crypto_investigator.importers.mapping import ColumnMappingError
 from crypto_investigator.domain.transaction import Chain
 from crypto_investigator.providers.factory import ProviderFactory
 from crypto_investigator.providers.service import analyze_provider_identifier
+from crypto_investigator.analyzers.models import FlowEdge, FlowNode, FlowResult
+from crypto_investigator.domain.transaction import Direction
+from crypto_investigator.graphs.export import GraphExporter
+from crypto_investigator.graphs.factory import GraphFactory
+from crypto_investigator.graphs.models import GraphFilterOptions
 
 app = typer.Typer(help="ChainSherlock: local-first blockchain transaction investigation toolkit.")
 
@@ -158,6 +167,213 @@ def analyze_tx(
         cache_ttl,
         refresh,
     )
+
+
+def _graph_options(
+    *,
+    top_counterparties: int,
+    max_nodes: int,
+    max_edges: int,
+    include_asset: list[str] | None,
+    exclude_asset: list[str] | None,
+    incoming_only: bool,
+    outgoing_only: bool,
+    date_from: datetime | None,
+    date_to: datetime | None,
+    sort_by: str,
+    sort_asset: str | None,
+) -> GraphFilterOptions:
+    return GraphFilterOptions(
+        top_counterparties=top_counterparties,
+        maximum_nodes=max_nodes,
+        maximum_edges=max_edges,
+        include_assets=tuple(include_asset or ()),
+        exclude_assets=tuple(exclude_asset or ()),
+        incoming_only=incoming_only,
+        outgoing_only=outgoing_only,
+        date_from=date_from,
+        date_to=date_to,
+        sort_by=sort_by,
+        sort_asset=sort_asset,
+    )
+
+
+def _write_graph(analysis, chain: Chain, target: str | None, output: Path, options):
+    graph = GraphFactory.create("address_flow").build(
+        analysis,
+        chain=chain,
+        target_address=target,
+        options=options,
+    )
+    paths = GraphExporter().export_all(graph, output, options)
+    typer.echo(f"Graph JSON: {paths['json']}")
+    typer.echo(f"GraphML: {paths['graphml']}")
+    typer.echo(f"HTML: {paths['html']}")
+
+
+def _analysis_from_json(path: Path):
+    value = json.loads(path.read_text(encoding="utf-8"))
+    flow = value["flow"]
+    flow_result = FlowResult(
+        nodes=tuple(FlowNode(item["address"]) for item in flow["nodes"]),
+        edges=tuple(
+            FlowEdge(
+                source=item["source"],
+                target=item["target"],
+                direction=Direction(item["direction"]),
+                weight=Decimal(item["weight"]),
+                asset=item["asset"],
+                timestamp=(
+                    datetime.fromisoformat(item["timestamp"])
+                    if item.get("timestamp")
+                    else None
+                ),
+                tx_hash=item["tx_hash"],
+            )
+            for item in flow["edges"]
+        ),
+    )
+    metadata = dict(value.get("metadata", {}))
+    provider_errors_path = path.with_name("provider_errors.json")
+    provider_status_path = path.with_name("provider_status.json")
+    if provider_errors_path.exists():
+        metadata["provider_errors"] = json.loads(
+            provider_errors_path.read_text(encoding="utf-8")
+        )
+    if provider_status_path.exists():
+        statuses = json.loads(provider_status_path.read_text(encoding="utf-8"))
+        metadata["missing_data"] = sorted(
+            {
+                category
+                for status in statuses
+                for category in status.get("missing_data", [])
+            }
+        )
+    return SimpleNamespace(
+        flow=flow_result,
+        summary=SimpleNamespace(
+            transaction_count=value["summary"]["transaction_count"]
+        ),
+        metadata=metadata,
+        warnings=tuple(value.get("warnings", ())),
+    )
+
+
+@app.command("graph-file")
+def graph_file(
+    file: Path = typer.Argument(..., exists=True, dir_okay=False, readable=True),
+    target: str = typer.Option(..., "--target"),
+    top_counterparties: int = typer.Option(30, "--top-counterparties", min=0),
+    max_nodes: int = typer.Option(100, "--max-nodes", min=1),
+    max_edges: int = typer.Option(200, "--max-edges", min=0),
+    include_asset: list[str] | None = typer.Option(None, "--include-asset"),
+    exclude_asset: list[str] | None = typer.Option(None, "--exclude-asset"),
+    incoming_only: bool = typer.Option(False, "--incoming-only"),
+    outgoing_only: bool = typer.Option(False, "--outgoing-only"),
+    date_from: datetime | None = typer.Option(None, "--date-from"),
+    date_to: datetime | None = typer.Option(None, "--date-to"),
+    sort_by: str = typer.Option("transactions", "--sort-by"),
+    sort_asset: str | None = typer.Option(None, "--sort-asset"),
+    output: Path | None = typer.Option(None, "--output"),
+) -> None:
+    """Build Graph JSON, GraphML, and offline HTML from a transaction file."""
+    transactions = _domain_transactions(file)
+    try:
+        chain = (
+            transactions[0].chain
+            if transactions
+            else Chain(detect_identifier(target).chain.value)
+        )
+        analysis = AnalysisEngine().analyze(transactions, target)
+        options = _graph_options(
+            top_counterparties=top_counterparties,
+            max_nodes=max_nodes,
+            max_edges=max_edges,
+            include_asset=include_asset,
+            exclude_asset=exclude_asset,
+            incoming_only=incoming_only,
+            outgoing_only=outgoing_only,
+            date_from=date_from,
+            date_to=date_to,
+            sort_by=sort_by,
+            sort_asset=sort_asset,
+        )
+        _write_graph(
+            analysis,
+            chain,
+            target,
+            output or Path("output") / file.stem,
+            options,
+        )
+    except (ValueError, InvalidIdentifierError) as error:
+        typer.echo(f"Graph error: {error}", err=True)
+        raise typer.Exit(code=2) from error
+
+
+@app.command("graph-address")
+def graph_address(
+    address: str = typer.Argument(...),
+    chain: Chain | None = typer.Option(None, "--chain"),
+    provider: str | None = typer.Option(None, "--provider"),
+    refresh: bool = typer.Option(False, "--refresh"),
+    cache_ttl: int = typer.Option(86400, "--cache-ttl", min=1),
+    max_pages: int = typer.Option(100, "--max-pages", min=1),
+    max_records: int = typer.Option(100000, "--max-records", min=1),
+    top_counterparties: int = typer.Option(30, "--top-counterparties", min=0),
+    max_nodes: int = typer.Option(100, "--max-nodes", min=1),
+    max_edges: int = typer.Option(200, "--max-edges", min=0),
+    include_asset: list[str] | None = typer.Option(None, "--include-asset"),
+    exclude_asset: list[str] | None = typer.Option(None, "--exclude-asset"),
+    incoming_only: bool = typer.Option(False, "--incoming-only"),
+    outgoing_only: bool = typer.Option(False, "--outgoing-only"),
+    date_from: datetime | None = typer.Option(None, "--date-from"),
+    date_to: datetime | None = typer.Option(None, "--date-to"),
+    sort_by: str = typer.Option("transactions", "--sort-by"),
+    sort_asset: str | None = typer.Option(None, "--sort-asset"),
+    output: Path = typer.Option(Path("output/provider_graph"), "--output"),
+) -> None:
+    """Build Graph exports after the existing V4 address analysis workflow."""
+    try:
+        detected = detect_identifier(address)
+        selected_chain = chain or Chain(detected.chain.value)
+        settings = load_config()
+        settings.pagination.max_pages = max_pages
+        settings.pagination.max_records = max_records
+        asyncio.run(
+            analyze_provider_identifier(
+                identifier=detected.value,
+                chain=selected_chain,
+                kind="address",
+                settings=settings,
+                output_dir=output,
+                provider=provider,
+                refresh=refresh,
+                cache_ttl=cache_ttl,
+            )
+        )
+        options = _graph_options(
+            top_counterparties=top_counterparties,
+            max_nodes=max_nodes,
+            max_edges=max_edges,
+            include_asset=include_asset,
+            exclude_asset=exclude_asset,
+            incoming_only=incoming_only,
+            outgoing_only=outgoing_only,
+            date_from=date_from,
+            date_to=date_to,
+            sort_by=sort_by,
+            sort_asset=sort_asset,
+        )
+        _write_graph(
+            _analysis_from_json(output / "analysis.json"),
+            selected_chain,
+            detected.value,
+            output,
+            options,
+        )
+    except (ValueError, KeyError, InvalidIdentifierError) as error:
+        typer.echo(f"Graph error: {error}", err=True)
+        raise typer.Exit(code=2) from error
 
 
 @app.command("analyze-file")

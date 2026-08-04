@@ -22,6 +22,16 @@ V4 adds no graph rendering, reports, AI, Agents, Risk/AML scoring, cross-chain, 
 - Provider batches retain valid records and emit structured `rejected_records.json`.
 - Real API validation covers Etherscan failure fallback, Blockscout, TronGrid, and Blockstream.
 
+## V5 completion summary
+
+- Added framework-independent GraphNode, GraphEdge, GraphMetadata, GraphResult, warning, and filter models.
+- Added GraphBuilder, registry-based GraphFactory, aggregation, filtering, deterministic truncation, and styling.
+- Added NetworkX `MultiDiGraph` adapter.
+- Added deterministic JSON round-trip, GraphML, and offline PyVis HTML exports.
+- Added `graph-file` and `graph-address` without changing existing CLI commands.
+- Added HTML/XML injection protection, tooltip and transaction-hash safety limits.
+- Added example outputs and bounded 100／10,000／100,000 transaction benchmark.
+
 ## Current version
 
 V3 — Analysis Engine.

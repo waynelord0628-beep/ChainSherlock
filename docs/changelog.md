@@ -1,5 +1,14 @@
 # Changelog
 
+## Unreleased — V5
+
+- Added Graph Domain models, Builder, Factory, aggregation, filtering, styling, and safety limits.
+- Added NetworkX `MultiDiGraph` conversion.
+- Added deterministic Graph JSON, GraphML, and offline PyVis HTML.
+- Added `graph-file` and `graph-address` commands while preserving existing CLI behavior.
+- Added Graph security tests, example outputs, and a bounded 100,000-transaction benchmark.
+- Added only the approved `networkx`, `pyvis`, and `jinja2` dependencies.
+
 ## Unreleased — V4.2
 
 - Fixed partial Provider results so missing capability data triggers fallback.
