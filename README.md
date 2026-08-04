@@ -1,5 +1,22 @@
 # ChainSherlock
 
+## V8 案件輸出（Milestone 4）
+
+V8 Milestone 4 將案件、調查計畫與 Execution artifacts 聚合為 `CaseResult`，
+並產生具版本保留的 Markdown、離線 HTML、DOCX 與 PDF 案件報告。報告明確
+區分已確認事實、確定性觀察與候選解釋。
+
+```powershell
+python -m crypto_investigator case-result <CASE_ID>
+python -m crypto_investigator case-report <CASE_ID> --format all
+python -m crypto_investigator case-export <CASE_ID> output\case --mode full
+python -m crypto_investigator case-package-validate output\case.chainsherlock-case.zip
+python -m crypto_investigator case-import output\case.chainsherlock-case.zip
+```
+
+套件模式包含 `full`、`report_only` 與 `deidentified`。套件使用 SHA-256
+manifest；匯入會檢查路徑穿越、符號連結、大小、壓縮比例與檔案雜湊。
+
 ## V8 案件執行服務（Milestone 3）
 
 ChainSherlock 現已具備本機案件執行服務，可將經使用者確認的調查計畫交由

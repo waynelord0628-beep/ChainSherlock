@@ -1,5 +1,13 @@
 # Changelog
 
+## V8 Milestone 4
+
+- Added CaseResult aggregation from case, plan, execution, evidence and public artifacts.
+- Added deterministic case narrative and versioned case reports.
+- Added evidence index, audit summary, unresolved questions and follow-up recommendations.
+- Added full, report-only and irreversible deidentified case packages.
+- Added safe package validation/import and Case Output CLI commands.
+
 ## V8 Milestone 3
 
 - Added Case Execution models, event system, context, registry, policies, and public API.

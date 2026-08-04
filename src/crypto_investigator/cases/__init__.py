@@ -12,6 +12,16 @@ from crypto_investigator.cases.models import (
 )
 from crypto_investigator.cases.repository import CaseRepository
 from crypto_investigator.cases.workspace import CaseWorkspace, new_case_id, validate_case_id
+from crypto_investigator.cases.results import (
+    AuditSummary,
+    CaseFact,
+    CaseInterpretation,
+    CaseObservation,
+    CaseResult,
+    EvidenceIndexEntry,
+    RecommendedFollowUp,
+    UnresolvedQuestion,
+)
 
 __all__ = [
     "CURRENT_CASE_SCHEMA_VERSION",
@@ -27,4 +37,12 @@ __all__ = [
     "new_case_id",
     "sha256_file",
     "validate_case_id",
+    "AuditSummary",
+    "CaseFact",
+    "CaseInterpretation",
+    "CaseObservation",
+    "CaseResult",
+    "EvidenceIndexEntry",
+    "RecommendedFollowUp",
+    "UnresolvedQuestion",
 ]

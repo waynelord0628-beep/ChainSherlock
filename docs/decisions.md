@@ -1,5 +1,22 @@
 # Architecture Decisions
 
+## ADR-060: Case output preserves epistemic boundaries
+
+Confirmed facts may only originate from deterministic results or explicit reviewed
+records. Rule-based observations remain observations; identity and service
+inferences remain candidates with alternatives and limitations.
+
+## ADR-061: Reports and packages are immutable versions
+
+Every report uses a new `reports/vNNN` directory. Package manifests contain a
+canonical SHA-256 inventory. Import validates all entries before committing a new
+workspace and never overwrites an existing case.
+
+## ADR-062: Deidentification is irreversible
+
+Deidentified packages use salted deterministic aliases inside one export. Neither
+the salt nor alias mapping is included, and original evidence is excluded.
+
 ## ADR-057: Execution Service is the single orchestration boundary
 
 UI and CLI consumers must call CaseExecutionService rather than invoking handlers or

@@ -1,5 +1,26 @@
 # ChainSherlock Architecture
 
+## V8 Milestone 4: Case Output
+
+```text
+Case + Plan + Executions + registered artifacts
+                        |
+                        v
+              CaseArtifactAggregator
+                        |
+                        v
+                    CaseResult
+                 /       |       \
+        deterministic  Report   Package
+          narrative    versions export/import
+```
+
+Case Output 只讀取公開案件紀錄與已登錄 artifacts。`CaseResult` 分開保存
+confirmed facts、deterministic observations 與 candidate interpretations。
+報告重用 V6 `ReportDocument` 與 exporters，每次輸出建立新的 `reports/vNNN`。
+套件使用 allowlist、相對路徑與 SHA-256 manifest，匯入驗證完成後才建立新的
+安全 case ID。
+
 ## V8 Milestone 3: Case Execution Service
 
 ```text

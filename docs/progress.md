@@ -1,5 +1,13 @@
 # Development Progress
 
+## V8 Milestone 4
+
+- 完成 Case Artifact Aggregation 與公開 `CaseResult`。
+- 完成 deterministic narrative，嚴格分離事實、觀察與候選解釋。
+- 完成四格式案件報告、證據索引、稽核摘要與版本保留。
+- 完成 full、report_only、deidentified 套件匯出、驗證與安全匯入。
+- 完成公開 Application Service API、CLI 與 92 項 Milestone 4 測試。
+
 ## V8 Milestone 3
 
 Status: completed.

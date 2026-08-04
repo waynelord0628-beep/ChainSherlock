@@ -43,6 +43,87 @@ from crypto_investigator.reports.offline import OfflineReportComposer
 app = typer.Typer(help="ChainSherlock: local-first blockchain transaction investigation toolkit.")
 
 
+def _case_repository(case_root: Path):
+    from crypto_investigator.cases import CaseRepository
+
+    return CaseRepository(case_root)
+
+
+@app.command("case-result")
+def case_result_command(
+    case_id: str,
+    case_root: Path = typer.Option(Path("cases"), "--case-root"),
+    output: Path | None = typer.Option(None, "--output"),
+) -> None:
+    """Aggregate verified case artifacts into deterministic CaseResult JSON."""
+    from crypto_investigator.application import CaseResultService
+
+    result = CaseResultService(_case_repository(case_root)).build_case_result(case_id)
+    text = result.model_dump_json(indent=2)
+    if output:
+        output.write_text(text, encoding="utf-8")
+        typer.echo(str(output))
+    else:
+        typer.echo(text)
+
+
+@app.command("case-report")
+def case_report_command(
+    case_id: str,
+    format: str = typer.Option("all", "--format"),
+    case_root: Path = typer.Option(Path("cases"), "--case-root"),
+) -> None:
+    """Generate a versioned deterministic case report."""
+    from crypto_investigator.application import CaseReportService, CaseResultService
+
+    repository = _case_repository(case_root)
+    result = CaseResultService(repository).build_case_result(case_id)
+    summary = CaseReportService(repository).generate(result, format)
+    typer.echo(json.dumps(summary, ensure_ascii=False, indent=2))
+
+
+@app.command("case-export")
+def case_export_command(
+    case_id: str,
+    mode: str = typer.Option("full", "--mode"),
+    output: Path = typer.Option(Path("case.chainsherlock-case.zip"), "--output"),
+    case_root: Path = typer.Option(Path("cases"), "--case-root"),
+) -> None:
+    """Export a full, report-only, or de-identified case package."""
+    from crypto_investigator.application import CasePackageService
+
+    path = CasePackageService(_case_repository(case_root)).export_case_package(
+        case_id, output, mode
+    )
+    typer.echo(str(path))
+
+
+@app.command("case-import")
+def case_import_command(
+    package: Path,
+    case_root: Path = typer.Option(Path("cases"), "--case-root"),
+) -> None:
+    """Validate and atomically import a case package."""
+    from crypto_investigator.application import CasePackageService
+
+    record = CasePackageService(_case_repository(case_root)).import_case_package(package)
+    typer.echo(record.case_id)
+
+
+@app.command("case-package-validate")
+def case_package_validate_command(
+    package: Path,
+    case_root: Path = typer.Option(Path("cases"), "--case-root"),
+) -> None:
+    """Validate a case package without importing it."""
+    from crypto_investigator.application import CasePackageService
+
+    manifest = CasePackageService(_case_repository(case_root)).validate_case_package(
+        package
+    )
+    typer.echo(manifest.model_dump_json(indent=2))
+
+
 @app.command()
 def detect(value: str = typer.Argument(..., help="Address or transaction hash to identify.")) -> None:
     """Detect the chain and type of an identifier."""

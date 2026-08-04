@@ -22,6 +22,9 @@ from crypto_investigator.application.execution_registry import (
     StepHandler,
 )
 from crypto_investigator.application.execution_service import CaseExecutionService
+from crypto_investigator.application.case_result_service import CaseResultService
+from crypto_investigator.application.case_report_service import CaseReportService
+from crypto_investigator.application.case_package_service import CasePackageService
 
 __all__ = [
     "ArtifactCandidate",
@@ -45,4 +48,7 @@ __all__ = [
     "StepExecution",
     "StepExecutionResult",
     "StepHandler",
+    "CasePackageService",
+    "CaseReportService",
+    "CaseResultService",
 ]

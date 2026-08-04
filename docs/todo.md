@@ -1,5 +1,12 @@
 # Planned Work
 
+## After V8 Milestone 4
+
+- Await explicit approval before starting the Desktop UI milestone.
+- Human review workflow and report approval signatures remain deferred.
+- Imported packages preserve public summaries and registered artifacts; they do not
+  imply that an execution can be resumed.
+
 ## V8 Milestone 3 boundary
 
 - Case Execution Service is complete.
