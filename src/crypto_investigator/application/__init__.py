@@ -25,6 +25,9 @@ from crypto_investigator.application.execution_service import CaseExecutionServi
 from crypto_investigator.application.offline_handlers import (
     create_offline_execution_registry,
 )
+from crypto_investigator.application.provider_handlers import (
+    create_desktop_execution_registry,
+)
 from crypto_investigator.application.case_result_service import CaseResultService
 from crypto_investigator.application.case_report_service import CaseReportService
 from crypto_investigator.application.case_package_service import CasePackageService
@@ -37,6 +40,7 @@ __all__ = [
     "CaseExecutionResult",
     "CaseExecutionService",
     "create_offline_execution_registry",
+    "create_desktop_execution_registry",
     "Completeness",
     "EventType",
     "ExecutionArtifact",

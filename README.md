@@ -1,5 +1,16 @@
 # ChainSherlock
 
+## V8 Real Provider Execution Integration（Milestone 8）
+
+Desktop Execution 現在可將 Provider-only address/transaction Plan 接入既有
+Etherscan／Blockscout、TronGrid 與 Blockstream，再沿用 V2～V7 的 Analysis、
+Graph 與 deterministic Investigation。Provider status、errors 與 rejected
+records 會成為案件內 immutable SHA-256 artifacts；structured Evidence 案件仍
+優先使用 M7 的離線流程。
+
+真實三鏈 bounded 驗收結果見 `docs/provider-execution-v8.md`。本功能不使用 AI，
+也不保存 API Key、Authorization header 或本機絕對路徑。
+
 ## V8.7.1 Windows CJK PDF Font Fallback
 
 PDF exporter 會依序使用明確傳入字型、`CHAINSHERLOCK_PDF_CJK_FONT`，以及

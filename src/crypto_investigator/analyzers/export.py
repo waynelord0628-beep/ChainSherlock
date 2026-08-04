@@ -9,11 +9,18 @@ from typing import Any, Mapping
 
 from crypto_investigator.analyzers.models import (
     AnalysisResult,
+    AssetStatistics,
     Counterparty,
+    FlowEdge,
+    FlowNode,
     FlowResult,
+    StatisticsResult,
     SummaryResult,
+    TimelineBucket,
     TimelineResult,
+    TransactionAmountRef,
 )
+from crypto_investigator.domain.transaction import Direction
 
 
 class AnalysisExporter:
@@ -109,6 +116,131 @@ class AnalysisExporter:
         path.write_text(
             json.dumps(self.to_primitive(value), ensure_ascii=False, indent=2),
             encoding="utf-8",
+        )
+
+    def read_analysis(self, path: Path) -> AnalysisResult:
+        value = json.loads(path.read_text(encoding="utf-8"))
+        timestamp = lambda item: datetime.fromisoformat(item) if item else None
+        summary = value["summary"]
+        statistics = value["statistics"]
+        timeline = value["timeline"]
+        flow = value["flow"]
+        amount_refs = lambda items: {
+            asset: TransactionAmountRef(
+                tx_hash=item["tx_hash"], amount=Decimal(item["amount"])
+            )
+            for asset, item in items.items()
+        }
+        return AnalysisResult(
+            summary=SummaryResult(
+                **{
+                    **summary,
+                    "first_seen": timestamp(summary.get("first_seen")),
+                    "last_seen": timestamp(summary.get("last_seen")),
+                    "assets": tuple(summary.get("assets", [])),
+                }
+            ),
+            statistics=StatisticsResult(
+                incoming_amount={
+                    key: Decimal(item)
+                    for key, item in statistics["incoming_amount"].items()
+                },
+                outgoing_amount={
+                    key: Decimal(item)
+                    for key, item in statistics["outgoing_amount"].items()
+                },
+                asset_breakdown={
+                    key: AssetStatistics(
+                        **{
+                            **item,
+                            "total_amount": Decimal(item["total_amount"]),
+                            "average_amount": Decimal(item["average_amount"]),
+                            "median_amount": Decimal(item["median_amount"]),
+                            "max_amount": Decimal(item["max_amount"]),
+                            "min_amount": Decimal(item["min_amount"]),
+                        }
+                    )
+                    for key, item in statistics["asset_breakdown"].items()
+                },
+                top_asset=statistics.get("top_asset"),
+                average_amount={
+                    key: Decimal(item)
+                    for key, item in statistics["average_amount"].items()
+                },
+                median_amount={
+                    key: Decimal(item)
+                    for key, item in statistics["median_amount"].items()
+                },
+                max_transaction=amount_refs(statistics["max_transaction"]),
+                min_transaction=amount_refs(statistics["min_transaction"]),
+                transaction_frequency=statistics["transaction_frequency"],
+            ),
+            counterparties=tuple(
+                Counterparty(
+                    **{
+                        **item,
+                        "incoming_amount_by_asset": {
+                            key: Decimal(amount)
+                            for key, amount in item[
+                                "incoming_amount_by_asset"
+                            ].items()
+                        },
+                        "outgoing_amount_by_asset": {
+                            key: Decimal(amount)
+                            for key, amount in item[
+                                "outgoing_amount_by_asset"
+                            ].items()
+                        },
+                        "first_seen": timestamp(item.get("first_seen")),
+                        "last_seen": timestamp(item.get("last_seen")),
+                        "direction": Direction(item["direction"]),
+                    }
+                )
+                for item in value["counterparties"]
+            ),
+            timeline=TimelineResult(
+                daily={
+                    key: TimelineBucket(
+                        transaction_count=item["transaction_count"],
+                        amounts_by_asset={
+                            asset: Decimal(amount)
+                            for asset, amount in item["amounts_by_asset"].items()
+                        },
+                    )
+                    for key, item in timeline["daily"].items()
+                },
+                monthly={
+                    key: TimelineBucket(
+                        transaction_count=item["transaction_count"],
+                        amounts_by_asset={
+                            asset: Decimal(amount)
+                            for asset, amount in item["amounts_by_asset"].items()
+                        },
+                    )
+                    for key, item in timeline["monthly"].items()
+                },
+                hourly_distribution={
+                    int(key): count
+                    for key, count in timeline["hourly_distribution"].items()
+                },
+                weekly_distribution=timeline["weekly_distribution"],
+            ),
+            flow=FlowResult(
+                nodes=tuple(FlowNode(**item) for item in flow["nodes"]),
+                edges=tuple(
+                    FlowEdge(
+                        **{
+                            **item,
+                            "direction": Direction(item["direction"]),
+                            "weight": Decimal(item["weight"]),
+                            "timestamp": timestamp(item.get("timestamp")),
+                        }
+                    )
+                    for item in flow["edges"]
+                ),
+            ),
+            metadata=value.get("metadata", {}),
+            warnings=tuple(value.get("warnings", [])),
         )
 
     @classmethod

@@ -1,5 +1,22 @@
 # Architecture Decisions
 
+## ADR-078: Provider execution is selected only without structured evidence
+
+The hybrid analysis handler always prefers immutable CSV/XLS/XLSX evidence. It invokes
+a public Provider only for a Provider-only plan, preventing duplicate or unexpected
+network access.
+
+## ADR-079: Downstream steps consume the registered analysis artifact
+
+Graph and Investigation deserialize the verified public AnalysisResult artifact. They
+do not call the Provider again, preserving cost, pagination and evidence boundaries.
+
+## ADR-080: Provider outputs are redacted at two boundaries
+
+The V4 Provider layer creates safe status/error outputs. The V8 handler redacts status,
+errors and rejected records again before immutable registration. API keys,
+Authorization headers, request bodies and absolute paths are not persisted.
+
 ## ADR-077: PDF uses licensed system fonts without redistribution
 
 PDF font resolution prefers an explicit path, then the environment override, then an

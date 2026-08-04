@@ -1,5 +1,16 @@
 # Planned Work
 
+## After V8 Milestone 8
+
+- Await explicit approval before Windows packaging and clean-machine acceptance.
+- Etherscan requires a valid environment-managed API key for primary and internal
+  transaction acceptance; Blockscout remains the public fallback where supported.
+- Larger Provider runs remain bounded by configured pagination/rate limits and may
+  correctly remain partial.
+- Provider UI connection-test controls, Graph node synchronization and report approval
+  signatures remain deferred.
+- Do not begin V9 without explicit approval.
+
 ## After V8 Milestone 7
 
 - Await explicit approval before real Provider StepHandler integration.

@@ -1,5 +1,13 @@
 # Changelog
 
+## V8 Milestone 8
+
+- Added hybrid offline/Provider analysis StepHandlers to Desktop Execution.
+- Connected Etherscan/Blockscout, TronGrid and Blockstream results to Case artifacts.
+- Added verified AnalysisResult deserialization for downstream Graph and Investigation.
+- Added defense-in-depth Provider output redaction and safe execution metadata.
+- Added recorded fallback/partial integration tests and a bounded real-provider validator.
+
 ## V8.7.1
 
 - Added automatic Windows 標楷體 discovery for PDF export.

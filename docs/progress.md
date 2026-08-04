@@ -1,5 +1,18 @@
 # Development Progress
 
+## V8 Milestone 8
+
+- 完成 Provider-only address/transaction StepHandler 與 Desktop hybrid registry。
+- 完成 Provider AnalysisResult 公開 JSON round-trip，Graph／Investigation 不重複
+  發出網路請求。
+- 完成 provider status、errors、rejected records 的 redaction、相對路徑、
+  SHA-256 immutable artifact registration。
+- 完成 fallback、partial preservation、單次 request workflow 與 secret regression。
+- M8-A 受影響測試 356 passed；完整驗收 1,150 passed、1 skipped。
+- M8-B 三鏈 bounded 真實驗收完成：Ethereum Blockscout fallback、TronGrid、
+  Blockstream 均產出 Analysis、Graph 與 Investigation；0 fatal failure。
+- 未使用 AI、商業 API、Cross-chain、Risk/AML；未開始 V9。
+
 ## V8.7.1
 
 - PDF exporter 支援 Windows 系統標楷體自動偵測，環境變數仍可明確覆寫。

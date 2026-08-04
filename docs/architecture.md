@@ -1,5 +1,28 @@
 # ChainSherlock Architecture
 
+## V8 Milestone 8: Provider Execution Integration
+
+```text
+Provider-only Plan -> Hybrid Analysis StepHandler
+                         |
+      Etherscan -> Blockscout / TronGrid / Blockstream
+                         |
+             Provider Collection + dedup
+                         |
+     Analysis artifact + status/errors/rejected
+                         |
+              Graph -> Investigation -> Report
+```
+
+The Desktop composition root uses a hybrid registry. Structured CSV/XLS/XLSX evidence
+continues through the M7 offline handler; a Provider request is allowed only when no
+structured evidence is available. Graph and Investigation deserialize the verified
+AnalysisResult artifact, so they never repeat the network request.
+
+Provider outputs are redacted again at the Application boundary before immutable
+artifact registration. Retry, pagination, cache and fallback remain owned by the
+existing V4 Provider layer.
+
 ## V8.7.1: PDF Font Resolution
 
 ```text

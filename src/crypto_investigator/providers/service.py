@@ -68,6 +68,9 @@ async def analyze_provider_identifier(
         analysis,
         metadata={
             **analysis.metadata,
+            "chain": chain.value,
+            "target_address": identifier if kind == "address" else None,
+            "tx_hash": identifier if kind != "address" else None,
             "rejected_record_count": rejected_count,
             "completeness": completeness,
         },

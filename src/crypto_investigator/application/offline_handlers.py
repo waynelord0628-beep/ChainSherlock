@@ -108,7 +108,17 @@ def _analysis(
     case: CaseRecord,
     token: CancellationToken,
     step: PlanStep | None = None,
+    context: ExecutionContext | None = None,
 ):
+    records = _evidence_records(case)
+    if not records:
+        for artifact in reversed(context.execution.artifacts if context else []):
+            if artifact.artifact_type is ArtifactType.ANALYSIS_RESULT:
+                path = repository.workspace(case.case_id).resolve_relative(
+                    artifact.relative_path
+                )
+                return (), AnalysisExporter().read_analysis(path)
+        raise ValueError("No verified analysis artifact is available")
     transactions = _load_transactions(repository, case, token)
     target = _target_address(case, step)
     result = AnalysisEngine().analyze(transactions, target)
@@ -143,13 +153,9 @@ class OfflineStepHandler:
     ) -> None:
         if case.case_id != context.case.case_id:
             raise ValueError("Execution case mismatch")
-        if self.supported_step_type in {
+        if step.step_type in {
             StepType.PARSE_STRUCTURED_ATTACHMENT,
             StepType.IMPORT_TRANSACTIONS,
-            StepType.ANALYZE_ADDRESS,
-            StepType.ANALYZE_TRANSACTION,
-            StepType.BUILD_GRAPH,
-            StepType.RUN_INVESTIGATION_FEATURES,
         } and not _evidence_records(case):
             raise ValueError("This offline step requires CSV or Excel evidence")
 
@@ -240,14 +246,19 @@ class OfflineStepHandler:
         )
 
     def _execute_detect_chain(self, case, step, context, token):
-        transactions = _load_transactions(self.repository, case, token)
-        chains = sorted({item.chain.value for item in transactions})
+        if _evidence_records(case):
+            transactions = _load_transactions(self.repository, case, token)
+            chains = sorted({item.chain.value for item in transactions})
+            records = len(transactions)
+        else:
+            chains = [step.chain.value] if step.chain else []
+            records = len(step.target_ids)
         path = _write_json(
             _output_dir(context) / "detected_chain.json",
             {"chains": chains, "target_count": len(step.target_ids)},
         )
         return self._result(
-            context, path, ArtifactType.OTHER, len(transactions), "offline_detection"
+            context, path, ArtifactType.OTHER, records, "offline_detection"
         )
 
     def _execute_analyze_address(self, case, step, context, token):
@@ -269,8 +280,15 @@ class OfflineStepHandler:
         )
 
     def _execute_build_graph(self, case, step, context, token):
-        transactions, analysis = _analysis(self.repository, case, token)
+        transactions, analysis = _analysis(
+            self.repository, case, token, context=context
+        )
         chains = {item.chain for item in transactions}
+        chain_value = analysis.metadata.get("chain")
+        if not chains and chain_value:
+            from crypto_investigator.domain.transaction import Chain
+
+            chains = {Chain(chain_value)}
         if len(chains) != 1:
             raise ValueError("Offline graph requires evidence from exactly one chain")
         graph = GraphBuilder().build(
@@ -285,7 +303,7 @@ class OfflineStepHandler:
             "html": ArtifactType.GRAPH_HTML,
         }
         return StepExecutionResult(
-            records_processed=len(transactions),
+            records_processed=analysis.summary.transaction_count,
             artifacts=[
                 self._artifact(
                     context, path, type_by_name[name], "offline_graph_engine"
@@ -295,7 +313,9 @@ class OfflineStepHandler:
         )
 
     def _execute_run_investigation_features(self, case, step, context, token):
-        transactions, analysis = _analysis(self.repository, case, token)
+        transactions, analysis = _analysis(
+            self.repository, case, token, context=context
+        )
         target = _target_address(case)
         if not target:
             raise ValueError("Investigation features require a confirmed target address")
@@ -312,7 +332,7 @@ class OfflineStepHandler:
             paths["conclusion_facts"], investigation.conclusion_fact_items
         )
         return StepExecutionResult(
-            records_processed=len(transactions),
+            records_processed=analysis.summary.transaction_count,
             artifacts=[
                 self._artifact(
                     context,
@@ -440,6 +460,8 @@ class OfflineStepHandler:
 
 def create_offline_execution_registry(
     repository: CaseRepository,
+    *,
+    include_analysis_handlers: bool = True,
 ) -> ExecutionRegistry:
     registry = ExecutionRegistry()
     definitions = {
@@ -450,8 +472,6 @@ def create_offline_execution_registry(
             "analysis_result",
         ),
         StepType.DETECT_CHAIN: ("other",),
-        StepType.ANALYZE_ADDRESS: ("analysis_result",),
-        StepType.ANALYZE_TRANSACTION: ("analysis_result",),
         StepType.BUILD_GRAPH: ("graph_json", "graphml", "graph_html"),
         StepType.RUN_INVESTIGATION_FEATURES: (
             "investigation_result",
@@ -461,6 +481,13 @@ def create_offline_execution_registry(
         StepType.EXPORT_EVIDENCE_MANIFEST: ("evidence_manifest",),
         StepType.GENERATE_REPORT: ("report_markdown", "report_html", "report_docx"),
     }
+    if include_analysis_handlers:
+        definitions.update(
+            {
+                StepType.ANALYZE_ADDRESS: ("analysis_result",),
+                StepType.ANALYZE_TRANSACTION: ("analysis_result",),
+            }
+        )
     for step_type, artifacts in definitions.items():
         registry.register(OfflineStepHandler(repository, step_type, artifacts))
     return registry

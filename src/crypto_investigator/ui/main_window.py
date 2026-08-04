@@ -119,12 +119,12 @@ class MainWindow(QMainWindow):
         if execution_service is None:
             from crypto_investigator.application import (
                 CaseExecutionService,
-                create_offline_execution_registry,
+                create_desktop_execution_registry,
             )
 
             execution_service = CaseExecutionService(
                 self.repository,
-                create_offline_execution_registry(self.repository),
+                create_desktop_execution_registry(self.repository),
             )
         self.execution_service = execution_service
         self.settings_service = UISettingsService(

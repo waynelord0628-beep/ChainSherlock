@@ -558,3 +558,17 @@ Windows packaging。不得直接開始 V9。
 - `export_status.json` 只保存可用狀態、字型名稱與來源類別，不保存本機路徑。
 - 不複製或提交 Windows 專有字型；無可用字型時仍採 partial export。
 - 完整驗收：`1148 passed, 1 skipped in 37.54s`；`pip check` 通過。
+
+## 15. 恢復後續：V8 Milestone 8
+
+- Desktop hybrid registry 支援 Provider-only address/transaction Plan。
+- structured Evidence 仍優先走 M7 離線 handler，不會意外呼叫 Provider。
+- Etherscan/Blockscout、TronGrid、Blockstream 結果接入 Analysis、Graph 與
+  deterministic Investigation。
+- 下游 steps 讀取已驗證 AnalysisResult artifact，不重複發出 Provider 請求。
+- provider status、errors、rejected records 再經 redaction 後以相對路徑與
+  SHA-256 登錄。
+- M8-A 最終完整驗收：`1150 passed, 1 skipped in 43.51s`；`pip check` 通過。
+- M8-B 三鏈單頁／20 筆／0 retry 真實驗收均完成，皆因 bounded truncation 或
+  capability 缺口正確標記 partial，但 Graph/Investigation 完成且 0 fatal failure。
+- 秘密與本機絕對路徑掃描命中 0；raw 驗收 artifacts 位於 ignored `output/`。
