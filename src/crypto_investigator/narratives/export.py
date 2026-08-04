@@ -5,7 +5,7 @@ import json
 from pathlib import Path
 
 from crypto_investigator.narratives import models
-from crypto_investigator.narratives.models import NarrativeResult
+from crypto_investigator.narratives.models import NarrativeInput, NarrativeResult
 
 
 def encode(value):
@@ -47,7 +47,24 @@ class NarrativeExporter:
         return path
 
     def read(self, path: Path) -> NarrativeResult:
-        value = decode(json.loads(path.read_text(encoding="utf-8")))
+        value = self.read_any(path)
         if not isinstance(value, NarrativeResult):
             raise ValueError("JSON is not a NarrativeResult")
+        return value
+
+    def read_input(self, path: Path) -> NarrativeInput:
+        value = self.read_any(path)
+        if not isinstance(value, NarrativeInput):
+            raise ValueError("JSON is not a NarrativeInput")
+        return value
+
+    @staticmethod
+    def read_any(path: Path):
+        value = decode(json.loads(path.read_text(encoding="utf-8")))
+        # V7.0 tagged JSON remains the canonical schema. This branch permits
+        # a public untagged NarrativeInput snapshot without changing that schema.
+        if isinstance(value, dict) and {"target_address", "conclusion_facts", "evidence_index"} <= value.keys():
+            fields = NarrativeInput.__dataclass_fields__
+            migrated = {key: item for key, item in value.items() if key in fields}
+            return NarrativeInput(**migrated)
         return value

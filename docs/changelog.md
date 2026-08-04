@@ -98,3 +98,10 @@
 - 新增 deterministic fallback、privacy/redaction、cache 與 usage contract。
 - 報告新增經驗證且標記為「AI 輔助敘事」的可選章節。
 - 新增三個 `narrate-*` CLI 指令與 V7 benchmark。
+
+## V7.1
+
+- 修正 `narrate-investigation --report` 的 AnalysisResult 依賴。
+- 支援從 investigation、narrative input 或 narrative artifact 離線重建。
+- 新增 compact prompt、尺寸比較、10-run consistency 與人工 real-AI validation。
+- 補齊 deterministic/mock Report composition 及四格式效能量測。

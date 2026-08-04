@@ -35,6 +35,10 @@ from crypto_investigator.investigation.export import InvestigationExporter
 from crypto_investigator.labels.registry import LabelRegistry
 from crypto_investigator.ai.settings import AISettings
 from crypto_investigator.narratives.engine import NarrativeEngine
+from crypto_investigator.narratives.export import NarrativeExporter
+from crypto_investigator.narratives.models import NarrativeInput, NarrativeResult
+from crypto_investigator.narratives.composer import NarrativeInputBuilder
+from crypto_investigator.reports.offline import OfflineReportComposer
 
 app = typer.Typer(help="ChainSherlock: local-first blockchain transaction investigation toolkit.")
 
@@ -771,6 +775,7 @@ def _run_narrative(
     save_prompt,
     ai_refresh=False,
     ai_no_cache=False,
+    prompt_mode="standard",
 ):
     result = NarrativeEngine().run(
         investigation,
@@ -785,6 +790,7 @@ def _run_narrative(
         save_prompt=save_prompt,
         use_cache=not ai_no_cache,
         refresh=ai_refresh,
+        prompt_mode=prompt_mode,
     )
     typer.echo(f"Narrative: {output / 'narrative.json'}")
     return result
@@ -805,22 +811,53 @@ def narrate_investigation(
     tone: str = typer.Option("professional", "--tone"),
     section: list[str] = typer.Option([], "--section"),
     save_prompt: bool = typer.Option(False, "--save-prompt"),
+    prompt_mode: str = typer.Option("standard", "--prompt-mode"),
     output: Path = typer.Option(Path("output/narrative"), "--output"),
     report: bool = typer.Option(False, "--report"),
     format: str = typer.Option("all", "--format"),
 ) -> None:
-    """Generate a grounded narrative from an existing InvestigationResult."""
-    del format
-    investigation = InvestigationExporter().read(investigation_json)
-    _run_narrative(
-        investigation, output, ai=ai, ai_provider=ai_provider, ai_model=ai_model,
-        ai_max_tokens=ai_max_tokens, ai_max_input_chars=ai_max_input_chars,
-        privacy_mode=privacy_mode, language=language, tone=tone, section=section,
-        save_prompt=save_prompt,
-        ai_refresh=ai_refresh, ai_no_cache=ai_no_cache,
-    )
+    """Generate an offline narrative/report from a public V6.5/V7 artifact."""
+    public_input = None
+    narrative = None
+    try:
+        investigation = InvestigationExporter().read(investigation_json)
+    except Exception:
+        artifact = NarrativeExporter.read_any(investigation_json)
+        if isinstance(artifact, NarrativeInput):
+            public_input = artifact
+            narrative = NarrativeEngine().run_input(
+                public_input, output,
+                settings=_ai_settings(
+                    ai, ai_provider, ai_model, ai_max_tokens,
+                    ai_max_input_chars, privacy_mode,
+                ),
+                requested=ai, save_prompt=save_prompt,
+                use_cache=not ai_no_cache, refresh=ai_refresh,
+                prompt_mode=prompt_mode,
+            )
+        elif isinstance(artifact, NarrativeResult):
+            narrative = artifact
+            NarrativeExporter().write(narrative, output / "narrative.json")
+        else:
+            raise typer.BadParameter("Unsupported public investigation artifact")
+    else:
+        public_input = NarrativeInputBuilder().build(
+            investigation, language=language, tone=tone,
+            requested_sections=tuple(section) or NarrativeInputBuilder().build(investigation).requested_sections,
+        )
+        narrative = _run_narrative(
+            investigation, output, ai=ai, ai_provider=ai_provider, ai_model=ai_model,
+            ai_max_tokens=ai_max_tokens, ai_max_input_chars=ai_max_input_chars,
+            privacy_mode=privacy_mode, language=language, tone=tone, section=section,
+            save_prompt=save_prompt, ai_refresh=ai_refresh, ai_no_cache=ai_no_cache,
+            prompt_mode=prompt_mode,
+        )
     if report:
-        typer.echo("Report requires the corresponding AnalysisResult; narrative artifacts were preserved.")
+        document = OfflineReportComposer().compose(
+            narrative, public_input, output_directory=str(output)
+        )
+        exported = ReportExportCoordinator().export(document, output, format)
+        typer.echo(f"Report status: {exported.status}")
 
 
 @app.command("narrate-file")
@@ -840,6 +877,7 @@ def narrate_file(
     tone: str = typer.Option("professional", "--tone"),
     section: list[str] = typer.Option([], "--section"),
     save_prompt: bool = typer.Option(False, "--save-prompt"),
+    prompt_mode: str = typer.Option("standard", "--prompt-mode"),
     output: Path = typer.Option(Path("output/narrative_file"), "--output"),
     report: bool = typer.Option(False, "--report"),
     format: str = typer.Option("all", "--format"),
@@ -856,6 +894,7 @@ def narrate_file(
         privacy_mode=privacy_mode, language=language, tone=tone, section=section,
         save_prompt=save_prompt,
         ai_refresh=ai_refresh, ai_no_cache=ai_no_cache,
+        prompt_mode=prompt_mode,
     )
     if report:
         AnalysisExporter().export_all(analysis, output)
@@ -884,6 +923,7 @@ def narrate_address(
     tone: str = typer.Option("professional", "--tone"),
     section: list[str] = typer.Option([], "--section"),
     save_prompt: bool = typer.Option(False, "--save-prompt"),
+    prompt_mode: str = typer.Option("standard", "--prompt-mode"),
     output: Path = typer.Option(Path("output/narrative_address"), "--output"),
     report: bool = typer.Option(False, "--report"),
     format: str = typer.Option("all", "--format"),
@@ -903,7 +943,82 @@ def narrate_address(
         privacy_mode=privacy_mode, language=language, tone=tone, section=section,
         save_prompt=save_prompt,
         ai_refresh=ai_refresh, ai_no_cache=ai_no_cache,
+        prompt_mode=prompt_mode,
     )
+
+
+@app.command("validate-ai")
+def validate_ai(
+    investigation_json: Path = typer.Argument(..., exists=True, dir_okay=False),
+    provider: str = typer.Option("openai-compatible", "--provider"),
+    model: str = typer.Option(..., "--model"),
+    runs: int = typer.Option(3, "--runs", min=1, max=10),
+    privacy_mode: str = typer.Option("standard", "--privacy-mode"),
+    prompt_mode: str = typer.Option("compact", "--prompt-mode"),
+    output: Path = typer.Option(Path("output/real_ai_validation"), "--output"),
+) -> None:
+    """Explicitly run a safe, human-triggered real-model validation."""
+    settings = AISettings.from_env()
+    if not settings.api_key:
+        raise typer.BadParameter(
+            "CHAINSHERLOCK_AI_API_KEY is not configured; no external request was made"
+        )
+    settings = AISettings(
+        enabled=True, provider=provider, model=model, api_key=settings.api_key,
+        base_url=settings.base_url, timeout_seconds=settings.timeout_seconds,
+        max_output_tokens=settings.max_output_tokens,
+        max_input_characters=settings.max_input_characters,
+        privacy_mode=privacy_mode,
+    )
+    investigation = InvestigationExporter().read(investigation_json)
+    records = []
+    signatures = []
+    for index in range(runs):
+        run_output = output / f"run_{index + 1}"
+        result = NarrativeEngine().run(
+            investigation, run_output, settings=settings, requested=True,
+            refresh=True, use_cache=False,
+            prompt_mode=prompt_mode,
+        )
+        status = json.loads((run_output / "ai_status.json").read_text(encoding="utf-8"))
+        usage = json.loads((run_output / "ai_usage.json").read_text(encoding="utf-8"))
+        signature = {
+            "claim_count": len(result.claims),
+            "section_count": sum(
+                getattr(result, name) is not None
+                for name in result.__dataclass_fields__
+                if name.endswith(("summary", "profile", "narrative", "explanations", "leads", "limitations", "conclusion"))
+            ),
+            "citations": [item.evidence_id for item in result.citations],
+            "numeric_values": [value for claim in result.claims for value in claim.numeric_values],
+        }
+        signatures.append(signature)
+        records.append({
+            "run": index + 1,
+            "json_parse_success": status["status"] in {"complete", "fallback"},
+            "schema_success": status["validation_passed"],
+            "hallucination_validation": status["validation_passed"],
+            "numeric_validation": status["validation_passed"],
+            "citation_validation": status["validation_passed"],
+            "candidate_preserved": status["validation_passed"],
+            "partial_preserved": status["validation_passed"],
+            "banned_wording_blocked": status["validation_passed"],
+            "fallback_used": status["fallback_used"],
+            "usage": usage,
+            "signature": signature,
+        })
+    output.mkdir(parents=True, exist_ok=True)
+    payload = {
+        "provider": provider, "model": model, "runs": runs,
+        "privacy_mode": privacy_mode, "prompt_mode": prompt_mode,
+        "run_to_run_consistent": all(item == signatures[0] for item in signatures),
+        "results": records,
+        "api_key_included": False,
+    }
+    (output / "real_ai_validation.json").write_text(
+        json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8"
+    )
+    typer.echo(f"AI validation: {output / 'real_ai_validation.json'}")
 
 
 @app.command("report-file")

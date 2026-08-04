@@ -1,5 +1,5 @@
 ﻿annotated-doc==0.0.5
-# ChainSherlock V7 dependency freeze
+# ChainSherlock V7.1 dependency freeze
 # Python: 3.12.13
 # Generated from: python -m pip freeze --all
 # Install with: python -m pip install -r requirements.lock

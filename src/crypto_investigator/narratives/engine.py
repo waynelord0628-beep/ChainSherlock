@@ -33,14 +33,35 @@ class NarrativeEngine:
         mock_response: str | dict | None = None,
         use_cache: bool = True,
         refresh: bool = False,
+        prompt_mode: str = "standard",
     ):
-        settings = settings or AISettings.from_env()
         raw_input = NarrativeInputBuilder().build(
             investigation, language=language, tone=tone,
             requested_sections=sections or NarrativeInputBuilder().build(investigation).requested_sections,
         )
+        return self.run_input(
+            raw_input, output, settings=settings, requested=requested,
+            save_prompt=save_prompt, mock_response=mock_response,
+            use_cache=use_cache, refresh=refresh, prompt_mode=prompt_mode,
+        )
+
+    def run_input(
+        self,
+        raw_input,
+        output: Path,
+        *,
+        settings: AISettings | None = None,
+        requested: bool = False,
+        save_prompt: bool = False,
+        mock_response: str | dict | None = None,
+        use_cache: bool = True,
+        refresh: bool = False,
+        prompt_mode: str = "standard",
+    ):
+        settings = settings or AISettings.from_env()
+        language = raw_input.language
         source = InputCompactor(max_input_characters=settings.max_input_characters).compact(
-            raw_input, settings.privacy_mode
+            raw_input, settings.privacy_mode, prompt_mode
         )
         prompt = PromptBuilder().build(source)
         if len(prompt) > settings.max_input_characters:
@@ -139,6 +160,7 @@ class NarrativeEngine:
             "section_list": list(source.requested_sections),
             "generated_at": datetime.now(timezone.utc).isoformat(),
             "prompt_characters": len(prompt),
+            "prompt_mode": prompt_mode,
             "elapsed_seconds": perf_counter() - started,
         }
         self._write(output / "prompt_manifest.json", manifest)

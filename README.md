@@ -342,3 +342,23 @@ V7 產生 `narrative_input.json`、`narrative.json`、`narrative_validation.json
 fallback。AI 內容進入報告前必須通過 schema、claim、citation、numeric 與禁止用語驗證，
 且預設顯示「AI 內容尚未經人工確認」。使用 `--ai-max-tokens` 與
 `--ai-max-input-chars` 控制 token/輸入；未設定價格時 estimated cost 為 `null`。
+
+## V7.1 離線重建與模型驗收
+
+`narrate-investigation` 現在可直接讀取 `investigation.json`、
+`narrative_input.json` 或 `narrative.json` 並以 `--report` 離線重建報告；不會重新呼叫
+Provider、讀取原始 CSV/Excel 或依賴 AnalysisResult。artifact 未保存的欄位會標記
+`unavailable`，不會補造。
+
+真實模型只能由人工明確執行：
+
+```powershell
+python -m crypto_investigator validate-ai investigation.json `
+  --provider openai-compatible --model MODEL --runs 3 `
+  --privacy-mode standard --output output/real_ai_validation
+```
+
+API Key 僅能由 `CHAINSHERLOCK_AI_API_KEY` 環境變數提供。指令輸出
+`real_ai_validation.json`，不保存 Key；無 Key 時不會送出請求。Prompt 提供
+`standard` 與內部 deterministic `compact` 模式，compact 保留 Conclusion Facts、
+重要 Observations、完整度、限制與必要 Evidence IDs，同時移除重複欄位。

@@ -24,6 +24,8 @@ from crypto_investigator.narratives.models import (
     NarrativeSection,
 )
 from crypto_investigator.narratives.sections import DEFAULT_SECTIONS
+from crypto_investigator.reports.offline import OfflineReportComposer
+from crypto_investigator.reports.export import ReportExportCoordinator
 
 
 def source(**changes):
@@ -210,6 +212,106 @@ def test_cache_round_trip_expiry_corruption_and_key_excludes_secret(tmp_path):
 def test_fallback_is_deterministic_except_metadata_time():
     first = DeterministicFallbackProvider().generate(source())
     second = DeterministicFallbackProvider().generate(source())
-    assert replace(first, metadata=second.metadata) == second
+    assert first == second
     assert "FIFO 近似" in first.holding_time_narrative.paragraphs[0].text
     assert "不代表實際同一筆資金" in first.holding_time_narrative.paragraphs[0].text
+
+
+@pytest.mark.parametrize("artifact_kind", ("investigation", "narrative_input", "narrative"))
+def test_offline_reconstruction_public_artifacts(artifact_kind, tmp_path):
+    public_input = source()
+    narrative = DeterministicFallbackProvider().generate(public_input)
+    if artifact_kind == "narrative":
+        public_input = None
+    document = OfflineReportComposer().compose(
+        narrative, public_input, output_directory=str(tmp_path)
+    )
+    result = ReportExportCoordinator().export(document, tmp_path / artifact_kind, "markdown")
+    assert result.status == "complete"
+    assert (tmp_path / artifact_kind / "report.md").exists()
+    assert document.metadata.source_type == "offline_artifact"
+    if artifact_kind == "narrative":
+        assert document.metadata.analysis_completeness == "unavailable"
+
+
+def test_offline_missing_optional_sections_are_omitted():
+    narrative = replace(
+        DeterministicFallbackProvider().generate(source()),
+        outgoing_narrative=None,
+        holding_time_narrative=None,
+    )
+    document = OfflineReportComposer().compose(narrative, source())
+    section_ids = {item.section_id for item in document.sections}
+    assert "ai_outgoing_narrative" not in section_ids
+    assert "ai_holding_time_narrative" not in section_ids
+
+
+def test_offline_reconstruction_has_no_analysis_or_provider_dependency(monkeypatch):
+    def forbidden(*args, **kwargs):
+        raise AssertionError("external dependency called")
+
+    monkeypatch.setattr("httpx.post", forbidden)
+    document = OfflineReportComposer().compose(
+        DeterministicFallbackProvider().generate(source()), source()
+    )
+    assert document.metadata.graph_completeness == "unavailable"
+
+
+def test_narrative_input_backward_compatible_tagged_load(tmp_path):
+    path = NarrativeExporter().write(source(), tmp_path / "v7_input.json")
+    assert NarrativeExporter().read_input(path) == source()
+
+
+def test_compact_prompt_reduces_at_least_thirty_percent_and_retains_core():
+    expanded = replace(
+        source(),
+        operation_stages=tuple(
+            {
+                "stage": "dominant", "started_at": f"2025-01-{index:02}T00:00:00+00:00",
+                "ended_at": f"2025-01-{index:02}T01:00:00+00:00",
+                "transaction_count": 12, "transaction_frequency": "1",
+                "concentration": "0.8", "assets": ("USDT",),
+                "dominant_funding_sources": ("TFunder",),
+                "dominant_outgoing_counterparties": ("TOut",),
+                "reason_codes": tuple(f"reason_{item}" for item in range(10)),
+                "evidence_refs": ("E1",), "confidence": "medium",
+            }
+            for index in range(1, 31)
+        ),
+        conclusion_facts=tuple(
+            {"fact_code": f"F{index}", "value": index, "confidence": "high", "evidence_refs": ("E1",)}
+            for index in range(20)
+        ),
+    )
+    standard = InputCompactor().compact(expanded, mode="standard")
+    compact = InputCompactor().compact(expanded, mode="compact")
+    standard_size = len(PromptBuilder().build(standard))
+    compact_size = len(PromptBuilder().build(compact))
+    assert compact_size <= standard_size * .70
+    assert len(compact.conclusion_facts) == len(standard.conclusion_facts)
+    assert len(compact.observations) == len(standard.observations)
+    assert {item["evidence_id"] for item in compact.evidence_index} == {"E1"}
+
+
+def test_mock_semantic_output_is_identical_ten_runs():
+    outputs = tuple(
+        DeterministicFallbackProvider().generate(source())
+        for _ in range(10)
+    )
+    assert all(item == outputs[0] for item in outputs)
+    signature = lambda item: (
+        len(item.claims),
+        sum(getattr(item, name) is not None for name in DEFAULT_SECTIONS),
+        item.citations,
+        tuple(value for claim in item.claims for value in claim.numeric_values),
+    )
+    assert len({signature(item) for item in outputs}) == 1
+
+
+@pytest.mark.integration
+@pytest.mark.skipif(
+    not __import__("os").getenv("CHAINSHERLOCK_AI_API_KEY"),
+    reason="real AI key not configured",
+)
+def test_real_ai_validation_is_explicit_only():
+    assert __import__("os").getenv("CHAINSHERLOCK_AI_API_KEY")

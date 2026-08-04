@@ -86,3 +86,9 @@ Future work must be approved and delivered one milestone at a time.
 - 真實 AI integration test 僅在使用者明確同意且提供有效環境變數後執行。
 - `narrate-investigation --report` 需要對應 AnalysisResult 才能重新組成完整 V6 報告。
 - V7 不包含任何 V8、cross-chain、risk/AML 或商業 intelligence API 功能。
+
+## V7.1 Remaining
+
+- 真實 AI 的 3-run 驗收仍需使用者提供環境變數並人工執行 `validate-ai`。
+- Narrative-only 離線報告無法還原 artifact 中未保存的 target、chain 或 Evidence Index；
+  這些欄位會保持 unavailable。

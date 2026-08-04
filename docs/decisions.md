@@ -192,3 +192,11 @@ DOCX body Chinese uses 標楷體 and Latin text uses Times New Roman. Table Chin
 - Human Review 預設 not_reviewed；AI 不取代人工判斷。
 - Cache key 不包含 API key；寫入必須 atomic 且容許 corruption recovery。
 - 無明確價格設定時 estimated cost 為 null，不猜測成本。
+
+## V7.1 Decisions
+
+- Offline Report 只使用公開 artifact；缺失資料以 unavailable 表示，不合成 AnalysisResult。
+- Tagged V7 JSON 保持相容；loader 可額外接受完整的 untagged public NarrativeInput。
+- Compact prompt 採欄位投影而非刪除核心 facts，並持續揭露 omitted counts。
+- Mock/fallback 的 generated_at 由分析期間決定，確保相同輸入的完整輸出可重現。
+- 真實模型驗收必須人工明確觸發；無 API Key 時直接停止且不發出請求。

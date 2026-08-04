@@ -254,3 +254,15 @@ transaction 或商業風險服務。Prompt 將所有標籤、地址、metadata �
 `UNTRUSTED_DATA_JSON` 邊界；cache key 不含 API key。Privacy mode 在 provider boundary
 前執行。AI 與 deterministic facts 在 Report 中分章呈現，且 Human Review 預設為
 `not_reviewed`。
+
+## V7.1 Offline Reconstruction
+
+公開 artifact loader 可識別 `InvestigationResult`、`NarrativeInput` 與
+`NarrativeResult`。前兩者可重建或重新驗證 deterministic narrative；僅有
+NarrativeResult 時，OfflineReportComposer 只輸出已保存章節，並將 target、chain、
+period、evidence 等缺失值標記 `unavailable`。這條路徑不引用 Analysis internals，
+也不具備 Provider 或原始檔入口。
+
+Prompt compaction 分為 standard/compact；兩者使用相同排序與核心 fact contract。
+Compact 僅投影必要欄位、限制 reason codes 與 hashes，不刪除 Conclusion Facts 或已選取
+Observations。真實模型驗收位於明確的人工 CLI boundary，預設測試永不呼叫外部模型。

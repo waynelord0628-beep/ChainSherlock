@@ -1,0 +1,220 @@
+{
+  "title": "ChainSherlock 離線調查敘事報告",
+  "metadata": {
+    "report_id": "CSR-OFFLINE-73D1FBAD7E",
+    "generated_at": "2026-08-04T08:26:42.779475+00:00",
+    "report_version": "7.1",
+    "chain": null,
+    "target_address": "0x1111111111111111111111111111111111111111",
+    "target_type": "address",
+    "source_type": "offline_artifact",
+    "source_files": [],
+    "providers": [
+      "deterministic-fallback"
+    ],
+    "analysis_completeness": "complete",
+    "graph_completeness": "unavailable",
+    "transaction_count": 10,
+    "rejected_record_count": 0,
+    "warning_count": 0,
+    "timezone": "UTC",
+    "language": "zh-TW",
+    "output_directory": "v71_offline_input"
+  },
+  "sections": [
+    {
+      "section_id": "offline_reconstruction",
+      "title": "離線重建摘要",
+      "order": 1,
+      "content_blocks": [
+        "分析標的：0x1111111111111111111111111111111111111111",
+        "鏈別：unavailable",
+        "分析期間：2026-01-01T00:00:00+00:00 至 2026-10-10T09:00:00+00:00",
+        "資料完整度：complete"
+      ],
+      "tables": [],
+      "figures": [],
+      "evidence_refs": [
+        "IF0",
+        "IF1"
+      ],
+      "warnings": [],
+      "limitations": []
+    },
+    {
+      "section_id": "ai_executive_summary",
+      "title": "AI 輔助敘事：調查摘要",
+      "order": 20,
+      "content_blocks": [
+        "AI 輔助敘事；provider=deterministic-fallback；model=template-v1；prompt=7.0.0；validation=passed；fallback=True。 AI 內容尚未經人工確認。",
+        "分析期間為 2026-01-01T00:00:00+00:00 至 2026-10-10T09:00:00+00:00，結構化樣本共 10 筆，完整度為 complete。本段僅整理 V6.5 已驗證事實，不作犯罪、身分或風險判定。"
+      ],
+      "tables": [],
+      "figures": [],
+      "evidence_refs": [
+        "IF0"
+      ],
+      "warnings": [],
+      "limitations": []
+    },
+    {
+      "section_id": "ai_funding_narrative",
+      "title": "AI 輔助敘事：資金來源分析",
+      "order": 21,
+      "content_blocks": [
+        "目前樣本的主要供款來源候選為 0x2222222222222222222222222222222222222222，排名 1；不代表主控方。"
+      ],
+      "tables": [],
+      "figures": [],
+      "evidence_refs": [],
+      "warnings": [],
+      "limitations": []
+    },
+    {
+      "section_id": "ai_outgoing_narrative",
+      "title": "AI 輔助敘事：資金去向分析",
+      "order": 22,
+      "content_blocks": [
+        "僅依目前結構化去向排行描述；若無資料，無法判定主要流出去向。"
+      ],
+      "tables": [],
+      "figures": [],
+      "evidence_refs": [],
+      "warnings": [],
+      "limitations": []
+    },
+    {
+      "section_id": "ai_stage_narrative",
+      "title": "AI 輔助敘事：運作階段",
+      "order": 23,
+      "content_blocks": [
+        "既有 Investigation Engine 共辨識 18 個運作階段；未新增任何階段。"
+      ],
+      "tables": [],
+      "figures": [],
+      "evidence_refs": [],
+      "warnings": [],
+      "limitations": []
+    },
+    {
+      "section_id": "ai_pattern_narrative",
+      "title": "AI 輔助敘事：批次及固定金額模式",
+      "order": 24,
+      "content_blocks": [
+        "結構化結果包含 0 個模式項目，單次事件不據此擴大解讀。"
+      ],
+      "tables": [],
+      "figures": [],
+      "evidence_refs": [],
+      "warnings": [],
+      "limitations": []
+    },
+    {
+      "section_id": "ai_alternative_explanations",
+      "title": "AI 輔助敘事：替代解釋",
+      "order": 25,
+      "content_blocks": [
+        "可能為營運型結算、代付、資金調度或未知服務型用途；目前資料尚不能排除其他解釋。"
+      ],
+      "tables": [],
+      "figures": [],
+      "evidence_refs": [],
+      "warnings": [],
+      "limitations": []
+    },
+    {
+      "section_id": "ai_investigative_leads",
+      "title": "AI 輔助敘事：後續調查建議",
+      "order": 26,
+      "content_blocks": [
+        "可依現有證據補充本地標籤、提高資料取得上限，並查核主要供款與出金對象；本系統不自動執行。"
+      ],
+      "tables": [],
+      "figures": [],
+      "evidence_refs": [],
+      "warnings": [],
+      "limitations": []
+    },
+    {
+      "section_id": "ai_conclusion",
+      "title": "AI 輔助敘事：綜合結論",
+      "order": 27,
+      "content_blocks": [
+        "分析期間為 2026-01-01T00:00:00+00:00 至 2026-10-10T09:00:00+00:00，結構化樣本共 10 筆，完整度為 complete。本段僅整理 V6.5 已驗證事實，不作犯罪、身分或風險判定。 所有候選角色與替代解釋均保留不確定語意。"
+      ],
+      "tables": [],
+      "figures": [],
+      "evidence_refs": [],
+      "warnings": [],
+      "limitations": []
+    },
+    {
+      "section_id": "limitations",
+      "title": "資料限制",
+      "order": 29,
+      "content_blocks": [],
+      "tables": [],
+      "figures": [],
+      "evidence_refs": [],
+      "warnings": [],
+      "limitations": []
+    }
+  ],
+  "evidence": [
+    {
+      "evidence_id": "IF0",
+      "evidence_type": "analysis_scope",
+      "source": "narrative_input.json",
+      "source_reference": "evidence_index",
+      "description": "離線重建使用的結構化 Evidence ID",
+      "collected_at": null,
+      "hash": null,
+      "chain": null,
+      "tx_hash": null,
+      "address": "0x1111111111111111111111111111111111111111",
+      "metadata": {}
+    },
+    {
+      "evidence_id": "IF1",
+      "evidence_type": "funding_source",
+      "source": "narrative_input.json",
+      "source_reference": "evidence_index",
+      "description": "離線重建使用的結構化 Evidence ID",
+      "collected_at": null,
+      "hash": null,
+      "chain": null,
+      "tx_hash": null,
+      "address": "0x2222222222222222222222222222222222222222",
+      "metadata": {}
+    }
+  ],
+  "citations": [
+    {
+      "citation_id": "C1",
+      "evidence_id": "IF0",
+      "display_text": "[IF0]",
+      "source": "narrative_input.json",
+      "source_reference": "evidence_index",
+      "section_id": "offline_reconstruction"
+    },
+    {
+      "citation_id": "C2",
+      "evidence_id": "IF1",
+      "display_text": "[IF1]",
+      "source": "narrative_input.json",
+      "source_reference": "evidence_index",
+      "section_id": "offline_reconstruction"
+    }
+  ],
+  "warnings": [
+    {
+      "code": "offline_reconstruction",
+      "message": "本報告未重新呼叫 Provider、未讀取原始交易或 AnalysisResult。"
+    }
+  ],
+  "limitations": [],
+  "conclusion": {
+    "completeness": "complete",
+    "text": "本結論僅重建既存且已驗證的敘事；unavailable 欄位未被推測或補造。"
+  }
+}

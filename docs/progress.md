@@ -126,3 +126,11 @@ V3 contains no Provider, blockchain API, graph rendering, report, Word/PDF, AI, 
 - 已完成 NarrativeResult round-trip、7 項 artifacts、AI status/usage/prompt manifest。
 - 已完成 `narrate-file`、`narrate-address`、`narrate-investigation` 與可選 Report AI 章節。
 - 已新增 141 項 V7 規則測試；AI 預設關閉，不執行真實外部 API 測試。
+
+## V7.1
+
+- 三種公開 artifact 均可在離線狀態重建 Narrative/Report。
+- Compact prompt benchmark 降低 55.35%，保留 16 facts、2 observations、42 evidence。
+- Mock semantic output 10/10 完全一致；真實模型測試無 Key 時預設 skip。
+- 新增 `validate-ai` 人工驗收指令、品質 checklist 與 fallback/mock 四格式 benchmark。
+- V7/V7.1 regression tests 共 149 passed，另 1 項 real-AI integration test skipped。

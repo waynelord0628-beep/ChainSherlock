@@ -1,0 +1,42 @@
+{
+  "deterministic_fallback": {
+    "composition_seconds": 0.0034300000115763396,
+    "export_seconds": {
+      "markdown": 0.03597139997873455,
+      "html": 0.029284499993082136,
+      "docx": 0.07353889997466467,
+      "pdf": 2.825390799989691
+    },
+    "peak_memory_bytes": 27023191,
+    "output_sizes": {
+      "evidence_manifest.json": 7722,
+      "export_errors.json": 2,
+      "export_status.json": 140,
+      "report.docx": 38976,
+      "report.html": 5958,
+      "report.md": 4174,
+      "report.pdf": 133034,
+      "report_data.json": 34050
+    }
+  },
+  "mock_ai_validated": {
+    "composition_seconds": 0.0011444000119809061,
+    "export_seconds": {
+      "markdown": 0.02966929998365231,
+      "html": 0.03209580000839196,
+      "docx": 0.09002890001283959,
+      "pdf": 3.494767399999546
+    },
+    "peak_memory_bytes": 15970105,
+    "output_sizes": {
+      "evidence_manifest.json": 7722,
+      "export_errors.json": 2,
+      "export_status.json": 140,
+      "report.docx": 38960,
+      "report.html": 5937,
+      "report.md": 4153,
+      "report.pdf": 133007,
+      "report_data.json": 34011
+    }
+  }
+}

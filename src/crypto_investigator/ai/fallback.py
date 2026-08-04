@@ -1,4 +1,4 @@
-from dataclasses import replace
+from dataclasses import asdict, replace
 from datetime import datetime, timezone
 from hashlib import sha256
 import json
@@ -24,7 +24,10 @@ class DeterministicFallbackProvider:
     supports_streaming = False
 
     def generate(self, source: NarrativeInput) -> NarrativeResult:
-        digest = sha256(json.dumps(source.report_metadata, sort_keys=True).encode()).hexdigest()
+        digest = sha256(
+            json.dumps(asdict(source), sort_keys=True, default=str).encode()
+        ).hexdigest()
+        generated_at = self._stable_generated_at(source)
         evidence_ids = tuple(str(item["evidence_id"]) for item in source.evidence_index if item.get("evidence_id"))
         evidence_id = evidence_ids[0] if evidence_ids else None
         citation = (
@@ -60,7 +63,7 @@ class DeterministicFallbackProvider:
         return NarrativeResult(
             metadata=NarrativeMetadata(
                 self.provider_name, self.model_name, "7.0.0",
-                datetime.now(timezone.utc), "fallback", True, digest,
+                generated_at, "fallback", True, digest,
             ),
             **{key: value for key, value in sections.items() if key in source.requested_sections},
             claims=(claim,), citations=citation,
@@ -87,3 +90,11 @@ class DeterministicFallbackProvider:
     @property
     def usage_metadata(self):
         return {}
+
+    @staticmethod
+    def _stable_generated_at(source):
+        raw = source.analysis_period.get("to") or source.analysis_period.get("from")
+        if raw:
+            value = datetime.fromisoformat(str(raw).replace("Z", "+00:00"))
+            return value if value.tzinfo else value.replace(tzinfo=timezone.utc)
+        return datetime(1970, 1, 1, tzinfo=timezone.utc)
