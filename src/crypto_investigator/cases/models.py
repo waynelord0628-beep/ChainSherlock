@@ -7,7 +7,7 @@ from typing import Any
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 
-CURRENT_CASE_SCHEMA_VERSION = 2
+CURRENT_CASE_SCHEMA_VERSION = 3
 
 
 def utc_now() -> datetime:
@@ -62,6 +62,11 @@ class CaseRecord(BaseModel):
     evidence: list[EvidenceRecord] = Field(default_factory=list)
     goals: list[dict[str, Any]] = Field(default_factory=list)
     plans: list[dict[str, Any]] = Field(default_factory=list)
+    executions: list[dict[str, Any]] = Field(default_factory=list)
+    latest_execution_id: str | None = None
+    active_execution_id: str | None = None
+    last_execution_status: str | None = None
+    execution_summary: dict[str, Any] = Field(default_factory=dict)
     metadata: dict[str, Any] = Field(default_factory=dict)
 
     @field_validator("created_at", "updated_at")

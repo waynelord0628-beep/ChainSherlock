@@ -1,5 +1,17 @@
 # Planned Work
 
+## V8 Milestone 3 boundary
+
+- Case Execution Service is complete.
+- Concrete V2-V7 adapters are intentionally not auto-registered; approved handlers must
+  be supplied explicitly by the application composition root.
+- Cancellation is cooperative and cannot interrupt code that ignores CancellationToken.
+- Execution persistence targets a single local process; cross-process file locking is not
+  included.
+- Debug case-run/resume/cancel CLI commands remain optional and were not added.
+- Case Report integration, Narrative UI, PySide6, Desktop UI, Windows packaging, and
+  Milestone 4 remain deferred pending explicit approval.
+
 ## V8 Milestone 2 boundary
 
 - Investigation Planner is complete.

@@ -1,5 +1,15 @@
 # ChainSherlock
 
+## V8 案件執行服務（Milestone 3）
+
+ChainSherlock 現已具備本機案件執行服務，可將經使用者確認的調查計畫交由
+registry-based Step Handler 執行。服務會保留步驟狀態、事件、checkpoint、artifact
+雜湊及案件 audit，並支援 partial failure、協作式取消、resume 與受限 retry。
+
+本階段僅提供 Application/Service API，不包含桌面 UI、案件報告整合或 Windows
+打包。實際 V2～V7 功能需透過明確註冊的 adapter handler 接入，Execution Service
+本身不直接依賴 Provider 或分析實作。
+
 > 目前版本：V6.5 Investigation Feature Engine
 
 V6.5 在既有分析、圖譜與報告流程之上加入可重複、可驗證的規則式調查特徵。它不使用 AI、LLM、風險分數或犯罪判斷。

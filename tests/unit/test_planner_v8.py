@@ -694,7 +694,8 @@ def test_case_v1_migration_adds_planner_collections() -> None:
         "unknown": "preserved",
     }
     migrated = migrate_case_payload(payload)
-    assert migrated["schema_version"] == 2
+    assert migrated["schema_version"] == 3
     assert migrated["goals"] == []
     assert migrated["plans"] == []
+    assert migrated["executions"] == []
     assert migrated["unknown"] == "preserved"

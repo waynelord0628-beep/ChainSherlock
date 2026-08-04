@@ -1,5 +1,23 @@
 # Development Progress
 
+## V8 Milestone 3
+
+Status: completed.
+
+- Added CaseExecution, StepExecution, ExecutionArtifact, ExecutionCheckpoint, result,
+  warning, failure, event, and cooperative CancellationToken models.
+- Added registry-based StepDispatcher and explicit StepHandler contract.
+- Added atomic execution/step/checkpoint/manifest persistence and append-only event/log
+  streams.
+- Added immutable artifact registration with relative paths, SHA-256, size, completeness,
+  safe metadata, and integrity verification.
+- Added fatal, recoverable, partial, unsupported, cancelled, and manual-review policies.
+- Added plan gating, cooperative cancellation, resume, bounded retry, Case summary, and
+  append-only Audit integration.
+- Added 90 focused Execution Service tests and Mock acceptance flows.
+- Did not add PySide6, Desktop UI, Case Report composition, Narrative UI, packaging,
+  commercial APIs, cross-chain, V9, or V2-V7 refactoring.
+
 ## V8 Milestone 2
 
 Status: completed.

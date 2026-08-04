@@ -1,5 +1,46 @@
 # Architecture Decisions
 
+## ADR-057: Execution Service is the single orchestration boundary
+
+UI and CLI consumers must call CaseExecutionService rather than invoking handlers or
+V2-V7 services directly.
+
+## ADR-058: Step dispatch is registry-based
+
+Each StepType is connected through a registered StepHandler adapter. The dispatcher does
+not contain a large conditional over implementation modules.
+
+## ADR-059: Failure policy preserves usable work
+
+Fatal input/import failures stop execution. Recoverable and partial failures preserve
+registered artifacts and permit later independent steps to continue.
+
+## ADR-060: Cancellation is cooperative
+
+CancellationToken is checked at handler boundaries and handlers receive cancellation
+notification. Execution never kills a process or abandons an atomic temporary file.
+
+## ADR-061: Resume and retry verify state
+
+Resume requires the same plan version and valid artifact hashes, and skips completed
+steps. Retry accepts only retryable failed, partial, or cancelled steps and is limited to
+three attempts.
+
+## ADR-062: Artifacts are immutable and case-relative
+
+Only complete files inside the execution workspace can be registered. Each is addressed
+relative to the case, hashed, sized, marked read-only, and verified before resume.
+
+## ADR-063: Execution events have deterministic order
+
+Events use monotonically increasing execution-local IDs and append-only JSON Lines.
+Observer failures are isolated and safely logged.
+
+## ADR-064: Detailed execution state stays outside CaseRecord
+
+CaseRecord stores only execution summaries and active/latest IDs. Detailed steps, events,
+logs, checkpoints, and artifacts remain in the execution workspace.
+
 ## ADR-051: Planner output is declarative and deterministic
 
 The Planner creates stable, ordered PlanStep data from CaseRecord, InvestigationGoal, and

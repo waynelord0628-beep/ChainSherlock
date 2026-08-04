@@ -31,7 +31,22 @@ def _migrate_v1_to_v2(data: dict[str, Any]) -> dict[str, Any]:
     return migrated
 
 
-MIGRATIONS: dict[int, Migration] = {0: _migrate_v0_to_v1, 1: _migrate_v1_to_v2}
+def _migrate_v2_to_v3(data: dict[str, Any]) -> dict[str, Any]:
+    migrated = deepcopy(data)
+    migrated.setdefault("executions", [])
+    migrated.setdefault("latest_execution_id", None)
+    migrated.setdefault("active_execution_id", None)
+    migrated.setdefault("last_execution_status", None)
+    migrated.setdefault("execution_summary", {})
+    migrated["schema_version"] = 3
+    return migrated
+
+
+MIGRATIONS: dict[int, Migration] = {
+    0: _migrate_v0_to_v1,
+    1: _migrate_v1_to_v2,
+    2: _migrate_v2_to_v3,
+}
 
 
 def migrate_case_payload(payload: Mapping[str, Any]) -> dict[str, Any]:

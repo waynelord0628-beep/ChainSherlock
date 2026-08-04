@@ -1,5 +1,16 @@
 # Changelog
 
+## V8 Milestone 3
+
+- Added Case Execution models, event system, context, registry, policies, and public API.
+- Added registry-based Step Dispatcher and handler contract.
+- Added atomic execution state, append-only events/logs, checkpoints, and artifact manifest.
+- Added immutable SHA-256 artifact registration and resume integrity checks.
+- Added partial/fatal handling, cooperative cancellation, manual suspension, resume, and
+  retry with a three-attempt limit.
+- Added Case summary and append-only audit integration.
+- Added 90 focused tests and Mock success, partial, cancellation/resume, and fatal flows.
+
 ## V8 Milestone 2
 
 - Added deterministic Investigation Goal and Plan models.

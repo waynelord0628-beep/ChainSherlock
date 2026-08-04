@@ -22,21 +22,31 @@ _SENSITIVE_KEYS = {
 }
 _SECRET_VALUE = re.compile(r"(?i)(?:bearer\s+|sk-(?:proj-)?)[A-Za-z0-9._-]{8,}")
 _WINDOWS_ABSOLUTE_PATH = re.compile(r"^[A-Za-z]:[\\/]")
+_WINDOWS_PATH_IN_TEXT = re.compile(r"(?i)[A-Z]:[\\/][^\s\"']+")
+_POSIX_PATH_IN_TEXT = re.compile(r"(?<!:)(?:/[A-Za-z0-9._-]+){2,}")
+_URL_USERINFO = re.compile(r"(?i)(https?://)[^/\s:@]+:[^@\s/]+@")
+_URL_SECRET_QUERY = re.compile(
+    r"(?i)([?&](?:api[_-]?key|token|secret|password)=)[^&\s]+"
+)
 
 
-def _safe_metadata(value: Any, *, key: str = "") -> Any:
+def redact_sensitive(value: Any, *, key: str = "") -> Any:
     if key.lower() in _SENSITIVE_KEYS:
         return "[REDACTED]"
     if isinstance(value, Mapping):
-        return {str(item_key): _safe_metadata(item, key=str(item_key)) for item_key, item in value.items()}
+        return {str(item_key): redact_sensitive(item, key=str(item_key)) for item_key, item in value.items()}
     if isinstance(value, (list, tuple)):
-        return [_safe_metadata(item) for item in value]
+        return [redact_sensitive(item) for item in value]
     if isinstance(value, Path):
         return value.name
     if isinstance(value, str):
         if _WINDOWS_ABSOLUTE_PATH.match(value) or value.startswith("/"):
             return value.replace("\\", "/").rsplit("/", 1)[-1]
-        return _SECRET_VALUE.sub("[REDACTED]", value)
+        redacted = _SECRET_VALUE.sub("[REDACTED]", value)
+        redacted = _URL_USERINFO.sub(r"\1[REDACTED]@", redacted)
+        redacted = _URL_SECRET_QUERY.sub(r"\1[REDACTED]", redacted)
+        redacted = _WINDOWS_PATH_IN_TEXT.sub("[REDACTED_PATH]", redacted)
+        return _POSIX_PATH_IN_TEXT.sub("[REDACTED_PATH]", redacted)
     return value
 
 
@@ -80,10 +90,10 @@ class AuditLog:
             "action": action,
             "object_type": object_type,
             "object_id": object_id,
-            "description": _safe_metadata(description),
-            "actor": _safe_metadata(actor),
+            "description": redact_sensitive(description),
+            "actor": redact_sensitive(actor),
             "previous_hash": previous,
-            "metadata": _safe_metadata(dict(metadata or {})),
+            "metadata": redact_sensitive(dict(metadata or {})),
         }
         normalized = CaseAuditEntry(**base, entry_hash="")
         digest_payload = normalized.model_dump(mode="json", exclude={"entry_hash"})

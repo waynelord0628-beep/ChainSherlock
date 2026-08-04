@@ -1,5 +1,41 @@
 # ChainSherlock Architecture
 
+## V8 Milestone 3: Case Execution Service
+
+```text
+confirmed InvestigationPlan
+          |
+          v
+ CaseExecutionService -- plan gate / policy / state transitions
+          |
+          v
+ StepDispatcher --> registered StepHandler adapters --> V2-V7 public services
+          |
+          +--> deterministic events.jsonl
+          +--> immutable hashed artifacts
+          +--> atomic execution/step/checkpoint state
+          +--> append-only Case Audit
+```
+
+Execution state is stored under
+`cases/<case_id>/executions/<execution_id>/`, with separate step, artifact, log, and
+checkpoint directories. `execution.json`, step state, checkpoints, manifests, and
+CaseRecord summaries use atomic replacement. Events, structured logs, and Case Audit are
+append-only.
+
+The dispatcher is registry-based. Execution code does not branch across V2-V7 internals;
+handlers adapt public services to a uniform contract. Unregistered, unsupported,
+unconfirmed, invalid-version, or archived-case plans fail the execution gate.
+
+Failures are classified as fatal, recoverable, partial, unsupported, or cancelled.
+Fatal input/import failures stop later steps. Recoverable and partial failures preserve
+artifacts and allow later independent steps. Cancellation is cooperative and checked at
+handler boundaries; no process is forcibly terminated.
+
+Resume verifies the current plan version and all retained artifact hashes, skips completed
+steps, and resumes only handler-supported work. Retry is limited to three attempts,
+requires a retryable failed/partial/cancelled step, and preserves prior artifacts.
+
 ## V8 Milestone 2: Investigation Planner
 
 ```text
