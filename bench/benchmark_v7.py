@@ -52,7 +52,7 @@ def main():
         "validation_passed": validation.valid,
         "real_api_latency_excluded": True,
     }
-    destination = root / "examples/v7_mock_validation/benchmark.json"
+    destination = root / "output/v7_benchmark/benchmark.json"
     destination.parent.mkdir(parents=True, exist_ok=True)
     destination.write_text(json.dumps(result, indent=2), encoding="utf-8")
     standard = InputCompactor().compact(source, mode="standard")

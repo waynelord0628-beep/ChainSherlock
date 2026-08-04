@@ -1,4 +1,0 @@
-address,incoming_count,outgoing_count,incoming_amount_by_asset,outgoing_amount_by_asset,first_seen,last_seen,interaction_count,direction
-bc1p3rhs9e0heuc7r6uf0e2v0gvvhzwp5zw6xkfhnrzqz6axu0y0y2xs4vsax6,1,0,"{""BTC"": ""0.00000546""}",{},,,1,incoming
-bc1p5upktx49j542kw0d55zzznhmv6ggwphzhytlm2xn2ert92y3y0zs8f00f2,1,0,"{""BTC"": ""0.00000546""}",{},2026-08-04T05:04:48+00:00,2026-08-04T05:04:48+00:00,1,incoming
-bc1pm68dasvl93gzdzp07x0atgf3l45f3huz6w8luq457698qghtn2lqucnc07,1,0,"{""BTC"": ""0.00000546""}",{},,,1,incoming

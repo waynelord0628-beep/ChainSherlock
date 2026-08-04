@@ -7,4 +7,13 @@ __pycache__/
 .ai_cache/
 output/
 data/cache/
+examples/v5_graph_output/
+examples/v6_*/
+examples/v65_investigation_output/
+examples/v65_quality_*/
+examples/v65_report_validation/
+examples/v71_*/
+examples/v7_mock_*/
+examples/v65_tron_validation/*
+!examples/v65_tron_validation/investigation.json
 

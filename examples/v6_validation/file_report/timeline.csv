@@ -1,5 +1,0 @@
-granularity,period,transaction_count,amounts_by_asset
-daily,2026-01-01,1,"{""ETH"": ""1.5""}"
-daily,2026-01-02,1,"{""USDT"": ""250""}"
-daily,2026-01-03,1,"{""ETH"": ""2.25""}"
-monthly,2026-01,3,"{""ETH"": ""3.75"", ""USDT"": ""250""}"
