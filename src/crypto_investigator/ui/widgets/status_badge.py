@@ -3,7 +3,7 @@ from PySide6.QtWidgets import QLabel
 
 class StatusBadge(QLabel):
     SAFE_STATUSES = {
-        "available", "configured", "not_configured", "disabled", "unknown",
+        "available", "supported", "configured", "not_configured", "disabled", "unknown",
         "confirmed", "candidate", "observation", "pending", "ready", "running",
         "completed", "warning", "partial", "failed", "error", "cancelled",
         "skipped", "unavailable", "verified", "mismatch", "missing",

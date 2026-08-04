@@ -1,5 +1,18 @@
 # Development Progress
 
+## V8 Desktop Visual Final Validation
+
+- 修正 System Readiness 語意：Blockscout「程式支援」與 Blockstream「公開服務」
+  使用冷藍 supported 狀態，並明示未驗證／未測試連線，不再等同成功綠色。
+- Empty State 的標題、說明與兩個操作按鈕改為同一置中視覺群組。
+- 英文輔助標籤提升至 11px 與較高對比，但維持低於中文主標題的層級。
+- LIVE EXECUTION 長案件／step 文字限制可視高度，完整內容保留於 tooltip；
+  未知總量仍不顯示百分比，取消仍走 cooperative cancellation。
+- UI targeted：266 passed；完整驗收：1,213 passed、1 skipped；`pip check` 通過。
+- Windows 系統 DPI 未實際切換；20 項情境由既有 fixture/regression 覆蓋，
+  但未宣稱完成全部人工逐頁操作。
+- 未開始 V9 或 Windows 打包。
+
 ## V8 Pre-Packaging Crypto Investigation Command Center Redesign
 
 - Desktop 改為深石墨藍黑的 blockchain forensics command center 視覺語言。

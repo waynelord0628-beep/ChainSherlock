@@ -191,9 +191,15 @@ class MainWindow(QMainWindow):
         self.global_execution_title = QLabel("目前沒有執行中的工作")
         self.global_execution_title.setWordWrap(True)
         self.global_execution_title.setStyleSheet("font-weight:600")
+        self.global_execution_title.setMaximumHeight(
+            self.global_execution_title.fontMetrics().lineSpacing() * 2 + 6
+        )
         self.global_execution_detail = QLabel("建立並確認調查計畫後即可開始執行。")
         self.global_execution_detail.setWordWrap(True)
         self.global_execution_detail.setObjectName("muted")
+        self.global_execution_detail.setMaximumHeight(
+            self.global_execution_detail.fontMetrics().lineSpacing() * 6 + 6
+        )
         self.global_execution_meta = QLabel()
         self.global_execution_meta.setWordWrap(True)
         self.global_execution_meta.setObjectName("muted")
@@ -655,8 +661,8 @@ class MainWindow(QMainWindow):
                 "已設定" if os.getenv("ETHERSCAN_API_KEY") else "未設定",
                 "Blockscout fallback available",
             ),
-            ("Blockscout", "available", "可用", "Ethereum public fallback"),
-            ("Blockstream", "available", "公開服務", "Bitcoin provider（未測試連線）"),
+            ("Blockscout", "supported", "程式支援", "尚未驗證連線 · Ethereum public fallback"),
+            ("Blockstream", "supported", "公開服務", "Bitcoin provider · 未測試連線"),
             ("Local Pipeline", "available", "正常", "CSV／Excel offline execution"),
             ("Case Workspace", "available", "正常", "Local-first case storage"),
             ("Cache", "available", "正常", "Local execution cache"),
@@ -1370,6 +1376,7 @@ class MainWindow(QMainWindow):
             self.execution_clock.start()
             self.global_execution_badge.set_status("running", "RUNNING")
             self.global_execution_title.setText(f"案件：{case.title}")
+            self.global_execution_title.setToolTip(f"案件：{case.title}")
             self.global_execution_detail.setText("目前階段：準備執行調查計畫")
             self.global_execution_meta.setText("紀錄：0 records  ·  耗時：00:00:00  ·  Artifacts：0")
             self.global_execution_progress.setRange(0, 0)
@@ -1393,6 +1400,7 @@ class MainWindow(QMainWindow):
         self._active_execution_case_id = None
         self.global_execution_badge.set_status("disabled", "IDLE")
         self.global_execution_title.setText("目前沒有執行中的工作")
+        self.global_execution_title.setToolTip("")
         self.global_execution_detail.setText("建立並確認調查計畫後即可開始執行。")
         self.global_execution_meta.clear()
         self.global_execution_progress.hide()
@@ -1416,6 +1424,9 @@ class MainWindow(QMainWindow):
         if capability:
             source = f"{source} · {human_label(capability)}"
         self.global_execution_detail.setText(
+            f"目前階段：{stage}\n目前步驟：{message}\n來源：{source}"
+        )
+        self.global_execution_detail.setToolTip(
             f"目前階段：{stage}\n目前步驟：{message}\n來源：{source}"
         )
         if isinstance(total, int) and total > 0:

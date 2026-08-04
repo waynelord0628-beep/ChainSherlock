@@ -1,5 +1,14 @@
 # Changelog
 
+## V8 Desktop Visual Final Validation
+
+- Corrected public-provider readiness badges so support is not presented as verified
+  connectivity.
+- Grouped Investigation Queue empty-state actions with its title and guidance.
+- Improved helper-label readability and bounded long LIVE EXECUTION content.
+- Added focused regressions for provider semantics, empty-state composition, helper
+  typography and long execution text.
+
 ## V8 Pre-Packaging Crypto Investigation Command Center Redesign
 
 - Replaced the light desktop presentation with a local-only blockchain-forensics theme.

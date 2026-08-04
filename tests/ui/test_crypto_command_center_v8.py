@@ -125,6 +125,24 @@ def test_blockscout_fallback_explanation(window) -> None:
     assert "Blockscout fallback" in row[3]
 
 
+@pytest.mark.parametrize(
+    "provider,text",
+    [("Blockscout", "程式支援"), ("Blockstream", "公開服務")],
+)
+def test_public_provider_support_is_not_verified(window, provider, text) -> None:
+    row = next(item for item in window._system_readiness() if item[0] == provider)
+    assert row[1] == "supported"
+    assert row[2] == text
+    assert "未驗證" in row[3] or "未測試" in row[3]
+
+
+def test_supported_badge_uses_cold_blue_semantics() -> None:
+    assert "QLabel#supported" in CRYPTO_INVESTIGATION_THEME
+    supported_rule = CRYPTO_INVESTIGATION_THEME.split("QLabel#supported", 1)[1].split("}", 1)[0]
+    assert "#173553" in supported_rule
+    assert "#123C3B" not in supported_rule
+
+
 def test_ai_is_disabled_with_deterministic_fallback(window) -> None:
     row = next(item for item in window._system_readiness() if item[0] == "AI")
     assert row[1] == "disabled"
@@ -149,6 +167,26 @@ def test_execution_idle_is_compact(window) -> None:
     assert not window.global_execution_actions.isVisible()
 
 
+def test_empty_state_actions_stay_with_message(window) -> None:
+    buttons = window.home_recent_empty.findChildren(QPushButton)
+    assert {button.text() for button in buttons} == {"建立新案件", "開啟案件清單"}
+    message = next(
+        item for item in window.home_recent_empty.findChildren(
+            __import__("PySide6.QtWidgets", fromlist=["QLabel"]).QLabel
+        )
+        if "CSV／Excel Evidence" in item.text()
+    )
+    assert max(button.geometry().top() for button in buttons) >= message.geometry().bottom()
+
+
+def test_english_helper_text_has_readable_size_and_contrast() -> None:
+    eyebrow_rule = CRYPTO_INVESTIGATION_THEME.split(
+        "QLabel#brandSubtitle, QLabel#eyebrow", 1
+    )[1].split("}", 1)[0]
+    assert "font-size: 11px" in eyebrow_rule
+    assert "#7DD3FC" in eyebrow_rule
+
+
 def test_execution_running_event_has_records_elapsed_and_artifacts(window, monkeypatch) -> None:
     monkeypatch.setattr("crypto_investigator.ui.main_window.time.monotonic", lambda: 15.0)
     window._execution_started_at = 3.0
@@ -170,6 +208,28 @@ def test_execution_running_event_has_records_elapsed_and_artifacts(window, monke
     assert "Artifacts：1" in window.global_execution_meta.text()
     assert window.global_execution_progress.maximum() == 0
     assert "%" not in window.global_execution_meta.text()
+
+
+def test_execution_long_content_is_bounded_and_available_in_tooltip(window, monkeypatch) -> None:
+    monkeypatch.setattr("crypto_investigator.ui.main_window.time.monotonic", lambda: 5.0)
+    window._execution_started_at = 0.0
+    long_step = "非常長的調查執行步驟名稱" * 8
+    window._apply_execution_event(
+        SimpleNamespace(
+            stage=long_step,
+            message=long_step,
+            provider="Blockscout fallback provider",
+            capability="address_transactions",
+            current_records=2,
+            total_records_if_known=None,
+            artifacts=[],
+            status="partial",
+        )
+    )
+    assert long_step in window.global_execution_detail.toolTip()
+    assert window.global_execution_detail.maximumHeight() > 0
+    assert window.global_execution_badge.text() == "PARTIAL"
+    assert window.global_execution_progress.maximum() == 0
 
 
 @pytest.mark.parametrize(

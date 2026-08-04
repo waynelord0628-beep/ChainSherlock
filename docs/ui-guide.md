@@ -1,5 +1,23 @@
 # ChainSherlock Desktop UI Guide
 
+## Desktop Visual Final Validation
+
+System Readiness 的狀態代表不同層級：
+
+- 「已設定」只代表安全環境設定存在。
+- 「程式支援」只代表 ChainSherlock 有對應 Provider handler。
+- 「公開服務」只代表不需 API Key 的公開來源；不代表連線已測試。
+- 「正常／已驗證」才使用青綠狀態；supported／public service 使用冷藍。
+- 「未設定」是中性狀態，不是錯誤。
+
+LIVE EXECUTION 的案件與步驟長文字會在側欄內換行並限制高度，完整內容可由
+tooltip 查看；未知總量維持 indeterminate progress，不顯示百分比。取消仍由
+既有 cooperative cancellation 處理，不會終止執行緒。
+
+本輪以 980×680、1366×768、1600×900、1920×1080 及 Qt 125%／150% 字型
+縮放回歸檢查版面。尚未實際切換 Windows 系統 DPI，因此不得視為實機 DPI
+驗收完成。
+
 ## Crypto Investigation Command Center
 
 V8 pre-packaging redesign 使用深石墨藍黑介面、低飽和青綠主操作與冷藍／紫／

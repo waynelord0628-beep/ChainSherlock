@@ -8,7 +8,7 @@ QFrame#sidebar { background: #0A101C; border-right: 1px solid #223047; }
 QFrame#sidebar QLabel { background: transparent; color: #D9E4F0; }
 QLabel#brand { color: #F1F5F9; font-size: 20px; font-weight: 700; }
 QLabel#brandSubtitle, QLabel#eyebrow {
-  color: #5EEAD4; font-family: "Consolas"; font-size: 10px; font-weight: 600;
+  color: #7DD3FC; font-family: "Consolas"; font-size: 11px; font-weight: 650;
 }
 QListWidget#navigation {
   background: transparent; color: #AAB8CA; border: 0; outline: 0;
@@ -94,6 +94,9 @@ QLabel#available, QLabel#configured, QLabel#confirmed, QLabel#completed, QLabel#
   color:#7EE7D5; background:#123C3B; border:1px solid #21645F; padding:3px 8px; border-radius:8px;
 }
 QLabel#observation, QLabel#running, QLabel#ready {
+  color:#A5D8FF; background:#173553; border:1px solid #285E87; padding:3px 8px; border-radius:8px;
+}
+QLabel#supported {
   color:#A5D8FF; background:#173553; border:1px solid #285E87; padding:3px 8px; border-radius:8px;
 }
 QLabel#candidate { color:#D0C4FF; background:#302A52; border:1px solid #554B82; padding:3px 8px; border-radius:8px; }

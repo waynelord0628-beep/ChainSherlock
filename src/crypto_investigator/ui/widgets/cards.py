@@ -44,10 +44,11 @@ class EmptyState(QFrame):
         layout.addStretch()
         layout.addWidget(title_label, alignment=Qt.AlignCenter)
         layout.addWidget(message_label, alignment=Qt.AlignCenter)
-        layout.addStretch()
         self.action_layout = QHBoxLayout()
         self.action_layout.addStretch()
+        self.action_layout.addStretch()
         layout.addLayout(self.action_layout)
+        layout.addStretch()
 
     def add_action(self, text: str, callback, *, secondary: bool = False) -> QPushButton:
         button = QPushButton(text)
