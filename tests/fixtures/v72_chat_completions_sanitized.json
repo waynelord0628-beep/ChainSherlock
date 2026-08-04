@@ -1,0 +1,22 @@
+{
+  "id": "chatcmpl_sanitized_fixture",
+  "model": "gpt-5-mini",
+  "created": 0,
+  "system_fingerprint": "fp_sanitized",
+  "choices": [
+    {
+      "index": 0,
+      "message": {
+        "role": "assistant",
+        "content": "{\"fixture\":true}",
+        "refusal": null
+      },
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 100,
+    "completion_tokens": 20,
+    "total_tokens": 120
+  }
+}

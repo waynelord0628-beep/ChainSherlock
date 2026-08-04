@@ -25,6 +25,24 @@ class AITimeoutError(AIProviderError):
 
 
 class AIResponseError(AIError):
+    def __init__(self, message: str, *, safe_details: dict | None = None):
+        super().__init__(message)
+        self.safe_details = safe_details or {}
+
+
+class AIRefusalError(AIResponseError):
+    pass
+
+
+class AIOutputTruncatedError(AIResponseError):
+    pass
+
+
+class AIContentFilterError(AIResponseError):
+    pass
+
+
+class AIFinishReasonError(AIResponseError):
     pass
 
 

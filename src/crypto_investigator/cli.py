@@ -956,7 +956,7 @@ def validate_ai(
     privacy_mode: str = typer.Option("standard", "--privacy-mode"),
     prompt_mode: str = typer.Option("compact", "--prompt-mode"),
     max_output_tokens: int = typer.Option(
-        2500, "--max-output-tokens", min=1, max=8000
+        3000, "--max-output-tokens", min=1, max=8000
     ),
     max_retries: int = typer.Option(1, "--max-retries", min=0, max=1),
     cache: bool = typer.Option(True, "--cache/--no-cache"),
@@ -988,6 +988,9 @@ def validate_ai(
         )
         status = json.loads((run_output / "ai_status.json").read_text(encoding="utf-8"))
         usage = json.loads((run_output / "ai_usage.json").read_text(encoding="utf-8"))
+        response_metadata = json.loads(
+            (run_output / "ai_response_metadata.json").read_text(encoding="utf-8")
+        )
         signature = {
             "claim_count": len(result.claims),
             "section_count": sum(
@@ -999,18 +1002,30 @@ def validate_ai(
             "numeric_values": [value for claim in result.claims for value in claim.numeric_values],
         }
         signatures.append(signature)
-        model_succeeded = (
+        model_parse_succeeded = (
             status["status"] == "complete" and not status["fallback_used"]
         )
+        http_status = response_metadata.get("http_status")
+        model_request_succeeded = (
+            isinstance(http_status, int) and 200 <= http_status < 300
+        )
+        model_output_received = bool(response_metadata.get("content_present"))
         records.append({
             "run": index + 1,
-            "model_request_succeeded": model_succeeded,
-            "model_output_received": model_succeeded,
-            "validated_source": (
-                "model_output" if model_succeeded else "deterministic_fallback"
+            "model_request_succeeded": model_request_succeeded,
+            "model_output_received": model_output_received,
+            "model_output_parse_succeeded": model_parse_succeeded,
+            "model_output_schema_succeeded": model_parse_succeeded,
+            "model_output_validation_succeeded": (
+                model_parse_succeeded and status["validation_passed"]
             ),
-            "json_parse_success": model_succeeded,
-            "schema_success": model_succeeded and status["validation_passed"],
+            "model_finish_reason": response_metadata.get("finish_reason"),
+            "model_usage_received": bool(response_metadata.get("usage")),
+            "validated_source": (
+                "model_output" if model_parse_succeeded else "deterministic_fallback"
+            ),
+            "json_parse_success": model_parse_succeeded,
+            "schema_success": model_parse_succeeded and status["validation_passed"],
             "hallucination_validation": status["validation_passed"],
             "numeric_validation": status["validation_passed"],
             "citation_validation": status["validation_passed"],

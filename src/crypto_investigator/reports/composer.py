@@ -168,9 +168,16 @@ class ReportComposer:
         if not getattr(narrative, "validation", None) or not narrative.validation.valid:
             return ()
         metadata = narrative.metadata
+        fallback = bool(metadata.fallback_used)
+        label = "規則式敘事" if fallback else "AI 輔助敘事"
         review = getattr(narrative.review_status, "value", narrative.review_status)
         header = (
-            "AI 輔助敘事；"
+            (
+                "AI 請求失敗，已使用規則式替代敘事；"
+                if fallback
+                else "AI 輔助敘事；"
+            )
+            +
             f"provider={redact(metadata.provider)}；model={redact(metadata.model)}；"
             f"prompt={redact(metadata.prompt_version)}；validation=passed；"
             f"fallback={metadata.fallback_used}。"
@@ -193,7 +200,7 @@ class ReportComposer:
                     if citation.section in {name, section.section_id}
                 )
                 result.append(ReportSection(
-                    f"ai_{name}", f"AI 輔助敘事：{redact(section.title)}", order,
+                    f"ai_{name}", f"{label}：{redact(section.title)}", order,
                     ((header,) if not result else ()) + tuple(
                         redact(paragraph.text) for paragraph in section.paragraphs
                     ),

@@ -15,6 +15,7 @@ from crypto_investigator.ai.prompt_builder import PROMPT_VERSION, PromptBuilder
 from crypto_investigator.ai.response_parser import ResponseParser
 from crypto_investigator.ai.redaction import redact_text
 from crypto_investigator.ai.settings import AISettings
+from crypto_investigator.ai.schema import narrative_response_schema
 from crypto_investigator.ai.validator import NarrativeValidator
 from crypto_investigator.narratives.composer import NarrativeInputBuilder
 from crypto_investigator.narratives.export import NarrativeExporter, decode, encode
@@ -75,6 +76,7 @@ class NarrativeEngine:
         exporter.write(source, output / "narrative_input.json")
         errors: list[dict[str, str]] = []
         usage = AIUsage(settings.provider, settings.model)
+        response_metadata = {}
         result = None
         cache_hit = False
         started = perf_counter()
@@ -102,17 +104,39 @@ class NarrativeEngine:
                     last_error = None
                     for attempt in range(settings.max_retries + 1):
                         try:
-                            response = provider.generate(prompt, schema={"type": "object"})
-                            ResponseParser().parse(response.content)
+                            response = provider.generate(
+                                prompt, schema=narrative_response_schema()
+                            )
+                            usage = response.usage
+                            response_metadata = dict(response.raw_metadata)
+                            parser = ResponseParser()
+                            parser.parse(response.content)
+                            response_metadata["parser_warnings"] = tuple(parser.warnings)
+                            response_metadata["parser_diagnostics"] = parser.diagnostics
                             last_error = None
                             break
                         except Exception as error:
                             last_error = error
+                            details = getattr(error, "safe_details", {})
+                            if isinstance(details, dict):
+                                response_metadata.update({
+                                    key: value for key, value in details.items()
+                                    if key != "error"
+                                })
+                                retained_usage = details.get("usage")
+                                if isinstance(retained_usage, dict):
+                                    usage = AIUsage(
+                                        settings.provider,
+                                        settings.model,
+                                        int(retained_usage.get("prompt_tokens", 0)),
+                                        int(retained_usage.get("completion_tokens", 0)),
+                                        int(retained_usage.get("total_tokens", 0)),
+                                        1,
+                                    )
                             if not isinstance(error, AITimeoutError):
                                 break
                     if last_error:
                         raise last_error
-                    usage = response.usage
                     result = DeterministicFallbackProvider().generate(source)
                     result = replace(
                         result,
@@ -139,6 +163,8 @@ class NarrativeEngine:
                 safe_details = getattr(error, "safe_details", None)
                 if isinstance(safe_details, dict):
                     record.update(safe_details)
+                for key, value in response_metadata.items():
+                    record.setdefault(key, value)
                 errors.append(record)
         if result is None:
             result = DeterministicFallbackProvider().generate(source)
@@ -151,6 +177,7 @@ class NarrativeEngine:
         exporter.write(result, output / "narrative.json")
         self._write(output / "narrative_validation.json", asdict(validation))
         self._write(output / "ai_usage.json", asdict(usage))
+        self._write(output / "ai_response_metadata.json", response_metadata)
         self._write(output / "ai_errors.json", errors)
         fallback = result.metadata.fallback_used
         status = AIStatus(

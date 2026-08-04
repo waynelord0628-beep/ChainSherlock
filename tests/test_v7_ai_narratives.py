@@ -7,7 +7,15 @@ import httpx
 import respx
 
 from crypto_investigator.ai.cache import AICache
-from crypto_investigator.ai.errors import AIParseError
+from crypto_investigator.ai.errors import (
+    AIContentFilterError,
+    AIFinishReasonError,
+    AIOutputTruncatedError,
+    AIParseError,
+    AIRefusalError,
+    AIResponseError,
+    AISchemaError,
+)
 from crypto_investigator.ai.fallback import DeterministicFallbackProvider
 from crypto_investigator.ai.input_compactor import InputCompactor
 from crypto_investigator.ai.prompt_builder import PromptBuilder, SYSTEM_POLICY
@@ -16,6 +24,12 @@ from crypto_investigator.ai.response_parser import ResponseParser
 from crypto_investigator.ai.settings import AISettings
 from crypto_investigator.ai.provider import OpenAICompatibleProvider
 from crypto_investigator.ai.validator import NarrativeValidator
+from crypto_investigator.ai.schema import (
+    estimate_output_tokens,
+    narrative_response_schema,
+    unsupported_schema_keywords,
+    validate_strict_schema,
+)
 from crypto_investigator.narratives.export import NarrativeExporter
 from crypto_investigator.narratives.models import (
     HumanReviewStatus,
@@ -100,7 +114,7 @@ def test_validator_blocks_unsupported_wording(term):
     ),
 )
 def test_response_parser_rejects_non_object_json(payload):
-    with pytest.raises(AIParseError):
+    with pytest.raises((AIParseError, AISchemaError)):
         ResponseParser().parse(payload)
 
 
@@ -341,12 +355,14 @@ def test_chat_completions_contract_matches_gpt5_parameters():
         return_value=httpx.Response(
             200,
             json={
-                "choices": [{"message": {"content": "{}"}}],
+                "choices": [{"message": {"content": "{}"}, "finish_reason": "stop"}],
                 "usage": {"prompt_tokens": 10, "completion_tokens": 2, "total_tokens": 12},
             },
         )
     )
-    OpenAICompatibleProvider(ai_settings()).generate("safe prompt", {"type": "object"})
+    response = OpenAICompatibleProvider(ai_settings()).generate(
+        "safe prompt", {"type": "object"}
+    )
     payload = route.calls[0].request.content.decode()
     request_json = __import__("json").loads(payload)
     assert request_json["model"] == "gpt-5-mini"
@@ -363,6 +379,12 @@ def test_chat_completions_contract_matches_gpt5_parameters():
         "required": [],
         "additionalProperties": False,
     }
+    assert response.raw_metadata["http_status"] == 200
+    assert response.raw_metadata["x_request_id"] == ""
+    assert response.raw_metadata["endpoint"] == "/v1/chat/completions"
+    assert response.raw_metadata["finish_reason"] == "stop"
+    assert response.raw_metadata["content_character_count"] == 2
+    assert response.raw_metadata["usage"]["total_tokens"] == 12
 
 
 @pytest.mark.parametrize(
@@ -427,7 +449,7 @@ def test_timeout_retries_once_then_succeeds(tmp_path):
             httpx.Response(
                 200,
                 json={
-                    "choices": [{"message": {"content": "{}"}}],
+                    "choices": [{"message": {"content": "{}"}, "finish_reason": "stop"}],
                     "usage": {},
                 },
             ),
@@ -441,3 +463,173 @@ def test_timeout_retries_once_then_succeeds(tmp_path):
     assert __import__("json").loads(
         (tmp_path / "ai_errors.json").read_text(encoding="utf-8")
     ) == []
+
+
+@pytest.mark.parametrize(
+    "payload",
+    (
+        '{\n  "value": 1,\n  "nested": {"ok": true}\n}',
+        '  \r\n {"value": 1} \n ',
+        '\ufeff{"value": 1}',
+    ),
+)
+def test_structured_parser_accepts_multiline_whitespace_and_bom(payload):
+    assert ResponseParser().parse(payload)["value"] == 1
+
+
+def test_fenced_json_is_unwrapped_with_warning():
+    parser = ResponseParser()
+    assert parser.parse('```json\n{"value": 1}\n```')["value"] == 1
+    assert parser.warnings == ["fenced_json_unwrapped"]
+
+
+def test_structured_parser_rejects_trailing_prose_with_safe_diagnostics():
+    with pytest.raises(AIParseError) as caught:
+        ResponseParser().parse('{"value": 1}\nextra prose')
+    details = caught.value.safe_details["parser_diagnostics"]
+    assert details["content_starts_with"] == "{"
+    assert details["content_ends_with"] == "e"
+    assert details["content_length"] > 0
+    assert details["json_error_line"] == 2
+
+
+def _success_envelope(*, content="{}", finish_reason="stop", refusal=None, choices=True):
+    choice_values = []
+    if choices:
+        choice_values = [{
+            "message": {"content": content, "refusal": refusal},
+            "finish_reason": finish_reason,
+        }]
+    return {
+        "id": "chatcmpl_fixture",
+        "model": "gpt-5-mini",
+        "created": 123,
+        "system_fingerprint": "fp_fixture",
+        "choices": choice_values,
+        "usage": {"prompt_tokens": 100, "completion_tokens": 20, "total_tokens": 120},
+    }
+
+
+def test_sanitized_recorded_fixture_contains_only_minimum_envelope():
+    fixture = __import__("json").loads(
+        (
+            Path(__file__).parent / "fixtures" / "v72_chat_completions_sanitized.json"
+        ).read_text(encoding="utf-8")
+    )
+    assert fixture["choices"][0]["message"]["content"] == '{"fixture":true}'
+    serialized = __import__("json").dumps(fixture)
+    assert "TR5W" not in serialized
+    assert "sk-" not in serialized
+    assert "Authorization" not in serialized
+
+
+@pytest.mark.parametrize(
+    ("envelope", "error_type"),
+    (
+        (_success_envelope(choices=False), AIResponseError),
+        (_success_envelope(content=None), AIResponseError),
+        (_success_envelope(content="", refusal="cannot comply"), AIRefusalError),
+        (_success_envelope(content='{"x":', finish_reason="length"), AIOutputTruncatedError),
+        (_success_envelope(content="", finish_reason="content_filter"), AIContentFilterError),
+        (_success_envelope(content="{}", finish_reason="tool_calls"), AIFinishReasonError),
+    ),
+)
+@respx.mock
+def test_success_envelope_special_conditions(envelope, error_type):
+    respx.post("https://mock.openai.test/v1/chat/completions").mock(
+        return_value=httpx.Response(
+            200, headers={"x-request-id": "req_fixture"}, json=envelope
+        )
+    )
+    with pytest.raises(error_type) as caught:
+        OpenAICompatibleProvider(ai_settings()).generate("prompt", {"type": "object"})
+    assert caught.value.safe_details["http_status"] == 200
+    assert caught.value.safe_details["x_request_id"] == "req_fixture"
+    assert caught.value.safe_details["usage"]["total_tokens"] == 120
+
+
+@respx.mock
+def test_only_message_content_is_returned_not_complete_response():
+    route = respx.post("https://mock.openai.test/v1/chat/completions").mock(
+        return_value=httpx.Response(200, json=_success_envelope(content='{"safe":true}'))
+    )
+    response = OpenAICompatibleProvider(ai_settings()).generate(
+        "prompt", {"type": "object"}
+    )
+    assert response.content == '{"safe":true}'
+    assert "choices" not in response.content
+    assert route.call_count == 1
+
+
+@respx.mock
+def test_usage_and_request_metadata_retained_after_parse_failure(tmp_path):
+    respx.post("https://mock.openai.test/v1/chat/completions").mock(
+        return_value=httpx.Response(
+            200,
+            headers={"x-request-id": "req_parse_failure"},
+            json=_success_envelope(content='{"safe":true}\ntrailing'),
+        )
+    )
+    NarrativeEngine().run_input(
+        source(), tmp_path, settings=ai_settings(), requested=True,
+        use_cache=False, prompt_mode="compact",
+    )
+    metadata = __import__("json").loads(
+        (tmp_path / "ai_response_metadata.json").read_text(encoding="utf-8")
+    )
+    usage = __import__("json").loads(
+        (tmp_path / "ai_usage.json").read_text(encoding="utf-8")
+    )
+    errors = __import__("json").loads(
+        (tmp_path / "ai_errors.json").read_text(encoding="utf-8")
+    )
+    assert metadata["http_status"] == 200
+    assert metadata["x_request_id"] == "req_parse_failure"
+    assert metadata["finish_reason"] == "stop"
+    assert usage["input_tokens"] == 100
+    assert usage["output_tokens"] == 20
+    assert usage["total_tokens"] == 120
+    assert metadata["content_character_count"] == 22
+    assert errors[0]["http_status"] == 200
+    assert errors[0]["x_request_id"] == "req_parse_failure"
+    assert "trailing" not in __import__("json").dumps(errors)
+
+
+def test_tron_chain_recovered_missing_hash_translation_and_fallback_label():
+    public_input = replace(
+        source(),
+        chain=None,
+        target_address="TR5WMAhpM9JkpouAT49X9pNHP8NPQkcGAE",
+        limitations=("Source analysis is partial; confidence is reduced.",),
+    )
+    narrative = DeterministicFallbackProvider().generate(public_input)
+    document = OfflineReportComposer().compose(narrative, public_input)
+    assert document.metadata.chain == "tron"
+    assert document.evidence[0].hash == "未提供"
+    assert any("來源分析資料不完整" in item.description for item in document.limitations)
+    assert any(item.title.startswith("規則式敘事") for item in document.sections)
+    assert not any(item.title.startswith("AI 輔助敘事") for item in document.sections)
+
+
+def test_narrative_schema_is_recursively_strict_and_supported():
+    schema = narrative_response_schema()
+    assert schema["type"] == "object"
+    assert schema["additionalProperties"] is False
+    assert set(schema["required"]) == set(schema["properties"])
+    assert validate_strict_schema(schema) == ()
+    assert unsupported_schema_keywords(schema) == set()
+    assert schema["properties"]["reviewed_by"]["anyOf"][1] == {"type": "null"}
+
+
+def test_schema_unsupported_keyword_detection():
+    assert unsupported_schema_keywords({"oneOf": [{"type": "string"}]}) == {"oneOf"}
+
+
+def test_estimated_output_token_budget_exceeds_1800_for_typical_narrative():
+    narrative = DeterministicFallbackProvider().generate(source())
+    serialized = __import__("json").dumps(
+        __import__("crypto_investigator.narratives.export", fromlist=["encode"]).encode(narrative),
+        ensure_ascii=False,
+        indent=2,
+    )
+    assert estimate_output_tokens(len(serialized)) > 1800

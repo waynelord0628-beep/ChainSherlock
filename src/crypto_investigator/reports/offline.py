@@ -13,6 +13,7 @@ from crypto_investigator.reports.models import (
     ReportSection,
     ReportWarning,
 )
+from crypto_investigator.detection.identifier import detect_identifier
 
 
 class OfflineReportComposer:
@@ -20,9 +21,17 @@ class OfflineReportComposer:
 
     def compose(self, narrative, narrative_input=None, *, output_directory="."):
         source = narrative_input
-        evidence = self._evidence(source)
+        chain = self._recover_chain(source)
+        evidence = self._evidence(source, chain)
         limitations = tuple(
-            ReportLimitation(f"offline_{index}", redact(text))
+            ReportLimitation(
+                f"offline_{index}",
+                redact(
+                    "來源分析資料不完整，可信度因此降低。"
+                    if text == "Source analysis is partial; confidence is reduced."
+                    else text
+                ),
+            )
             for index, text in enumerate(getattr(source, "limitations", ()), 1)
         )
         unavailable = []
@@ -63,7 +72,7 @@ class OfflineReportComposer:
         metadata = ReportMetadata(
             report_id=f"CSR-OFFLINE-{uuid4().hex[:10].upper()}",
             report_version="7.1",
-            chain=source.chain if source is not None else None,
+            chain=chain,
             target_address=source.target_address if source is not None else None,
             source_type="offline_artifact",
             providers=(narrative.metadata.provider,),
@@ -91,7 +100,7 @@ class OfflineReportComposer:
         )
 
     @staticmethod
-    def _evidence(source):
+    def _evidence(source, chain):
         if source is None:
             return ()
         return tuple(
@@ -101,9 +110,21 @@ class OfflineReportComposer:
                 source="narrative_input.json",
                 source_reference="evidence_index",
                 description="離線重建使用的結構化 Evidence ID",
-                chain=source.chain,
+                chain=chain,
                 address=(item.get("addresses") or (None,))[0],
+                hash="未提供",
             )
             for item in source.evidence_index
             if item.get("evidence_id")
         )
+
+    @staticmethod
+    def _recover_chain(source):
+        if source is None:
+            return None
+        if source.chain:
+            return source.chain
+        try:
+            return detect_identifier(source.target_address).chain.value
+        except Exception:
+            return None

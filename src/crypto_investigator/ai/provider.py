@@ -5,7 +5,12 @@ import httpx
 
 from crypto_investigator.ai.errors import (
     AIAuthenticationError,
+    AIContentFilterError,
+    AIFinishReasonError,
+    AIOutputTruncatedError,
     AIProviderError,
+    AIRefusalError,
+    AIResponseError,
     AIRateLimitError,
     AITimeoutError,
 )
@@ -82,9 +87,53 @@ class OpenAICompatibleProvider:
                 f"AI provider request failed with status {response.status_code}",
                 safe_details=details,
             )
-        value = response.json()
-        usage = value.get("usage", {})
-        content = value["choices"][0]["message"]["content"]
+        try:
+            value = response.json()
+        except ValueError as error:
+            raise AIResponseError(
+                "AI provider returned a non-JSON success envelope",
+                safe_details={
+                    "http_status": response.status_code,
+                    "x_request_id": redact_text(
+                        response.headers.get("x-request-id", ""), 200
+                    ),
+                    "endpoint": self.endpoint_label,
+                },
+            ) from error
+        if not isinstance(value, dict):
+            raise AIResponseError("AI provider success envelope must be an object")
+        choices = value.get("choices")
+        usage = value.get("usage") if isinstance(value.get("usage"), dict) else {}
+        metadata = self._success_metadata(response, value, choices, usage)
+        if not isinstance(choices, list) or not choices:
+            raise AIResponseError(
+                "AI provider returned no choices", safe_details=metadata
+            )
+        choice = choices[0] if isinstance(choices[0], dict) else {}
+        message = choice.get("message") if isinstance(choice.get("message"), dict) else {}
+        refusal = message.get("refusal")
+        finish_reason = choice.get("finish_reason")
+        if refusal:
+            raise AIRefusalError("AI provider refused the request", safe_details=metadata)
+        if finish_reason == "length":
+            raise AIOutputTruncatedError(
+                "AI output may be truncated by the completion token limit",
+                safe_details=metadata,
+            )
+        if finish_reason == "content_filter":
+            raise AIContentFilterError(
+                "AI output was blocked by the content filter", safe_details=metadata
+            )
+        if finish_reason != "stop":
+            raise AIFinishReasonError(
+                f"AI output ended with unsupported finish reason: {redact_text(finish_reason, 80)}",
+                safe_details=metadata,
+            )
+        content = message.get("content")
+        if not isinstance(content, str) or not content:
+            raise AIResponseError(
+                "AI provider returned empty response content", safe_details=metadata
+            )
         return AIResponse(
             content,
             AIUsage(
@@ -98,7 +147,32 @@ class OpenAICompatibleProvider:
                 perf_counter() - started,
                 None,
             ),
+            metadata,
         )
+
+    def _success_metadata(self, response, value, choices, usage):
+        first = choices[0] if isinstance(choices, list) and choices and isinstance(choices[0], dict) else {}
+        message = first.get("message") if isinstance(first.get("message"), dict) else {}
+        content = message.get("content")
+        return {
+            "endpoint": self.endpoint_label,
+            "http_status": response.status_code,
+            "x_request_id": redact_text(response.headers.get("x-request-id", ""), 200),
+            "response_model": redact_text(value.get("model", ""), 200),
+            "response_id": redact_text(value.get("id", ""), 200),
+            "created": value.get("created") if isinstance(value.get("created"), (int, float)) else None,
+            "system_fingerprint": redact_text(value.get("system_fingerprint", ""), 200),
+            "choices_count": len(choices) if isinstance(choices, list) else 0,
+            "finish_reason": redact_text(first.get("finish_reason", ""), 80),
+            "refusal_present": bool(message.get("refusal")),
+            "content_present": isinstance(content, str) and bool(content),
+            "content_character_count": len(content) if isinstance(content, str) else 0,
+            "usage": {
+                "prompt_tokens": int(usage.get("prompt_tokens", 0) or 0),
+                "completion_tokens": int(usage.get("completion_tokens", 0) or 0),
+                "total_tokens": int(usage.get("total_tokens", 0) or 0),
+            },
+        }
 
     @staticmethod
     def _normalize_schema(schema: dict) -> dict:
