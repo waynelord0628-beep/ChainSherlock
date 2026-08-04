@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<title>{{ document.title }}</title>
+<style>
+body{font-family:"Microsoft JhengHei","Noto Sans CJK TC",sans-serif;margin:2rem;color:#172033;line-height:1.65}
+h1,h2,h3{color:#16213e}section{break-inside:avoid;margin:1.5rem 0}
+table{border-collapse:collapse;width:100%;font-size:.9rem}th,td{border:1px solid #cbd5e1;padding:.4rem;text-align:left}
+.meta,.notice{background:#f1f5f9;padding:1rem;border-radius:.5rem}.notice{border-left:4px solid #f59e0b}
+iframe{width:100%;height:720px;border:1px solid #cbd5e1}@media print{iframe{display:none}a{color:#000}}
+</style>
+</head>
+<body>
+<h1>{{ document.title }}</h1>
+<div class="meta">報告編號：{{ document.metadata.report_id }}<br>資料完整度：{{ document.metadata.analysis_completeness }}<br>交易筆數：{{ document.metadata.transaction_count }}</div>
+{% for section in document.sections %}
+<section id="{{ section.section_id }}"><h2>{{ section.title }}</h2>
+{% for block in section.content_blocks %}<p>{{ block }}</p>{% endfor %}
+{% for table in section.tables %}<h3>{{ table.title }}</h3><table><thead><tr>{% for column in table.columns %}<th>{{ column }}</th>{% endfor %}</tr></thead><tbody>{% for row in table.rows %}<tr>{% for value in row %}<td>{{ value }}</td>{% endfor %}</tr>{% endfor %}</tbody></table>{% endfor %}
+{% if section.section_id == "graph" %}<p><a href="flow.html">開啟離線互動圖</a></p><iframe src="flow.html" title="Transaction graph"></iframe>{% endif %}
+</section>
+{% endfor %}
+<section><h2>Evidence Anchors</h2>{% for item in document.evidence %}<p id="evidence-{{ item.evidence_id }}">[{{ item.evidence_id }}] {{ item.source }} — {{ item.hash }}</p>{% endfor %}</section>
+</body></html>

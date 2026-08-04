@@ -74,3 +74,13 @@ V3 — Analysis Engine.
 
 V2 contains no Provider, Graph, Timeline, Counterparty analysis, Report, AI, Risk, Cross-chain, Bridge, or on-chain API implementation.
 V3 contains no Provider, blockchain API, graph rendering, report, Word/PDF, AI, Agent, Risk, Cross-chain, Bridge, or OSINT implementation.
+
+## V6 — Report Engine
+
+- 完成框架獨立 Report models、registry-based factory 與 deterministic composer。
+- 完成 Evidence／Citation、SHA-256 manifest 與 `ReportDocument` JSON round-trip。
+- 完成 Markdown、離線 HTML、DOCX、PDF exporter 與 partial failure 狀態。
+- 完成 `report-file`、`report-address`、`report-tx`。
+- 新增 80 項 V6 測試；完整測試為 305 passed。
+- 完成 100／10,000／100,000 筆 Report benchmark 與 example outputs。
+- V6 未加入 AI、Risk、Cross-chain、UI 或任何新分析邏輯。

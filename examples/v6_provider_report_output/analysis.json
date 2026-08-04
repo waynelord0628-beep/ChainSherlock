@@ -1,0 +1,200 @@
+{
+  "summary": {
+    "first_seen": "2026-08-04T05:04:48+00:00",
+    "last_seen": "2026-08-04T05:04:48+00:00",
+    "transaction_count": 5,
+    "incoming_count": 3,
+    "outgoing_count": 0,
+    "unique_counterparties": 3,
+    "active_days": 1,
+    "assets": [
+      "BTC"
+    ],
+    "top_asset": "BTC",
+    "average_daily_transactions": 5.0,
+    "unconfirmed_count": 4,
+    "missing_timestamp_count": 4
+  },
+  "statistics": {
+    "incoming_amount": {
+      "BTC": "0.00001638"
+    },
+    "outgoing_amount": {},
+    "asset_breakdown": {
+      "BTC": {
+        "transaction_count": 5,
+        "total_amount": "0.00065744",
+        "average_amount": "0.000131488",
+        "median_amount": "0.00000546",
+        "max_amount": "0.00055162",
+        "min_amount": "0.00000546"
+      }
+    },
+    "top_asset": "BTC",
+    "average_amount": {
+      "BTC": "0.000131488"
+    },
+    "median_amount": {
+      "BTC": "0.00000546"
+    },
+    "max_transaction": {
+      "BTC": {
+        "tx_hash": "c684a54883d28c18d2b53dd3845665c4fab99845c4889dc496ab9c51dc56b101",
+        "amount": "0.00055162"
+      }
+    },
+    "min_transaction": {
+      "BTC": {
+        "tx_hash": "5b9f53ff7b46525ec167aa10b3ccb71a499b6997995e685fe4af53b35cbce4b9",
+        "amount": "0.00000546"
+      }
+    },
+    "transaction_frequency": 5.0
+  },
+  "counterparties": [
+    {
+      "address": "bc1p3rhs9e0heuc7r6uf0e2v0gvvhzwp5zw6xkfhnrzqz6axu0y0y2xs4vsax6",
+      "incoming_count": 1,
+      "outgoing_count": 0,
+      "incoming_amount_by_asset": {
+        "BTC": "0.00000546"
+      },
+      "outgoing_amount_by_asset": {},
+      "first_seen": null,
+      "last_seen": null,
+      "interaction_count": 1,
+      "direction": "incoming"
+    },
+    {
+      "address": "bc1p5upktx49j542kw0d55zzznhmv6ggwphzhytlm2xn2ert92y3y0zs8f00f2",
+      "incoming_count": 1,
+      "outgoing_count": 0,
+      "incoming_amount_by_asset": {
+        "BTC": "0.00000546"
+      },
+      "outgoing_amount_by_asset": {},
+      "first_seen": "2026-08-04T05:04:48+00:00",
+      "last_seen": "2026-08-04T05:04:48+00:00",
+      "interaction_count": 1,
+      "direction": "incoming"
+    },
+    {
+      "address": "bc1pm68dasvl93gzdzp07x0atgf3l45f3huz6w8luq457698qghtn2lqucnc07",
+      "incoming_count": 1,
+      "outgoing_count": 0,
+      "incoming_amount_by_asset": {
+        "BTC": "0.00000546"
+      },
+      "outgoing_amount_by_asset": {},
+      "first_seen": null,
+      "last_seen": null,
+      "interaction_count": 1,
+      "direction": "incoming"
+    }
+  ],
+  "timeline": {
+    "daily": {
+      "2026-08-04": {
+        "transaction_count": 1,
+        "amounts_by_asset": {
+          "BTC": "0.00000546"
+        }
+      }
+    },
+    "monthly": {
+      "2026-08": {
+        "transaction_count": 1,
+        "amounts_by_asset": {
+          "BTC": "0.00000546"
+        }
+      }
+    },
+    "hourly_distribution": {
+      "5": 1
+    },
+    "weekly_distribution": {
+      "Tuesday": 1
+    }
+  },
+  "flow": {
+    "nodes": [
+      {
+        "address": "1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa"
+      },
+      {
+        "address": "bc1p3rhs9e0heuc7r6uf0e2v0gvvhzwp5zw6xkfhnrzqz6axu0y0y2xs4vsax6"
+      },
+      {
+        "address": "bc1p5upktx49j542kw0d55zzznhmv6ggwphzhytlm2xn2ert92y3y0zs8f00f2"
+      },
+      {
+        "address": "bc1pm68dasvl93gzdzp07x0atgf3l45f3huz6w8luq457698qghtn2lqucnc07"
+      }
+    ],
+    "edges": [
+      {
+        "source": "bc1pm68dasvl93gzdzp07x0atgf3l45f3huz6w8luq457698qghtn2lqucnc07",
+        "target": "1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa",
+        "direction": "incoming",
+        "weight": "0.00000546",
+        "asset": "BTC",
+        "timestamp": null,
+        "tx_hash": "5b9f53ff7b46525ec167aa10b3ccb71a499b6997995e685fe4af53b35cbce4b9"
+      },
+      {
+        "source": "bc1pm68dasvl93gzdzp07x0atgf3l45f3huz6w8luq457698qghtn2lqucnc07",
+        "target": "bc1pm68dasvl93gzdzp07x0atgf3l45f3huz6w8luq457698qghtn2lqucnc07",
+        "direction": "unknown",
+        "weight": "0.00008944",
+        "asset": "BTC",
+        "timestamp": null,
+        "tx_hash": "5b9f53ff7b46525ec167aa10b3ccb71a499b6997995e685fe4af53b35cbce4b9"
+      },
+      {
+        "source": "bc1p3rhs9e0heuc7r6uf0e2v0gvvhzwp5zw6xkfhnrzqz6axu0y0y2xs4vsax6",
+        "target": "1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa",
+        "direction": "incoming",
+        "weight": "0.00000546",
+        "asset": "BTC",
+        "timestamp": null,
+        "tx_hash": "c684a54883d28c18d2b53dd3845665c4fab99845c4889dc496ab9c51dc56b101"
+      },
+      {
+        "source": "bc1p3rhs9e0heuc7r6uf0e2v0gvvhzwp5zw6xkfhnrzqz6axu0y0y2xs4vsax6",
+        "target": "bc1p3rhs9e0heuc7r6uf0e2v0gvvhzwp5zw6xkfhnrzqz6axu0y0y2xs4vsax6",
+        "direction": "unknown",
+        "weight": "0.00055162",
+        "asset": "BTC",
+        "timestamp": null,
+        "tx_hash": "c684a54883d28c18d2b53dd3845665c4fab99845c4889dc496ab9c51dc56b101"
+      },
+      {
+        "source": "bc1p5upktx49j542kw0d55zzznhmv6ggwphzhytlm2xn2ert92y3y0zs8f00f2",
+        "target": "1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa",
+        "direction": "incoming",
+        "weight": "0.00000546",
+        "asset": "BTC",
+        "timestamp": "2026-08-04T05:04:48+00:00",
+        "tx_hash": "9b00f85f209029a55e26cfdff94f0f235f065546dbaa8076210f3fd129b436d5"
+      }
+    ]
+  },
+  "metadata": {
+    "transaction_count": 5,
+    "target_address": "1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa",
+    "analyzers": [
+      "summary",
+      "statistics",
+      "counterparty",
+      "timeline",
+      "flow"
+    ],
+    "unconfirmed_count": 4,
+    "missing_timestamp_count": 4,
+    "rejected_record_count": 0,
+    "completeness": "partial"
+  },
+  "warnings": [
+    "excluded_unconfirmed_without_timestamp=4"
+  ]
+}

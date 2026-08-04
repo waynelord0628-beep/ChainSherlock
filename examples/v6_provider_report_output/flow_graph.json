@@ -1,0 +1,215 @@
+{
+  "edges": [
+    {
+      "amounts_by_asset": {
+        "BTC": "0.00000546"
+      },
+      "assets": [
+        "BTC"
+      ],
+      "direction": "incoming",
+      "edge_id": "bitcoin:bc1p5upktx49j542kw0d55zzznhmv6ggwphzhytlm2xn2ert92y3y0zs8f00f2|bitcoin:1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa|incoming|BTC",
+      "first_seen": "2026-08-04T05:04:48+00:00",
+      "last_seen": "2026-08-04T05:04:48+00:00",
+      "metadata": {
+        "transaction_hashes_truncated": false
+      },
+      "source": "bitcoin:bc1p5upktx49j542kw0d55zzznhmv6ggwphzhytlm2xn2ert92y3y0zs8f00f2",
+      "target": "bitcoin:1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa",
+      "transaction_count": 1,
+      "transaction_hashes": [
+        "9b00f85f209029a55e26cfdff94f0f235f065546dbaa8076210f3fd129b436d5"
+      ]
+    },
+    {
+      "amounts_by_asset": {
+        "BTC": "0.00000546"
+      },
+      "assets": [
+        "BTC"
+      ],
+      "direction": "incoming",
+      "edge_id": "bitcoin:bc1p3rhs9e0heuc7r6uf0e2v0gvvhzwp5zw6xkfhnrzqz6axu0y0y2xs4vsax6|bitcoin:1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa|incoming|BTC",
+      "first_seen": null,
+      "last_seen": null,
+      "metadata": {
+        "transaction_hashes_truncated": false
+      },
+      "source": "bitcoin:bc1p3rhs9e0heuc7r6uf0e2v0gvvhzwp5zw6xkfhnrzqz6axu0y0y2xs4vsax6",
+      "target": "bitcoin:1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa",
+      "transaction_count": 1,
+      "transaction_hashes": [
+        "c684a54883d28c18d2b53dd3845665c4fab99845c4889dc496ab9c51dc56b101"
+      ]
+    },
+    {
+      "amounts_by_asset": {
+        "BTC": "0.00055162"
+      },
+      "assets": [
+        "BTC"
+      ],
+      "direction": "unknown",
+      "edge_id": "bitcoin:bc1p3rhs9e0heuc7r6uf0e2v0gvvhzwp5zw6xkfhnrzqz6axu0y0y2xs4vsax6|bitcoin:bc1p3rhs9e0heuc7r6uf0e2v0gvvhzwp5zw6xkfhnrzqz6axu0y0y2xs4vsax6|unknown|BTC",
+      "first_seen": null,
+      "last_seen": null,
+      "metadata": {
+        "transaction_hashes_truncated": false
+      },
+      "source": "bitcoin:bc1p3rhs9e0heuc7r6uf0e2v0gvvhzwp5zw6xkfhnrzqz6axu0y0y2xs4vsax6",
+      "target": "bitcoin:bc1p3rhs9e0heuc7r6uf0e2v0gvvhzwp5zw6xkfhnrzqz6axu0y0y2xs4vsax6",
+      "transaction_count": 1,
+      "transaction_hashes": [
+        "c684a54883d28c18d2b53dd3845665c4fab99845c4889dc496ab9c51dc56b101"
+      ]
+    },
+    {
+      "amounts_by_asset": {
+        "BTC": "0.00000546"
+      },
+      "assets": [
+        "BTC"
+      ],
+      "direction": "incoming",
+      "edge_id": "bitcoin:bc1pm68dasvl93gzdzp07x0atgf3l45f3huz6w8luq457698qghtn2lqucnc07|bitcoin:1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa|incoming|BTC",
+      "first_seen": null,
+      "last_seen": null,
+      "metadata": {
+        "transaction_hashes_truncated": false
+      },
+      "source": "bitcoin:bc1pm68dasvl93gzdzp07x0atgf3l45f3huz6w8luq457698qghtn2lqucnc07",
+      "target": "bitcoin:1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa",
+      "transaction_count": 1,
+      "transaction_hashes": [
+        "5b9f53ff7b46525ec167aa10b3ccb71a499b6997995e685fe4af53b35cbce4b9"
+      ]
+    },
+    {
+      "amounts_by_asset": {
+        "BTC": "0.00008944"
+      },
+      "assets": [
+        "BTC"
+      ],
+      "direction": "unknown",
+      "edge_id": "bitcoin:bc1pm68dasvl93gzdzp07x0atgf3l45f3huz6w8luq457698qghtn2lqucnc07|bitcoin:bc1pm68dasvl93gzdzp07x0atgf3l45f3huz6w8luq457698qghtn2lqucnc07|unknown|BTC",
+      "first_seen": null,
+      "last_seen": null,
+      "metadata": {
+        "transaction_hashes_truncated": false
+      },
+      "source": "bitcoin:bc1pm68dasvl93gzdzp07x0atgf3l45f3huz6w8luq457698qghtn2lqucnc07",
+      "target": "bitcoin:bc1pm68dasvl93gzdzp07x0atgf3l45f3huz6w8luq457698qghtn2lqucnc07",
+      "transaction_count": 1,
+      "transaction_hashes": [
+        "5b9f53ff7b46525ec167aa10b3ccb71a499b6997995e685fe4af53b35cbce4b9"
+      ]
+    }
+  ],
+  "metadata": {
+    "chain": "bitcoin",
+    "excluded_edge_count": 0,
+    "excluded_node_count": 0,
+    "filters": {
+      "date_from": null,
+      "date_to": null,
+      "exclude_addresses": [],
+      "exclude_assets": [],
+      "include_addresses": [],
+      "include_assets": [],
+      "incoming_only": false,
+      "maximum_edges": 200,
+      "maximum_nodes": 100,
+      "maximum_tooltip_length": 1000,
+      "maximum_transaction_hashes_per_edge": 100,
+      "minimum_transaction_count": 1,
+      "outgoing_only": false,
+      "sort_asset": null,
+      "sort_by": "transactions",
+      "top_counterparties": 20
+    },
+    "generated_at": "2026-08-04T06:51:09.496696+00:00",
+    "included_edge_count": 5,
+    "included_node_count": 4,
+    "missing_data": [],
+    "provider_errors": [],
+    "rejected_record_count": 0,
+    "source_completeness": "partial",
+    "source_transaction_count": 5,
+    "target_address": "1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa",
+    "truncated": false,
+    "truncation_reason": null,
+    "warnings": []
+  },
+  "nodes": [
+    {
+      "address": "1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa",
+      "assets": [
+        "BTC"
+      ],
+      "category": "unknown",
+      "chain": "bitcoin",
+      "first_seen": "2026-08-04T05:04:48+00:00",
+      "incoming_count": 3,
+      "is_target": true,
+      "label": "1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa",
+      "last_seen": "2026-08-04T05:04:48+00:00",
+      "metadata": {},
+      "node_id": "bitcoin:1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa",
+      "outgoing_count": 0,
+      "transaction_count": 3
+    },
+    {
+      "address": "bc1p3rhs9e0heuc7r6uf0e2v0gvvhzwp5zw6xkfhnrzqz6axu0y0y2xs4vsax6",
+      "assets": [
+        "BTC"
+      ],
+      "category": "unknown",
+      "chain": "bitcoin",
+      "first_seen": null,
+      "incoming_count": 1,
+      "is_target": false,
+      "label": "bc1p3rhs9e0heuc7r6uf0e2v0gvvhzwp5zw6xkfhnrzqz6axu0y0y2xs4vsax6",
+      "last_seen": null,
+      "metadata": {},
+      "node_id": "bitcoin:bc1p3rhs9e0heuc7r6uf0e2v0gvvhzwp5zw6xkfhnrzqz6axu0y0y2xs4vsax6",
+      "outgoing_count": 2,
+      "transaction_count": 3
+    },
+    {
+      "address": "bc1p5upktx49j542kw0d55zzznhmv6ggwphzhytlm2xn2ert92y3y0zs8f00f2",
+      "assets": [
+        "BTC"
+      ],
+      "category": "unknown",
+      "chain": "bitcoin",
+      "first_seen": "2026-08-04T05:04:48+00:00",
+      "incoming_count": 0,
+      "is_target": false,
+      "label": "bc1p5upktx49j542kw0d55zzznhmv6ggwphzhytlm2xn2ert92y3y0zs8f00f2",
+      "last_seen": "2026-08-04T05:04:48+00:00",
+      "metadata": {},
+      "node_id": "bitcoin:bc1p5upktx49j542kw0d55zzznhmv6ggwphzhytlm2xn2ert92y3y0zs8f00f2",
+      "outgoing_count": 1,
+      "transaction_count": 1
+    },
+    {
+      "address": "bc1pm68dasvl93gzdzp07x0atgf3l45f3huz6w8luq457698qghtn2lqucnc07",
+      "assets": [
+        "BTC"
+      ],
+      "category": "unknown",
+      "chain": "bitcoin",
+      "first_seen": null,
+      "incoming_count": 1,
+      "is_target": false,
+      "label": "bc1pm68dasvl93gzdzp07x0atgf3l45f3huz6w8luq457698qghtn2lqucnc07",
+      "last_seen": null,
+      "metadata": {},
+      "node_id": "bitcoin:bc1pm68dasvl93gzdzp07x0atgf3l45f3huz6w8luq457698qghtn2lqucnc07",
+      "outgoing_count": 2,
+      "transaction_count": 3
+    }
+  ],
+  "warnings": []
+}

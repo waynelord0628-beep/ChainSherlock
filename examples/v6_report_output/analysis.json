@@ -1,0 +1,167 @@
+{
+  "summary": {
+    "first_seen": "2026-01-01T00:00:00+00:00",
+    "last_seen": "2026-01-03T00:00:00+00:00",
+    "transaction_count": 3,
+    "incoming_count": 0,
+    "outgoing_count": 0,
+    "unique_counterparties": 0,
+    "active_days": 3,
+    "assets": [
+      "ETH",
+      "USDT"
+    ],
+    "top_asset": "ETH",
+    "average_daily_transactions": 1.0,
+    "unconfirmed_count": 0,
+    "missing_timestamp_count": 0
+  },
+  "statistics": {
+    "incoming_amount": {},
+    "outgoing_amount": {},
+    "asset_breakdown": {
+      "ETH": {
+        "transaction_count": 2,
+        "total_amount": "3.75",
+        "average_amount": "1.875",
+        "median_amount": "1.875",
+        "max_amount": "2.25",
+        "min_amount": "1.5"
+      },
+      "USDT": {
+        "transaction_count": 1,
+        "total_amount": "250",
+        "average_amount": "250",
+        "median_amount": "250",
+        "max_amount": "250",
+        "min_amount": "250"
+      }
+    },
+    "top_asset": "ETH",
+    "average_amount": {
+      "ETH": "1.875",
+      "USDT": "250"
+    },
+    "median_amount": {
+      "ETH": "1.875",
+      "USDT": "250"
+    },
+    "max_transaction": {
+      "ETH": {
+        "tx_hash": "0xv5example3",
+        "amount": "2.25"
+      },
+      "USDT": {
+        "tx_hash": "0xv5example2",
+        "amount": "250"
+      }
+    },
+    "min_transaction": {
+      "ETH": {
+        "tx_hash": "0xv5example1",
+        "amount": "1.5"
+      },
+      "USDT": {
+        "tx_hash": "0xv5example2",
+        "amount": "250"
+      }
+    },
+    "transaction_frequency": 1.0
+  },
+  "counterparties": [],
+  "timeline": {
+    "daily": {
+      "2026-01-01": {
+        "transaction_count": 1,
+        "amounts_by_asset": {
+          "ETH": "1.5"
+        }
+      },
+      "2026-01-02": {
+        "transaction_count": 1,
+        "amounts_by_asset": {
+          "USDT": "250"
+        }
+      },
+      "2026-01-03": {
+        "transaction_count": 1,
+        "amounts_by_asset": {
+          "ETH": "2.25"
+        }
+      }
+    },
+    "monthly": {
+      "2026-01": {
+        "transaction_count": 3,
+        "amounts_by_asset": {
+          "ETH": "3.75",
+          "USDT": "250"
+        }
+      }
+    },
+    "hourly_distribution": {
+      "0": 3
+    },
+    "weekly_distribution": {
+      "Thursday": 1,
+      "Friday": 1,
+      "Saturday": 1
+    }
+  },
+  "flow": {
+    "nodes": [
+      {
+        "address": "0x1111111111111111111111111111111111111111"
+      },
+      {
+        "address": "0x2222222222222222222222222222222222222222"
+      },
+      {
+        "address": "0x3333333333333333333333333333333333333333"
+      }
+    ],
+    "edges": [
+      {
+        "source": "0x1111111111111111111111111111111111111111",
+        "target": "0x2222222222222222222222222222222222222222",
+        "direction": "unknown",
+        "weight": "1.5",
+        "asset": "ETH",
+        "timestamp": "2026-01-01T00:00:00+00:00",
+        "tx_hash": "0xv5example1"
+      },
+      {
+        "source": "0x2222222222222222222222222222222222222222",
+        "target": "0x1111111111111111111111111111111111111111",
+        "direction": "unknown",
+        "weight": "250",
+        "asset": "USDT",
+        "timestamp": "2026-01-02T00:00:00+00:00",
+        "tx_hash": "0xv5example2"
+      },
+      {
+        "source": "0x1111111111111111111111111111111111111111",
+        "target": "0x3333333333333333333333333333333333333333",
+        "direction": "unknown",
+        "weight": "2.25",
+        "asset": "ETH",
+        "timestamp": "2026-01-03T00:00:00+00:00",
+        "tx_hash": "0xv5example3"
+      }
+    ]
+  },
+  "metadata": {
+    "transaction_count": 3,
+    "target_address": "0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "analyzers": [
+      "summary",
+      "statistics",
+      "counterparty",
+      "timeline",
+      "flow"
+    ],
+    "unconfirmed_count": 0,
+    "missing_timestamp_count": 0
+  },
+  "warnings": []
+}

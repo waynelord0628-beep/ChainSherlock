@@ -1,0 +1,39 @@
+{
+  "daily": {
+    "2026-01-01": {
+      "transaction_count": 1,
+      "amounts_by_asset": {
+        "ETH": "1.5"
+      }
+    },
+    "2026-01-02": {
+      "transaction_count": 1,
+      "amounts_by_asset": {
+        "USDT": "250"
+      }
+    },
+    "2026-01-03": {
+      "transaction_count": 1,
+      "amounts_by_asset": {
+        "ETH": "2.25"
+      }
+    }
+  },
+  "monthly": {
+    "2026-01": {
+      "transaction_count": 3,
+      "amounts_by_asset": {
+        "ETH": "3.75",
+        "USDT": "250"
+      }
+    }
+  },
+  "hourly_distribution": {
+    "0": 3
+  },
+  "weekly_distribution": {
+    "Thursday": 1,
+    "Friday": 1,
+    "Saturday": 1
+  }
+}

@@ -275,4 +275,20 @@ Domain Layer 不依賴 Provider、HTTP client、Importer、Analyzer、圖形套�
 - V5：Graph Model、Graph Builder、Filtering、GraphML、JSON 與 offline HTML。
 - V5 之後：依核准的獨立 milestone 逐步開發。
 
-目前不包含 Markdown／Word／PDF 報告、AI、Risk／AML 評分、Bridge、Cross-chain、OSINT、Web UI 或錢包操作。
+## V6 正式報告
+
+```powershell
+python -m crypto_investigator report-file data.csv --target <ADDRESS> --format all
+python -m crypto_investigator report-address <ADDRESS> --format all
+python -m crypto_investigator report-tx <TX_HASH> --chain ethereum --format all
+```
+
+支援 Markdown、離線 HTML、DOCX 與 PDF，並一律產生 `report_data.json`、`evidence_manifest.json`、`export_status.json` 與 `export_errors.json`。PDF 中文需先設定本機字體：
+
+```powershell
+$env:CHAINSHERLOCK_PDF_CJK_FONT="C:\Windows\Fonts\your-cjk-font.ttf"
+```
+
+未設定字體時 PDF 會明確失敗，但其他成功格式仍保留，整體狀態為 `partial`。報告會揭露資料完整度、Provider 缺口、被拒絕紀錄與證據 SHA-256；不輸出 API Key、Authorization header 或本機絕對路徑。不同資產只分別呈現，不做跨資產加總或估值。
+
+V6 不包含 AI、Risk／AML 評分、Bridge、Cross-chain、OSINT、Web UI 或錢包操作。

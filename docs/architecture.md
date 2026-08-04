@@ -204,3 +204,25 @@ Node identity is `chain + normalized address`. Edge identity is `source + target
 Filtering and truncation are deterministic. Target nodes are retained, graph limits are applied before rendering, and excluded counts plus truncation reasons are recorded in metadata. Partial Analysis completeness, missing data, safe Provider error summaries, and rejected record counts propagate into Graph metadata.
 
 HTML rendering uses inline assets, bounded tooltips, escaped labels, and no Provider credentials. GraphML converts datetimes to ISO 8601 and complex values to JSON strings while preserving Decimal text.
+
+## V6 Report Layer
+
+```text
+AnalysisResult + GraphResult + public status/error artifacts
+                         |
+                         v
+                  ReportComposer
+                         |
+                         v
+                  ReportDocument
+             /       |       |       \
+       Markdown    HTML     DOCX      PDF
+                         |
+             export status / errors
+
+local evidence -> SHA-256 manifest -> citations -> Evidence Index
+```
+
+Composer 是唯一的內容組裝邊界；Exporter 只呈現同一份 `ReportDocument`，不重新分析交易或建立圖。Report Layer 不依賴 Provider、Importer、Normalizer、HTTP、AI、Risk 或 Cross-chain internals。
+
+輸出路徑限制在指定目錄，HTML 不可信內容強制 escape，秘密與絕對路徑在進入文件前遮罩。PDF 字體是明確的環境設定邊界；缺少 CJK 字體只使 PDF 失敗，其他格式保留並回報 partial。

@@ -67,3 +67,6 @@ Implemented flow: `Raw Data -> Importer -> Validation -> Normalizer -> Domain Tr
 - AI, Agent, Risk, OSINT, Bridge, and Cross-chain features.
 
 Future work must be approved and delivered one milestone at a time.
+## After V6
+
+- V6 acceptance is complete. Do not begin V7 without an explicit prompt.

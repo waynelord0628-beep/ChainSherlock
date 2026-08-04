@@ -1,0 +1,22 @@
+[
+  {
+    "provider": "blockstream",
+    "chain": "bitcoin",
+    "capability": "address_transactions",
+    "fetched_at": "2026-08-04T06:51:09.468912+00:00",
+    "completeness": "partial",
+    "warnings": [
+      "Maximum record limit reached"
+    ],
+    "missing_data": [],
+    "status": "partial",
+    "fallback_attempted": false,
+    "fallback_result": null,
+    "final_completeness": "partial",
+    "truncated": true,
+    "truncation_reason": "max_records",
+    "fetched_records": 5,
+    "available_more": true,
+    "analysis_completeness": "partial"
+  }
+]

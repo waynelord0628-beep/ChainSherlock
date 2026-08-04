@@ -1,0 +1,65 @@
+{
+  "python_version": "3.12.13",
+  "results": {
+    "small": {
+      "transactions": 100,
+      "evidence_manifest_seconds": 0.0010476000024937093,
+      "composition_seconds": 0.012446400010958314,
+      "markdown_seconds": 0.035461599996779114,
+      "markdown_status": "complete",
+      "html_seconds": 0.028493199992226437,
+      "html_status": "complete",
+      "docx_seconds": 0.14884719997644424,
+      "docx_status": "complete",
+      "pdf_seconds": 1.5536307000147644,
+      "pdf_status": "complete",
+      "peak_memory_bytes": 27282479,
+      "output_sizes": {
+        "report.docx": 38338,
+        "report.html": 7444,
+        "report.md": 4469,
+        "report.pdf": 39790
+      }
+    },
+    "medium": {
+      "transactions": 10000,
+      "evidence_manifest_seconds": 0.009238900005584583,
+      "composition_seconds": 0.36168579998775385,
+      "markdown_seconds": 0.028178100008517504,
+      "markdown_status": "complete",
+      "html_seconds": 0.028473800019128248,
+      "html_status": "complete",
+      "docx_seconds": 0.1608006999886129,
+      "docx_status": "complete",
+      "pdf_seconds": 2.079189000010956,
+      "pdf_status": "complete",
+      "peak_memory_bytes": 19894279,
+      "output_sizes": {
+        "report.docx": 38349,
+        "report.html": 7497,
+        "report.md": 4522,
+        "report.pdf": 39868
+      }
+    },
+    "large": {
+      "transactions": 100000,
+      "evidence_manifest_seconds": 0.01015929999994114,
+      "composition_seconds": 3.4039952000021003,
+      "markdown_seconds": 0.02898319999803789,
+      "markdown_status": "complete",
+      "html_seconds": 0.02753389999270439,
+      "html_status": "complete",
+      "docx_seconds": 0.14139899998554029,
+      "docx_status": "complete",
+      "pdf_seconds": 1.6998896000150125,
+      "pdf_status": "complete",
+      "peak_memory_bytes": 40828139,
+      "output_sizes": {
+        "report.docx": 38366,
+        "report.html": 7548,
+        "report.md": 4573,
+        "report.pdf": 39875
+      }
+    }
+  }
+}

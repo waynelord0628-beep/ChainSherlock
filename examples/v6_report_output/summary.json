@@ -1,0 +1,17 @@
+{
+  "first_seen": "2026-01-01T00:00:00+00:00",
+  "last_seen": "2026-01-03T00:00:00+00:00",
+  "transaction_count": 3,
+  "incoming_count": 0,
+  "outgoing_count": 0,
+  "unique_counterparties": 0,
+  "active_days": 3,
+  "assets": [
+    "ETH",
+    "USDT"
+  ],
+  "top_asset": "ETH",
+  "average_daily_transactions": 1.0,
+  "unconfirmed_count": 0,
+  "missing_timestamp_count": 0
+}

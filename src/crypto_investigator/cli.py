@@ -1,5 +1,6 @@
 from pathlib import Path
 import asyncio
+import os
 from datetime import datetime
 from decimal import Decimal
 import json
@@ -25,6 +26,9 @@ from crypto_investigator.domain.transaction import Direction
 from crypto_investigator.graphs.export import GraphExporter
 from crypto_investigator.graphs.factory import GraphFactory
 from crypto_investigator.graphs.models import GraphFilterOptions
+from crypto_investigator.reports.composer import ReportComposer
+from crypto_investigator.reports.evidence import EvidenceManifest
+from crypto_investigator.reports.export import ReportExportCoordinator
 
 app = typer.Typer(help="ChainSherlock: local-first blockchain transaction investigation toolkit.")
 
@@ -431,6 +435,220 @@ def _domain_transactions(file: Path):
 
 def _analysis_output_dir(file: Path) -> Path:
     return Path("output") / file.stem
+
+
+def _report_graph(analysis, chain: Chain, target: str, output: Path, top: int):
+    graph = GraphFactory.create("address_flow").build(
+        analysis,
+        chain=chain,
+        target_address=target,
+        options=GraphFilterOptions(top_counterparties=top),
+    )
+    GraphExporter().export_all(graph, output, GraphFilterOptions(top_counterparties=top))
+    return graph
+
+
+def _report_evidence(paths: tuple[Path, ...]):
+    existing = tuple(path.resolve() for path in paths if path.exists())
+    if not existing:
+        return ()
+    root = Path(os.path.commonpath([str(path.parent) for path in existing]))
+    return EvidenceManifest().collect(existing, root=root)
+
+
+def _export_report(
+    analysis,
+    graph,
+    *,
+    report_type: str,
+    target: str,
+    chain: Chain,
+    output: Path,
+    source_files: tuple[Path, ...] = (),
+    requested_format: str = "all",
+    language: str = "zh-TW",
+    title: str = "ChainSherlock 區塊鏈幣流分析報告",
+    report_id: str | None = None,
+    timezone: str = "UTC",
+) -> None:
+    evidence_paths = (
+        *source_files,
+        *(output / name for name in (
+            "analysis.json",
+            "flow_graph.json",
+            "provider_status.json",
+            "provider_errors.json",
+            "rejected_records.json",
+        )),
+    )
+    document = ReportComposer().compose(
+        analysis,
+        graph=graph,
+        target_address=target,
+        chain=chain.value,
+        source_type=report_type,
+        source_files=tuple(str(item) for item in source_files),
+        provider_status=_read_records(output / "provider_status.json"),
+        provider_errors=_read_records(output / "provider_errors.json"),
+        rejected_records=_read_records(output / "rejected_records.json"),
+        evidence=_report_evidence(tuple(evidence_paths)),
+        title=title,
+        report_id=report_id,
+        language=language,
+        timezone=timezone,
+        output_directory=str(output),
+    )
+    result = ReportExportCoordinator().export(document, output, requested_format)
+    typer.echo(f"Report status: {result.status}")
+    typer.echo(f"Report data: {output / 'report_data.json'}")
+
+
+def _read_records(path: Path):
+    if not path.exists():
+        return ()
+    value = json.loads(path.read_text(encoding="utf-8"))
+    if isinstance(value, list):
+        return tuple(value)
+    return (value,)
+
+
+@app.command("report-file")
+def report_file(
+    file: Path = typer.Argument(..., exists=True, dir_okay=False, readable=True),
+    target: str = typer.Option(..., "--target"),
+    format: str = typer.Option("all", "--format"),
+    language: str = typer.Option("zh-TW", "--language"),
+    title: str = typer.Option("ChainSherlock 區塊鏈幣流分析報告", "--title"),
+    report_id: str | None = typer.Option(None, "--report-id"),
+    output: Path | None = typer.Option(None, "--output"),
+    include_graph: bool = typer.Option(True, "--include-graph/--no-graph"),
+    top_counterparties: int = typer.Option(20, "--top-counterparties", min=0),
+    timezone: str = typer.Option("UTC", "--timezone"),
+) -> None:
+    """Create a V6 report from a CSV or Excel transaction file."""
+    transactions = _domain_transactions(file)
+    try:
+        chain = transactions[0].chain if transactions else Chain(detect_identifier(target).chain.value)
+        destination = output or Path("output") / f"{file.stem}_report"
+        analysis = AnalysisEngine().analyze(transactions, target)
+        AnalysisExporter().export_all(analysis, destination)
+        graph = _report_graph(analysis, chain, target, destination, top_counterparties) if include_graph else None
+        _export_report(
+            analysis,
+            graph,
+            report_type="file",
+            target=target,
+            chain=chain,
+            output=destination,
+            source_files=(file,),
+            requested_format=format,
+            language=language,
+            title=title,
+            report_id=report_id,
+            timezone=timezone,
+        )
+    except (ValueError, InvalidIdentifierError) as error:
+        typer.echo(f"Report error: {error}", err=True)
+        raise typer.Exit(code=2) from error
+
+
+def _provider_report(
+    identifier: str,
+    chain: Chain,
+    kind: str,
+    provider: str | None,
+    refresh: bool,
+    cache_ttl: int,
+    max_pages: int,
+    max_records: int,
+    output: Path,
+    requested_format: str,
+    language: str,
+    title: str,
+    report_id: str | None,
+    include_graph: bool,
+    top_counterparties: int,
+    timezone: str,
+) -> None:
+    settings = load_config()
+    settings.pagination.max_pages = max_pages
+    settings.pagination.max_records = max_records
+    asyncio.run(
+        analyze_provider_identifier(
+            identifier=identifier,
+            chain=chain,
+            kind=kind,
+            settings=settings,
+            output_dir=output,
+            provider=provider,
+            refresh=refresh,
+            cache_ttl=cache_ttl,
+        )
+    )
+    analysis = _analysis_from_json(output / "analysis.json")
+    graph = _report_graph(analysis, chain, identifier, output, top_counterparties) if include_graph else None
+    _export_report(
+        analysis,
+        graph,
+        report_type="provider",
+        target=identifier,
+        chain=chain,
+        output=output,
+        requested_format=requested_format,
+        language=language,
+        title=title,
+        report_id=report_id,
+        timezone=timezone,
+    )
+
+
+@app.command("report-address")
+def report_address(
+    address: str = typer.Argument(...),
+    chain: Chain | None = typer.Option(None, "--chain"),
+    provider: str | None = typer.Option(None, "--provider"),
+    refresh: bool = typer.Option(False, "--refresh"),
+    cache_ttl: int = typer.Option(86400, "--cache-ttl", min=1),
+    max_pages: int = typer.Option(100, "--max-pages", min=1),
+    max_records: int = typer.Option(100000, "--max-records", min=1),
+    format: str = typer.Option("all", "--format"),
+    language: str = typer.Option("zh-TW", "--language"),
+    title: str = typer.Option("ChainSherlock 區塊鏈幣流分析報告", "--title"),
+    report_id: str | None = typer.Option(None, "--report-id"),
+    output: Path = typer.Option(Path("output/address_report"), "--output"),
+    include_graph: bool = typer.Option(True, "--include-graph/--no-graph"),
+    top_counterparties: int = typer.Option(20, "--top-counterparties", min=0),
+    timezone: str = typer.Option("UTC", "--timezone"),
+) -> None:
+    """Create a V6 report from the existing provider workflow."""
+    detected = detect_identifier(address)
+    _provider_report(
+        detected.value, chain or Chain(detected.chain.value), "address", provider,
+        refresh, cache_ttl, max_pages, max_records, output, format, language,
+        title, report_id, include_graph, top_counterparties, timezone,
+    )
+
+
+@app.command("report-tx")
+def report_tx(
+    tx_hash: str = typer.Argument(...),
+    chain: Chain = typer.Option(..., "--chain"),
+    provider: str | None = typer.Option(None, "--provider"),
+    format: str = typer.Option("all", "--format"),
+    language: str = typer.Option("zh-TW", "--language"),
+    title: str = typer.Option("ChainSherlock 區塊鏈幣流分析報告", "--title"),
+    report_id: str | None = typer.Option(None, "--report-id"),
+    output: Path = typer.Option(Path("output/transaction_report"), "--output"),
+    include_graph: bool = typer.Option(True, "--include-graph/--no-graph"),
+    top_counterparties: int = typer.Option(20, "--top-counterparties", min=0),
+    timezone: str = typer.Option("UTC", "--timezone"),
+) -> None:
+    """Create a V6 report for one provider transaction."""
+    _provider_report(
+        tx_hash, chain, "transaction", provider, False, 86400, 100, 100000,
+        output, format, language, title, report_id, include_graph,
+        top_counterparties, timezone,
+    )
 
 
 @app.command("analyze-summary")

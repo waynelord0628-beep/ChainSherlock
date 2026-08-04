@@ -1,0 +1,17 @@
+REQUIRED_SECTION_IDS = (
+    "cover",
+    "executive_summary",
+    "data_sources",
+    "analysis_summary",
+    "asset_flows",
+    "counterparties",
+    "timeline",
+    "graph",
+    "provider_status",
+    "provider_errors",
+    "rejected_records",
+    "observations",
+    "limitations",
+    "conclusion",
+    "evidence_index",
+)

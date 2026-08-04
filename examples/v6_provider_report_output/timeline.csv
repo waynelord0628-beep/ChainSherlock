@@ -1,0 +1,3 @@
+granularity,period,transaction_count,amounts_by_asset
+daily,2026-08-04,1,"{""BTC"": ""0.00000546""}"
+monthly,2026-08,1,"{""BTC"": ""0.00000546""}"

@@ -115,3 +115,23 @@ Nodes and edges are ranked by stable metrics and IDs. Maximum node and edge limi
 ## ADR-029: HTML is an escaped offline artifact
 
 PyVis assets are embedded inline. Labels and tooltips are escaped and bounded; raw Provider errors, credentials, and unbounded metadata are not rendered.
+
+## ADR-030: Exporters share one ReportDocument
+
+Composer consumes only public V3/V5 results and public artifacts. Every exporter receives the same immutable report model and cannot recalculate analysis.
+
+## ADR-031: Conclusions are deterministic and conservative
+
+Conclusion text depends only on completeness and recorded gaps. It cannot assert identity, crime, fraud, money laundering, or risk.
+
+## ADR-032: Evidence uses citations and SHA-256 manifests
+
+Evidence references are safe relative paths with SHA-256, size, and modification time. Secrets and `.env` are excluded.
+
+## ADR-033: PDF CJK font and partial export
+
+PDF requires `CHAINSHERLOCK_PDF_CJK_FONT`; no font is bundled. A PDF failure is isolated, successful files remain, and status becomes partial.
+
+## ADR-034: Assets and paths remain separated
+
+Asset amounts are never summed across symbols. Output traversal is rejected, while absolute paths and credentials are redacted before presentation.

@@ -67,3 +67,9 @@
 ## 0.1.0 — V1
 
 - Added project foundation, configuration, data models, identifier detection, and CLI.
+## V6
+
+- Added ReportDocument composition, evidence citations and JSON round-trip.
+- Added Markdown, offline HTML, DOCX and configurable-CJK PDF exports.
+- Added partial export status/error artifacts and three report CLI workflows.
+- Added V6 examples, security coverage and report benchmarks.
