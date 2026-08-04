@@ -7,7 +7,9 @@ class AIConfigurationError(AIError):
 
 
 class AIProviderError(AIError):
-    pass
+    def __init__(self, message: str, *, safe_details: dict | None = None):
+        super().__init__(message)
+        self.safe_details = safe_details or {}
 
 
 class AIAuthenticationError(AIProviderError):

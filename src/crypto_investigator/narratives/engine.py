@@ -7,11 +7,13 @@ from time import perf_counter
 
 from crypto_investigator.ai.factory import AIProviderFactory
 from crypto_investigator.ai.cache import AICache
+from crypto_investigator.ai.errors import AITimeoutError
 from crypto_investigator.ai.fallback import DeterministicFallbackProvider
 from crypto_investigator.ai.input_compactor import InputCompactor
 from crypto_investigator.ai.models import AIStatus, AIUsage
 from crypto_investigator.ai.prompt_builder import PROMPT_VERSION, PromptBuilder
 from crypto_investigator.ai.response_parser import ResponseParser
+from crypto_investigator.ai.redaction import redact_text
 from crypto_investigator.ai.settings import AISettings
 from crypto_investigator.ai.validator import NarrativeValidator
 from crypto_investigator.narratives.composer import NarrativeInputBuilder
@@ -106,6 +108,8 @@ class NarrativeEngine:
                             break
                         except Exception as error:
                             last_error = error
+                            if not isinstance(error, AITimeoutError):
+                                break
                     if last_error:
                         raise last_error
                     usage = response.usage
@@ -128,7 +132,14 @@ class NarrativeEngine:
                             "narrative": encode(result),
                         })
             except Exception as error:
-                errors.append({"type": type(error).__name__, "message": str(error)[:500]})
+                record = {
+                    "type": type(error).__name__,
+                    "message": redact_text(str(error), 500),
+                }
+                safe_details = getattr(error, "safe_details", None)
+                if isinstance(safe_details, dict):
+                    record.update(safe_details)
+                errors.append(record)
         if result is None:
             result = DeterministicFallbackProvider().generate(source)
         validation = NarrativeValidator().validate(result, source)

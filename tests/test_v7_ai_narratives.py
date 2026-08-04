@@ -3,6 +3,8 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 import pytest
+import httpx
+import respx
 
 from crypto_investigator.ai.cache import AICache
 from crypto_investigator.ai.errors import AIParseError
@@ -12,6 +14,7 @@ from crypto_investigator.ai.prompt_builder import PromptBuilder, SYSTEM_POLICY
 from crypto_investigator.ai.redaction import redact_text
 from crypto_investigator.ai.response_parser import ResponseParser
 from crypto_investigator.ai.settings import AISettings
+from crypto_investigator.ai.provider import OpenAICompatibleProvider
 from crypto_investigator.ai.validator import NarrativeValidator
 from crypto_investigator.narratives.export import NarrativeExporter
 from crypto_investigator.narratives.models import (
@@ -24,6 +27,7 @@ from crypto_investigator.narratives.models import (
     NarrativeSection,
 )
 from crypto_investigator.narratives.sections import DEFAULT_SECTIONS
+from crypto_investigator.narratives.engine import NarrativeEngine
 from crypto_investigator.reports.offline import OfflineReportComposer
 from crypto_investigator.reports.export import ReportExportCoordinator
 
@@ -315,3 +319,125 @@ def test_mock_semantic_output_is_identical_ten_runs():
 )
 def test_real_ai_validation_is_explicit_only():
     assert __import__("os").getenv("CHAINSHERLOCK_AI_API_KEY")
+
+
+def ai_settings(**changes):
+    values = {
+        "enabled": True,
+        "provider": "openai-compatible",
+        "model": "gpt-5-mini",
+        "api_key": "sk-test-value-that-must-never-be-saved",
+        "base_url": "https://mock.openai.test/v1",
+        "max_retries": 1,
+        "max_output_tokens": 1800,
+    }
+    values.update(changes)
+    return AISettings(**values)
+
+
+@respx.mock
+def test_chat_completions_contract_matches_gpt5_parameters():
+    route = respx.post("https://mock.openai.test/v1/chat/completions").mock(
+        return_value=httpx.Response(
+            200,
+            json={
+                "choices": [{"message": {"content": "{}"}}],
+                "usage": {"prompt_tokens": 10, "completion_tokens": 2, "total_tokens": 12},
+            },
+        )
+    )
+    OpenAICompatibleProvider(ai_settings()).generate("safe prompt", {"type": "object"})
+    payload = route.calls[0].request.content.decode()
+    request_json = __import__("json").loads(payload)
+    assert request_json["model"] == "gpt-5-mini"
+    assert request_json["max_completion_tokens"] == 1800
+    assert "max_tokens" not in request_json
+    assert "temperature" not in request_json
+    assert "input" not in request_json
+    assert "messages" in request_json
+    schema = request_json["response_format"]["json_schema"]
+    assert schema["strict"] is True
+    assert schema["schema"] == {
+        "type": "object",
+        "properties": {},
+        "required": [],
+        "additionalProperties": False,
+    }
+
+
+@pytest.mark.parametrize(
+    ("status", "error_type", "error_code", "error_param"),
+    (
+        (400, "invalid_request_error", "unsupported_parameter", "max_tokens"),
+        (400, "invalid_request_error", "invalid_json_schema", "response_format"),
+        (401, "authentication_error", "invalid_api_key", None),
+        (403, "permission_error", "access_denied", None),
+        (404, "invalid_request_error", "model_not_found", "model"),
+        (422, "invalid_request_error", "unprocessable_entity", "messages"),
+        (429, "rate_limit_error", "rate_limit_exceeded", None),
+    ),
+)
+@respx.mock
+def test_http_errors_are_safe_and_never_retried(
+    tmp_path, status, error_type, error_code, error_param
+):
+    route = respx.post("https://mock.openai.test/v1/chat/completions").mock(
+        return_value=httpx.Response(
+            status,
+            headers={"x-request-id": "req_safe_123"},
+            json={
+                "error": {
+                    "type": error_type,
+                    "code": error_code,
+                    "param": error_param,
+                    "message": (
+                        "Bad parameter; Authorization: Bearer "
+                        "sk-secret-value-that-must-be-redacted"
+                    ),
+                }
+            },
+        )
+    )
+    NarrativeEngine().run_input(
+        source(), tmp_path, settings=ai_settings(), requested=True,
+        use_cache=False, prompt_mode="compact",
+    )
+    assert route.call_count == 1
+    errors = __import__("json").loads(
+        (tmp_path / "ai_errors.json").read_text(encoding="utf-8")
+    )
+    error = errors[0]
+    assert error["http_status"] == status
+    assert error["error"]["type"] == error_type
+    assert error["error"]["code"] == error_code
+    assert error["error"]["param"] == error_param
+    assert error["x_request_id"] == "req_safe_123"
+    assert error["endpoint"] == "/v1/chat/completions"
+    serialized = __import__("json").dumps(errors)
+    assert "sk-secret" not in serialized
+    assert "Authorization: Bearer" not in serialized
+    assert "safe prompt" not in serialized
+
+
+@respx.mock
+def test_timeout_retries_once_then_succeeds(tmp_path):
+    route = respx.post("https://mock.openai.test/v1/chat/completions").mock(
+        side_effect=[
+            httpx.ReadTimeout("temporary timeout"),
+            httpx.Response(
+                200,
+                json={
+                    "choices": [{"message": {"content": "{}"}}],
+                    "usage": {},
+                },
+            ),
+        ]
+    )
+    NarrativeEngine().run_input(
+        source(), tmp_path, settings=ai_settings(), requested=True,
+        use_cache=False, prompt_mode="compact",
+    )
+    assert route.call_count == 2
+    assert __import__("json").loads(
+        (tmp_path / "ai_errors.json").read_text(encoding="utf-8")
+    ) == []

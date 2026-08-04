@@ -955,6 +955,11 @@ def validate_ai(
     runs: int = typer.Option(3, "--runs", min=1, max=10),
     privacy_mode: str = typer.Option("standard", "--privacy-mode"),
     prompt_mode: str = typer.Option("compact", "--prompt-mode"),
+    max_output_tokens: int = typer.Option(
+        2500, "--max-output-tokens", min=1, max=8000
+    ),
+    max_retries: int = typer.Option(1, "--max-retries", min=0, max=1),
+    cache: bool = typer.Option(True, "--cache/--no-cache"),
     output: Path = typer.Option(Path("output/real_ai_validation"), "--output"),
 ) -> None:
     """Explicitly run a safe, human-triggered real-model validation."""
@@ -966,9 +971,10 @@ def validate_ai(
     settings = AISettings(
         enabled=True, provider=provider, model=model, api_key=settings.api_key,
         base_url=settings.base_url, timeout_seconds=settings.timeout_seconds,
-        max_output_tokens=settings.max_output_tokens,
+        max_output_tokens=max_output_tokens,
         max_input_characters=settings.max_input_characters,
         privacy_mode=privacy_mode,
+        max_retries=max_retries,
     )
     investigation = InvestigationExporter().read(investigation_json)
     records = []
@@ -977,7 +983,7 @@ def validate_ai(
         run_output = output / f"run_{index + 1}"
         result = NarrativeEngine().run(
             investigation, run_output, settings=settings, requested=True,
-            refresh=True, use_cache=False,
+            refresh=False, use_cache=cache,
             prompt_mode=prompt_mode,
         )
         status = json.loads((run_output / "ai_status.json").read_text(encoding="utf-8"))
@@ -993,10 +999,18 @@ def validate_ai(
             "numeric_values": [value for claim in result.claims for value in claim.numeric_values],
         }
         signatures.append(signature)
+        model_succeeded = (
+            status["status"] == "complete" and not status["fallback_used"]
+        )
         records.append({
             "run": index + 1,
-            "json_parse_success": status["status"] in {"complete", "fallback"},
-            "schema_success": status["validation_passed"],
+            "model_request_succeeded": model_succeeded,
+            "model_output_received": model_succeeded,
+            "validated_source": (
+                "model_output" if model_succeeded else "deterministic_fallback"
+            ),
+            "json_parse_success": model_succeeded,
+            "schema_success": model_succeeded and status["validation_passed"],
             "hallucination_validation": status["validation_passed"],
             "numeric_validation": status["validation_passed"],
             "citation_validation": status["validation_passed"],
@@ -1011,6 +1025,9 @@ def validate_ai(
     payload = {
         "provider": provider, "model": model, "runs": runs,
         "privacy_mode": privacy_mode, "prompt_mode": prompt_mode,
+        "max_output_tokens": max_output_tokens,
+        "max_retries": max_retries,
+        "cache_enabled": cache,
         "run_to_run_consistent": all(item == signatures[0] for item in signatures),
         "results": records,
         "api_key_included": False,
