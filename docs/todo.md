@@ -1,5 +1,16 @@
 # Planned Work
 
+## V8 Milestone 2 boundary
+
+- Investigation Planner is complete.
+- Execution Service remains unavailable; confirmed plans only expose a validated list of
+  executable declarative steps.
+- No Provider request, analysis, report generation, narrative generation, UI, or packaging
+  is performed by the Planner.
+- AI planning is not implemented. The optional narrative step can only be proposed when
+  explicitly enabled and always requires confirmation.
+- Milestone 3 must not begin without explicit approval.
+
 ## V8 Milestone 1 boundary
 
 - Case Foundation is complete.

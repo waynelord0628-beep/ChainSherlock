@@ -1,5 +1,35 @@
 # Architecture Decisions
 
+## ADR-051: Planner output is declarative and deterministic
+
+The Planner creates stable, ordered PlanStep data from CaseRecord, InvestigationGoal, and
+safe Settings. It cannot execute steps or create investigation findings.
+
+## ADR-052: Provider planning uses public capability metadata
+
+The Planner accepts only ProviderDescriptor values. It does not instantiate Providers,
+inspect HTTP internals, test connections, or access credentials.
+
+## ADR-053: Unsupported recommendations remain non-executable
+
+Out-of-scope commercial intelligence actions use `unsupported_recommended_step`, are
+disabled and skipped, and carry an explicit warning. They cannot enter executable steps.
+
+## ADR-054: Explicit confirmation gates execution
+
+Plans are non-executable until confirmed by a named user. Any modification increments the
+plan version and clears prior confirmation.
+
+## ADR-055: Unknown cost remains null
+
+Without authoritative configured pricing, plan and step costs remain null. The Planner
+emits a cost warning instead of inventing a numeric estimate.
+
+## ADR-056: Case stores public planner JSON
+
+CaseRecord persists goals and plans as forward-compatible public JSON. Planner models own
+validation, which prevents the Case Layer from depending on Planner implementation code.
+
 ## ADR-046: Case workspaces use opaque identifiers
 
 Case directories use generated `case_<32 lowercase hex>` IDs. Human-readable titles are

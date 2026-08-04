@@ -1,5 +1,36 @@
 # ChainSherlock Architecture
 
+## V8 Milestone 2: Investigation Planner
+
+```text
+CaseRecord + InvestigationGoal + safe Settings snapshot
+                         |
+                         v
+             DeterministicPlanner
+                         |
+          public ProviderDescriptor metadata
+                         |
+                         v
+ InvestigationPlan -> validation -> user confirmation
+        |                                  |
+        +--> CaseRecord.plans              +--> executable_steps boundary
+        +--> append-only Case Audit
+```
+
+The Planner creates declarative steps only. It never calls a Provider, reads Provider
+internals, runs analysis, or manufactures investigation facts and evidence. Provider
+selection and warnings consume only public `ProviderDescriptor` capability metadata.
+
+Stable plan and step identifiers are derived from canonical inputs. Validation checks
+unique IDs and ordering, dependency existence and cycles, disabled prerequisites,
+report/narrative prerequisites, target/chain requirements, pagination bounds, and
+unsupported steps. Unknown costs remain `null` and produce an explicit warning.
+
+An unconfirmed plan is not executable. Confirmation records the actor, timezone-aware
+time, enabled steps, and a secret-free Settings snapshot. Planner state is persisted as
+public JSON in CaseRecord and plan creation, modification, and confirmation append Case
+Audit entries.
+
 ## V8 Milestone 1: Case Foundation
 
 ```text

@@ -23,7 +23,15 @@ def _migrate_v0_to_v1(data: dict[str, Any]) -> dict[str, Any]:
     return migrated
 
 
-MIGRATIONS: dict[int, Migration] = {0: _migrate_v0_to_v1}
+def _migrate_v1_to_v2(data: dict[str, Any]) -> dict[str, Any]:
+    migrated = deepcopy(data)
+    migrated.setdefault("goals", [])
+    migrated.setdefault("plans", [])
+    migrated["schema_version"] = 2
+    return migrated
+
+
+MIGRATIONS: dict[int, Migration] = {0: _migrate_v0_to_v1, 1: _migrate_v1_to_v2}
 
 
 def migrate_case_payload(payload: Mapping[str, Any]) -> dict[str, Any]:

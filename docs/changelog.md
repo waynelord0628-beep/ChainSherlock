@@ -1,5 +1,15 @@
 # Changelog
 
+## V8 Milestone 2
+
+- Added deterministic Investigation Goal and Plan models.
+- Added address, transaction, structured-evidence, victim-payment, comparison, local-label,
+  graph, investigation, evidence-manifest, optional narrative, and report planning rules.
+- Added plan/dependency validation, safe settings snapshots, and user-confirmation gating.
+- Added public capability, provider credential, unknown cost, and unsupported-scope warnings.
+- Added Case persistence and append-only audit integration for planner state.
+- Added 61 focused tests without Provider execution or UI dependencies.
+
 ## V8 Milestone 1
 
 - Added Case models, safe workspace IDs, and forward-compatible schema migration.

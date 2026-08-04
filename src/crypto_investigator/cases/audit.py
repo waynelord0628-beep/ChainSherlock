@@ -80,8 +80,8 @@ class AuditLog:
             "action": action,
             "object_type": object_type,
             "object_id": object_id,
-            "description": description,
-            "actor": actor,
+            "description": _safe_metadata(description),
+            "actor": _safe_metadata(actor),
             "previous_hash": previous,
             "metadata": _safe_metadata(dict(metadata or {})),
         }

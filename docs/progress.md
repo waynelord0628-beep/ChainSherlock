@@ -1,5 +1,25 @@
 # Development Progress
 
+## V8 Milestone 2
+
+Status: completed.
+
+- Added InvestigationGoal with all approved goal types, priorities, targets, date ranges,
+  completion criteria, state, creator, and user-confirmation fields.
+- Added InvestigationPlan, PlanStep, ProviderRequirement, PlanWarning, and PlanConfirmation.
+- Added deterministic address, transaction, structured-file, victim-payment,
+  multi-address, local-label, investigation, graph, evidence-manifest, narrative, and
+  report planning rules.
+- Added dependency, order, target, capability, AI confirmation, unsupported-step, and
+  pagination validation.
+- Added explicit Provider, Capability, Cost, and unsupported-scope warnings using public
+  metadata only.
+- Added plan persistence and append-only audit events for plan creation, modification,
+  and confirmation.
+- Added 61 focused Milestone 2 tests.
+- Did not add Execution Service, Provider execution, Case Report, Narrative integration,
+  PySide6, Desktop UI, packaging, commercial APIs, cross-chain, V9, or V2-V7 refactoring.
+
 ## V8 Milestone 1
 
 Status: completed.
