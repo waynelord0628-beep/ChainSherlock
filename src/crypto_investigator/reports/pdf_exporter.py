@@ -15,6 +15,39 @@ from crypto_investigator.reports.errors import PdfExportError
 from crypto_investigator.reports.models import ReportDocument
 
 
+_WINDOWS_CJK_FONTS = (
+    ("kaiu.ttf", "標楷體"),
+    ("msjh.ttc", "Microsoft JhengHei"),
+)
+
+
+def resolve_cjk_font(
+    font_path: Path | None = None,
+) -> tuple[Path | None, str, str | None]:
+    if font_path is not None:
+        return font_path, "explicit", font_path.stem
+    if value := os.getenv("CHAINSHERLOCK_PDF_CJK_FONT"):
+        path = Path(value)
+        return path, "environment", path.stem
+    windows = os.getenv("WINDIR")
+    if windows:
+        fonts = Path(windows) / "Fonts"
+        for filename, name in _WINDOWS_CJK_FONTS:
+            candidate = fonts / filename
+            if candidate.is_file():
+                return candidate, "system", name
+    return None, "unavailable", None
+
+
+def pdf_font_status() -> dict[str, str | bool | None]:
+    path, source, name = resolve_cjk_font()
+    return {
+        "available": bool(path and path.is_file()),
+        "font_name": name,
+        "source": source,
+    }
+
+
 class PdfReportExporter:
     def _page_number(self, canvas, doc) -> None:
         canvas.saveState()
@@ -48,11 +81,7 @@ class PdfReportExporter:
     def write(
         self, document: ReportDocument, path: Path, font_path: Path | None = None
     ) -> Path:
-        configured = font_path or (
-            Path(value)
-            if (value := os.getenv("CHAINSHERLOCK_PDF_CJK_FONT"))
-            else None
-        )
+        configured, _, _ = resolve_cjk_font(font_path)
         if configured is None or not configured.exists():
             raise PdfExportError(
                 "A CJK font is required; configure CHAINSHERLOCK_PDF_CJK_FONT"

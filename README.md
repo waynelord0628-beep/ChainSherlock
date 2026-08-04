@@ -1,5 +1,12 @@
 # ChainSherlock
 
+## V8.7.1 Windows CJK PDF Font Fallback
+
+PDF exporter 會依序使用明確傳入字型、`CHAINSHERLOCK_PDF_CJK_FONT`，以及
+Windows 系統標楷體（`kaiu.ttf`）。Windows 已安裝標楷體時不需要手動設定環境
+變數；`export_status.json` 只記錄字型名稱與來源，不記錄絕對路徑。若系統確實
+沒有可用 CJK 字型，仍保留其他格式並標記 partial。
+
 ## V8 Offline Execution Integration（Milestone 7）
 
 Desktop UI 現在預設註冊受控的離線 StepHandler，可將案件內 immutable CSV／Excel
@@ -386,10 +393,13 @@ python -m crypto_investigator report-tx <TX_HASH> --chain ethereum --format all
 支援 Markdown、離線 HTML、DOCX 與 PDF，並一律產生 `report_data.json`、`evidence_manifest.json`、`export_status.json` 與 `export_errors.json`。PDF 中文需先設定本機字體：
 
 ```powershell
-$env:CHAINSHERLOCK_PDF_CJK_FONT="C:\Windows\Fonts\your-cjk-font.ttf"
+$env:CHAINSHERLOCK_PDF_CJK_FONT="C:\path\to\your-cjk-font.ttf"
 ```
 
-未設定字體時 PDF 會明確失敗，但其他成功格式仍保留，整體狀態為 `partial`。報告會揭露資料完整度、Provider 缺口、被拒絕紀錄與證據 SHA-256；不輸出 API Key、Authorization header 或本機絕對路徑。不同資產只分別呈現，不做跨資產加總或估值。
+Windows 會自動使用系統標楷體；環境變數只用於覆寫。無可用 CJK 字型時 PDF
+會明確失敗，但其他成功格式仍保留，整體狀態為 `partial`。報告會揭露資料完整度、
+Provider 缺口、被拒絕紀錄與證據 SHA-256；不輸出 API Key、Authorization header
+或本機絕對路徑。不同資產只分別呈現，不做跨資產加總或估值。
 
 V6 不包含 AI、Risk／AML 評分、Bridge、Cross-chain、OSINT、Web UI 或錢包操作。
 # V7：AI 調查敘事

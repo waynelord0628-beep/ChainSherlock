@@ -1,5 +1,15 @@
 # ChainSherlock Architecture
 
+## V8.7.1: PDF Font Resolution
+
+```text
+explicit font -> environment override -> Windows 標楷體 -> partial export
+```
+
+Only `available`, safe font name and source category are written to
+`export_status.json`. System font paths are never persisted, and proprietary fonts
+are not copied into the repository or package.
+
 ## V8 Milestone 7: Offline Execution Integration
 
 ```text
@@ -426,7 +436,7 @@ local evidence -> SHA-256 manifest -> citations -> Evidence Index
 
 Composer 是唯一的內容組裝邊界；Exporter 只呈現同一份 `ReportDocument`，不重新分析交易或建立圖。Report Layer 不依賴 Provider、Importer、Normalizer、HTTP、AI、Risk 或 Cross-chain internals。
 
-輸出路徑限制在指定目錄，HTML 不可信內容強制 escape，秘密與絕對路徑在進入文件前遮罩。PDF 字體是明確的環境設定邊界；缺少 CJK 字體只使 PDF 失敗，其他格式保留並回報 partial。
+輸出路徑限制在指定目錄，HTML 不可信內容強制 escape，秘密與絕對路徑在進入文件前遮罩。PDF 優先使用明確設定，再使用 Windows 系統標楷體；缺少 CJK 字體只使 PDF 失敗，其他格式保留並回報 partial。
 # V7 AI Narrative Boundary
 
 V7 的唯一 AI 輸入是由 V6.5 `InvestigationResult` 建立的 bounded `NarrativeInput`。

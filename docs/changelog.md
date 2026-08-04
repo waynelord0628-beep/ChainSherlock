@@ -1,5 +1,11 @@
 # Changelog
 
+## V8.7.1
+
+- Added automatic Windows 標楷體 discovery for PDF export.
+- Added safe PDF font name/source metadata without local path disclosure.
+- Preserved explicit environment overrides and partial export on unavailable fonts.
+
 ## V8 Milestone 7
 
 - Added the default offline Execution Registry to the Desktop composition root.

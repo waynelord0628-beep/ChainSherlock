@@ -147,7 +147,8 @@ Future work must be approved and delivered one milestone at a time.
 ## After V6
 
 - V6 acceptance is complete. Do not begin V7 without an explicit prompt.
-- Keep the locally configured CJK font requirement documented; no font files are bundled.
+- Keep the CJK environment override and Windows system-font fallback documented; no
+  proprietary font files are bundled.
 # V7 Known Follow-ups
 
 - 真實 AI integration test 僅在使用者明確同意且提供有效環境變數後執行。

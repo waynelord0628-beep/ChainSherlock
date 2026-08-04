@@ -1,5 +1,12 @@
 # Architecture Decisions
 
+## ADR-077: PDF uses licensed system fonts without redistribution
+
+PDF font resolution prefers an explicit path, then the environment override, then an
+installed Windows CJK font. ChainSherlock does not copy or bundle proprietary Windows
+fonts. Export status records only the safe font name and source category; no local
+font path is persisted. ADR-033's partial policy remains the final fallback.
+
 ## ADR-074: Desktop execution defaults to explicit offline handlers
 
 The Desktop composition root registers only approved CSV/XLS/XLSX handlers. It does
@@ -357,7 +364,9 @@ Evidence references are safe relative paths with SHA-256, size, and modification
 
 ## ADR-033: PDF CJK font and partial export
 
-PDF requires `CHAINSHERLOCK_PDF_CJK_FONT`; no font is bundled. A PDF failure is isolated, successful files remain, and status becomes partial.
+PDF uses an explicit font, `CHAINSHERLOCK_PDF_CJK_FONT`, or an installed Windows CJK
+font; no font is bundled. A PDF failure is isolated, successful files remain, and
+status becomes partial.
 
 ## ADR-034: Assets and paths remain separated
 

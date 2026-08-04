@@ -9,7 +9,10 @@ from crypto_investigator.reports.html_exporter import HtmlReportExporter
 from crypto_investigator.reports.json_exporter import write_report_data
 from crypto_investigator.reports.markdown_exporter import MarkdownReportExporter
 from crypto_investigator.reports.models import ReportDocument, ReportExportResult
-from crypto_investigator.reports.pdf_exporter import PdfReportExporter
+from crypto_investigator.reports.pdf_exporter import (
+    PdfReportExporter,
+    pdf_font_status,
+)
 
 
 class ReportExportCoordinator:
@@ -61,14 +64,17 @@ class ReportExportCoordinator:
         error_path.write_text(json.dumps(errors, ensure_ascii=False, indent=2), encoding="utf-8")
         files["export_errors"] = error_path.name
         status_path = safe_output_path(root, "export_status.json")
+        status_payload = {
+            "status": status,
+            "requested_formats": list(selected),
+            "successful_formats": [item for item in selected if item in files],
+            "failed_formats": [item["format"] for item in errors],
+        }
+        if "pdf" in selected:
+            status_payload["pdf_font"] = pdf_font_status()
         status_path.write_text(
             json.dumps(
-                {
-                    "status": status,
-                    "requested_formats": list(selected),
-                    "successful_formats": [item for item in selected if item in files],
-                    "failed_formats": [item["format"] for item in errors],
-                },
+                status_payload,
                 ensure_ascii=False,
                 indent=2,
             ),

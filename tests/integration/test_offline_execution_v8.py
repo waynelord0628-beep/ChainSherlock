@@ -130,6 +130,7 @@ def test_offline_manifest_contains_only_relative_evidence_paths(
     tmp_path: Path, monkeypatch
 ) -> None:
     monkeypatch.delenv("CHAINSHERLOCK_PDF_CJK_FONT", raising=False)
+    monkeypatch.delenv("WINDIR", raising=False)
     repository = CaseRepository(tmp_path / "cases")
     case, plan = _confirmed_offline_case(repository, _csv(tmp_path / "source.csv"))
     service = CaseExecutionService(

@@ -176,17 +176,44 @@ def test_docx_export_is_readable_zip(document, tmp_path):
 
 def test_pdf_requires_cjk_font(document, tmp_path, monkeypatch):
     monkeypatch.delenv("CHAINSHERLOCK_PDF_CJK_FONT", raising=False)
+    monkeypatch.delenv("WINDIR", raising=False)
     with pytest.raises(PdfExportError):
         PdfReportExporter().write(document, tmp_path / "report.pdf")
 
 
 def test_pdf_failure_retains_other_formats(document, tmp_path, monkeypatch):
     monkeypatch.delenv("CHAINSHERLOCK_PDF_CJK_FONT", raising=False)
+    monkeypatch.delenv("WINDIR", raising=False)
     result = ReportExportCoordinator().export(document, tmp_path, "all")
     assert result.status == "partial"
     assert (tmp_path / "report.md").exists()
     assert (tmp_path / "report.html").exists()
     assert (tmp_path / "report.docx").exists()
+
+
+def test_pdf_uses_windows_system_font_without_path_disclosure(
+    document, tmp_path, monkeypatch
+):
+    monkeypatch.delenv("CHAINSHERLOCK_PDF_CJK_FONT", raising=False)
+    windows = tmp_path / "Windows"
+    fonts = windows / "Fonts"
+    fonts.mkdir(parents=True)
+    source = Path(reportlab.__file__).parent / "fonts" / "Vera.ttf"
+    (fonts / "kaiu.ttf").write_bytes(source.read_bytes())
+    monkeypatch.setenv("WINDIR", str(windows))
+
+    result = ReportExportCoordinator().export(document, tmp_path / "output", "pdf")
+
+    assert result.status == "complete"
+    status = json.loads(
+        (tmp_path / "output" / "export_status.json").read_text(encoding="utf-8")
+    )
+    assert status["pdf_font"] == {
+        "available": True,
+        "font_name": "標楷體",
+        "source": "system",
+    }
+    assert str(windows) not in json.dumps(status, ensure_ascii=False)
 
 
 @pytest.mark.parametrize("requested", ["markdown", "html", "docx"])

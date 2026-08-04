@@ -1,5 +1,13 @@
 # Development Progress
 
+## V8.7.1
+
+- PDF exporter 支援 Windows 系統標楷體自動偵測，環境變數仍可明確覆寫。
+- `export_status.json` 記錄安全的 font name/source，不記錄字型絕對路徑。
+- 找不到或無法載入 CJK 字型時，維持既有 partial export policy。
+- Report／Case Output／M7 integration targeted tests：97 passed。
+- 完整驗收：1,148 passed、1 skipped；`pip check` 無相依性錯誤。
+
 ## V8 Milestone 7
 
 - 完成 CSV／XLS／XLSX Evidence 的離線 StepHandler registry 與 UI composition。

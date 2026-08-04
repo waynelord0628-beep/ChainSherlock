@@ -249,8 +249,9 @@ ChainSherlock/
 7. **Windows 發佈尚未完成。** 沒有 PyInstaller/Nuitka installer、code signing、
    auto-update 或正式 Windows package 指令。`case-export` 是案件套件，不是應用程式
    installer。
-8. **PDF CJK 字型是部署條件。** 必須設定 `CHAINSHERLOCK_PDF_CJK_FONT`；
-   未設定時其他輸出保留，PDF 失敗應被記錄為 partial export。
+8. **PDF CJK 字型是部署條件。** Windows 會自動偵測系統標楷體，也可用
+   `CHAINSHERLOCK_PDF_CJK_FONT` 覆寫；找不到時其他輸出保留，PDF 失敗應被
+   記錄為 partial export。
 9. **README 版本資訊不一致。** 頂部為 V8 Milestone 6，但中段殘留 V5/V6.5 與
    package 0.1.2；實際 package 為 0.1.4。
 10. **部分 UI 組裝集中。** `ui/pages/__init__.py` 幾乎是 namespace，
@@ -550,3 +551,10 @@ V8 Milestone 6 在 Windows／Python 3.12.13／PySide6 6.11.1 的既有單次結�
 
 下一個待批准項目是 bounded real Provider StepHandler integration；其後才是
 Windows packaging。不得直接開始 V9。
+
+### V8.7.1 PDF 字型修正
+
+- 字型解析順序：明確參數、環境變數、Windows 系統標楷體。
+- `export_status.json` 只保存可用狀態、字型名稱與來源類別，不保存本機路徑。
+- 不複製或提交 Windows 專有字型；無可用字型時仍採 partial export。
+- 完整驗收：`1148 passed, 1 skipped in 37.54s`；`pip check` 通過。
