@@ -147,7 +147,11 @@ class DeterministicPlanner:
                 expected_outputs=["detected_chain"],
             )
             if identifier.kind is IdentifierKind.ADDRESS:
-                address_requirements = capability_requirements(identifier.chain, self.descriptors)
+                address_requirements = (
+                    ()
+                    if import_steps
+                    else capability_requirements(identifier.chain, self.descriptors)
+                )
                 requirements.extend(address_requirements)
                 selected_provider = next(
                     (
@@ -160,7 +164,11 @@ class DeterministicPlanner:
                 step = add(
                     StepType.ANALYZE_ADDRESS,
                     "Analyze address",
-                    "Address analysis is required by the selected goals.",
+                    (
+                        "Address analysis uses imported structured evidence."
+                        if import_steps
+                        else "Address analysis is required by the selected goals."
+                    ),
                     target_ids=[identifier.value],
                     target_type="address",
                     chain=identifier.chain,
@@ -168,12 +176,18 @@ class DeterministicPlanner:
                     date_from=date_from,
                     date_to=date_to,
                     provider=selected_provider,
-                    prerequisites=[chain_step.step_id],
+                    prerequisites=[
+                        chain_step.step_id,
+                        *[item.step_id for item in import_steps],
+                    ],
                     parameters={
                         "max_pages": self.settings.pagination.max_pages,
                         "max_records": self.settings.pagination.max_records,
                         "cache": self.settings.cache.enabled,
                         "refresh": False,
+                        "data_source": (
+                            "case_evidence" if import_steps else "provider"
+                        ),
                     },
                     expected_outputs=["analysis_result"],
                     estimated_records=self.settings.pagination.max_records,

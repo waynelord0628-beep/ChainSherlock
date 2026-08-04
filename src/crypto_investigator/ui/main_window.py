@@ -116,6 +116,16 @@ class MainWindow(QMainWindow):
         self.resize(1360, 860)
         self.repository = CaseRepository(case_root)
         self.case_service = CaseUIService(self.repository)
+        if execution_service is None:
+            from crypto_investigator.application import (
+                CaseExecutionService,
+                create_offline_execution_registry,
+            )
+
+            execution_service = CaseExecutionService(
+                self.repository,
+                create_offline_execution_registry(self.repository),
+            )
         self.execution_service = execution_service
         self.settings_service = UISettingsService(
             settings_path or Path(case_root) / ".ui-settings.json"

@@ -232,6 +232,34 @@ def test_structured_file_plan(
     assert StepType.IMPORT_TRANSACTIONS in types
 
 
+def test_structured_evidence_address_plan_uses_local_source(
+    repository: CaseRepository,
+    settings: Settings,
+    descriptors: tuple[ProviderDescriptor, ...],
+    tmp_path: Path,
+) -> None:
+    case = repository.create("Local address case")
+    source = tmp_path / "transactions.csv"
+    source.write_text("fixture", encoding="utf-8")
+    EvidenceManager(repository).import_file(case.case_id, source)
+    plan = make_plan(
+        settings,
+        descriptors,
+        goal(GoalType.TRACE_FUNDS, ETHEREUM),
+        case=repository.load(case.case_id),
+    )
+    address = next(
+        step for step in plan.steps if step.step_type is StepType.ANALYZE_ADDRESS
+    )
+    imported = next(
+        step for step in plan.steps if step.step_type is StepType.IMPORT_TRANSACTIONS
+    )
+    assert address.provider is None
+    assert address.parameters["data_source"] == "case_evidence"
+    assert imported.step_id in address.prerequisites
+    assert plan.provider_requirements == []
+
+
 def test_unstructured_file_is_not_executable_clue(
     repository: CaseRepository,
     settings: Settings,

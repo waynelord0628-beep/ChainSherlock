@@ -1,5 +1,15 @@
 # Planned Work
 
+## After V8 Milestone 7
+
+- Await explicit approval before real Provider StepHandler integration.
+- Real Provider desktop acceptance must remain bounded and must verify credential
+  redaction, pagination, partial failure and deduplication.
+- Windows packaging, installer, code signing and clean-machine acceptance remain later
+  V8 work.
+- Graph node synchronization and report approval signatures remain deferred.
+- Do not begin V9 without explicit approval.
+
 ## After V8 Milestone 6
 
 - Await explicit approval before any Windows packaging or V9 work.

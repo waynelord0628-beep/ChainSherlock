@@ -1,5 +1,13 @@
 # Changelog
 
+## V8 Milestone 7
+
+- Added the default offline Execution Registry to the Desktop composition root.
+- Connected immutable CSV/XLS/XLSX evidence to existing Pipeline and Analysis engines.
+- Connected deterministic Investigation, offline Graph, Evidence Manifest and Case Report.
+- Made structured-evidence address plans depend on local imports without Provider claims.
+- Added offline CSV/Excel end-to-end, partial PDF and evidence-integrity regressions.
+
 ## V8 Milestone 6
 
 - Redesigned the desktop UI around the investigation workflow.

@@ -123,11 +123,11 @@ def test_goal_add_from_workspace(window) -> None:
     assert saved.goals[0]["target_entities"]
 
 
-def test_execution_without_handlers_is_blocked_safely(window) -> None:
+def test_execution_without_confirmed_plan_is_blocked_safely(window) -> None:
     case = window.case_service.create_case("Execution gate")
     window.open_case(case.case_id)
     window.start_execution()
-    assert "No execution handlers" in window.statusBar().currentMessage()
+    assert "No confirmed plan" in window.statusBar().currentMessage()
 
 
 def test_evidence_import_and_hash(tmp_path) -> None:

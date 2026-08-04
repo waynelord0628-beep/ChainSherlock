@@ -533,3 +533,20 @@ V8 Milestone 6 在 Windows／Python 3.12.13／PySide6 6.11.1 的既有單次結�
 - 不得跳過 Plan confirmation 或 Execution policy。
 - 不得在未經批准時開始 V9、Cross-chain、Risk/AML、商業 API、Web UI 或
   Windows installer。
+
+## 14. 恢復後續：V8 Milestone 7
+
+基準文件提交並推送後，V8 Milestone 7 已完成離線 execution integration：
+
+- Desktop UI 預設建立離線 Execution Registry。
+- CSV／XLS／XLSX Evidence 接入既有 Importer、Normalizer、Domain、Analysis、
+  Investigation、Graph 與 deterministic Case Report。
+- structured Evidence 地址 Plan 使用 `case_evidence`，不宣稱或呼叫 Provider。
+- 每次執行重新驗證 Evidence SHA-256，artifacts 使用相對路徑、SHA-256 與唯讀
+  registration。
+- PDF 缺少 CJK 字型時維持既有 partial export policy。
+- 驗收：`1147 passed, 1 skipped in 41.01s`；`pip check` 通過。
+- 唯一 skip 是未配置真實 AI Key；本 Milestone 未呼叫 Provider 或 AI。
+
+下一個待批准項目是 bounded real Provider StepHandler integration；其後才是
+Windows packaging。不得直接開始 V9。

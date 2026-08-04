@@ -1,5 +1,21 @@
 # ChainSherlock
 
+## V8 Offline Execution Integration（Milestone 7）
+
+Desktop UI 現在預設註冊受控的離線 StepHandler，可將案件內 immutable CSV／Excel
+Evidence 接入既有 Data Pipeline、Analysis、Investigation、Graph 與 deterministic
+Case Report。此流程不呼叫 Provider、不使用 AI，所有 execution artifacts 都保存
+於案件 workspace、使用相對路徑並登錄 SHA-256。
+
+```text
+Case Evidence -> Import/Normalize -> Analysis -> Investigation
+              -> Offline Graph -> Deterministic Report
+```
+
+有 structured Evidence 的地址 Plan 會明確使用 `case_evidence`，不顯示或呼叫
+Provider。沒有 CSV／Excel Evidence 的 Provider-only Plan 仍維持原本行為，且本
+Milestone 不替它註冊真實 Provider handler。
+
 ## V8 Desktop Workflow Redesign（Milestone 6）
 
 Desktop UI 已改為案件調查流程導向：

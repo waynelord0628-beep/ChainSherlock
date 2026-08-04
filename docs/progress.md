@@ -1,5 +1,17 @@
 # Development Progress
 
+## V8 Milestone 7
+
+- 完成 CSV／XLS／XLSX Evidence 的離線 StepHandler registry 與 UI composition。
+- 完成 Evidence integrity gate、Data Pipeline、Domain Transaction 與 Analysis 接線。
+- 完成 deterministic Investigation、離線 Graph、Evidence Manifest 與四格式
+  Case Report 接線。
+- 完成 Planner `case_evidence` 資料來源與 import prerequisite，避免誤示
+  Provider 已被呼叫。
+- 完成 CSV、Excel、PDF partial policy、相對路徑與 Evidence tamper 回歸測試。
+- 完整驗收：1,147 passed、1 skipped；`pip check` 無相依性錯誤。
+- 未呼叫公開 Provider、真實 AI、付費模型或商業 API；未開始 V9。
+
 ## V8 Milestone 6
 
 - 完成 workflow-oriented Home、最近案件、pending review 與 system status。

@@ -1,5 +1,23 @@
 # Architecture Decisions
 
+## ADR-074: Desktop execution defaults to explicit offline handlers
+
+The Desktop composition root registers only approved CSV/XLS/XLSX handlers. It does
+not auto-register Provider or AI execution. Provider-only plans therefore remain
+unavailable until a later explicitly approved milestone.
+
+## ADR-075: Offline handlers reuse public V2-V7 engines
+
+Handlers orchestrate existing Importer, Normalizer, Analyzer, Investigation, Graph and
+Report services. They contain no new analysis rules and write only execution-scoped
+artifacts.
+
+## ADR-076: Structured evidence suppresses Provider claims
+
+When a case includes structured evidence, address analysis depends on its import step,
+uses `case_evidence`, and has no Provider requirement. This prevents the UI and audit
+from implying that a network Provider was used.
+
 ## ADR-068: Desktop navigation follows the investigation workflow
 
 The primary navigation presents the next investigator action instead of internal

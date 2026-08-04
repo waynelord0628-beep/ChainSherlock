@@ -1,5 +1,31 @@
 # ChainSherlock Architecture
 
+## V8 Milestone 7: Offline Execution Integration
+
+```text
+Confirmed InvestigationPlan
+          |
+          v
+Offline Execution Registry
+          |
+          +-> immutable CSV/XLS/XLSX Evidence
+          +-> Data Pipeline -> Domain Transactions
+          +-> Analysis -> Investigation -> Graph
+          +-> Evidence Manifest -> deterministic Case Report
+          |
+          v
+SHA-256 Execution Artifacts -> Case Result / Desktop UI
+```
+
+Milestone 7 在 Application boundary 新增離線 StepHandler adapters。Handler
+只使用既有公開 engine，不把分析邏輯複製到 UI，也不呼叫 Provider 或 AI。
+每個 step 從案件 workspace 重新驗證 Evidence integrity；artifact 只能寫入
+目前 execution directory，經既有 ArtifactService 轉為唯讀並登錄 SHA-256。
+
+同時存在 structured Evidence 與地址 target 時，Planner 將地址分析標記為
+`case_evidence`，以 import step 為 prerequisite，且不產生 Provider requirement。
+Provider-only plan 的語意及既有 V4 能力不變。
+
 ## V8 Milestone 6: Workflow-oriented Desktop UI
 
 ```text
