@@ -1,0 +1,37 @@
+{
+  "python": "3.12.13",
+  "results": [
+    {
+      "transactions": 100,
+      "completeness": "complete",
+      "seconds": 0.059731,
+      "peak_memory_mib": 1.04,
+      "observations": 1,
+      "evidence_refs": 50
+    },
+    {
+      "transactions": 10000,
+      "completeness": "complete",
+      "seconds": 1.08049,
+      "peak_memory_mib": 5.932,
+      "observations": 1,
+      "evidence_refs": 500
+    },
+    {
+      "transactions": 100000,
+      "completeness": "complete",
+      "seconds": 10.792139,
+      "peak_memory_mib": 51.305,
+      "observations": 3,
+      "evidence_refs": 500
+    },
+    {
+      "transactions": 10000,
+      "completeness": "partial",
+      "seconds": 1.009175,
+      "peak_memory_mib": 5.845,
+      "observations": 1,
+      "evidence_refs": 500
+    }
+  ]
+}

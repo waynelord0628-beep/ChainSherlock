@@ -1,5 +1,20 @@
 # ChainSherlock Architecture
 
+## V6.5 Investigation Feature Layer
+
+```text
+public AnalysisResult ----+
+public GraphResult -------+--> InvestigationFeatureEngine
+Provider completeness ----+            |
+Local Label Registry -----+            v
+                                  InvestigationResult
+                               / evidence / JSON / report
+```
+
+此層不讀取 Importer、Normalizer、Provider raw response 或 HTTP 內部物件。規則、排序、時間窗、方向 reconciliation、evidence ID 與輸出均為 deterministic。不同資產不加總；不完整來源會降低可信度並產生 warning，不補猜資料。
+
+Local Label 僅支援 CSV、XLS/XLSX、JSON，不連接商業情資 API。Account-based chain 的停留時間使用明示的 FIFO approximation；Bitcoin 不套用該近似政策。Conclusion Facts 只描述可驗證事實，不輸出身分、犯罪、詐欺、洗錢或風險結論。
+
 ## Project tree
 
 ```text

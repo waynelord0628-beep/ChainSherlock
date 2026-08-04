@@ -1,5 +1,21 @@
 # Development Progress
 
+## Current version
+
+V6.5 Investigation Feature Engine 已完成。
+
+## V6.5 completion summary
+
+- 建立只讀取公開 AnalysisResult／GraphResult／Provider 完整度／Local Label 的 deterministic feature layer。
+- 完成供款、初始供款、階段、休眠恢復、活動、集中度、規則角色、Local Label、FIFO 近似、轉帳模式、關係、方向 reconciliation、Observations 與 Conclusion Facts。
+- InvestigationResult 支援精確 JSON round-trip、evidence、observations、facts 與 label matches 輸出。
+- Report 新增 Investigation section；Graph 支援 stage 與 funding 色彩。
+- 新增五個 investigation／label CLI。
+- V6.5 專屬測試 143 項；全專案 459 項通過。
+- 已以公開 TronGrid 對指定 TRON 地址完成受限真實流程。
+
+未加入 AI、LLM、Risk/AML Score、Cross-chain、商業情資 API 或 Web UI。
+
 ## V4 completion summary
 
 V4 Blockchain Provider Engine is implemented.
@@ -32,7 +48,7 @@ V4 adds no graph rendering, reports, AI, Agents, Risk/AML scoring, cross-chain, 
 - Added HTML/XML injection protection, tooltip and transaction-hash safety limits.
 - Added example outputs and bounded 100／10,000／100,000 transaction benchmark.
 
-## Current version
+## Historical current version
 
 V3 — Analysis Engine.
 

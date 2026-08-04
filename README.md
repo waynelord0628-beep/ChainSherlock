@@ -1,5 +1,33 @@
 # ChainSherlock
 
+> 目前版本：V6.5 Investigation Feature Engine
+
+V6.5 在既有分析、圖譜與報告流程之上加入可重複、可驗證的規則式調查特徵。它不使用 AI、LLM、風險分數或犯罪判斷。
+
+```text
+AnalysisResult + GraphResult + Provider completeness + Local labels
+                              |
+                              v
+                Investigation Feature Engine
+                              |
+                              v
+                    InvestigationResult
+```
+
+主要指令：
+
+```powershell
+python -m crypto_investigator investigate-file FILE --target ADDRESS
+python -m crypto_investigator investigate-address ADDRESS --chain tron
+python -m crypto_investigator investigate-tx TX_HASH --chain ethereum
+python -m crypto_investigator labels-import LABELS.csv
+python -m crypto_investigator labels-check ADDRESS --chain ethereum
+```
+
+輸出包含 `investigation.json`、`investigation_evidence.json`、
+`observations.json`、`conclusion_facts.json` 與 `label_matches.json`。
+金額依資產分開計算，JSON 保留 Decimal 與 timezone-aware datetime。
+
 ChainSherlock 是一套本機優先（local-first）的區塊鏈交易與幣流調查工具。
 
 **目前里程碑：** V5 Graph Engine

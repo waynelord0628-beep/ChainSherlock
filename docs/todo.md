@@ -1,5 +1,11 @@
 # Planned Work
 
+## After V6.5
+
+- V6.5 acceptance is complete. Do not start V7 without a new explicit prompt.
+- Known limitations: no Bitcoin UTXO holding-time matching, cross-chain tracing, commercial label intelligence, or AI-generated narrative.
+- Future dependency additions require explicit need, lock update, and clean-environment validation.
+
 ## V5 completed scope
 
 - Graph Domain Model and GraphBuilder from V3 Flow Data.

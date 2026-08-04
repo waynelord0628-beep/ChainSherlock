@@ -1,0 +1,23 @@
+{
+  "__tuple__": [
+    {
+      "__type__": "Observation",
+      "code": "funding_source_changed",
+      "occurred_at": {
+        "__datetime__": "2026-08-02T16:02:51+00:00"
+      },
+      "facts": {
+        "previous_source": "TNJg619GpW92Ff7xBmqc49HYUwU4bUpYsR",
+        "current_source": "TCPEk4qeGVbn8b5U81DDd2uxipuyny6s4r"
+      }
+    },
+    {
+      "__type__": "Observation",
+      "code": "batch_distribution",
+      "occurred_at": null,
+      "facts": {
+        "batch_count": 4
+      }
+    }
+  ]
+}

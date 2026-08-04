@@ -29,6 +29,10 @@ from crypto_investigator.graphs.models import GraphFilterOptions
 from crypto_investigator.reports.composer import ReportComposer
 from crypto_investigator.reports.evidence import EvidenceManifest
 from crypto_investigator.reports.export import ReportExportCoordinator
+from crypto_investigator.investigation.feature_engine import InvestigationFeatureEngine
+from crypto_investigator.investigation.investigation_result import InvestigationSettings
+from crypto_investigator.investigation.export import InvestigationExporter
+from crypto_investigator.labels.registry import LabelRegistry
 
 app = typer.Typer(help="ChainSherlock: local-first blockchain transaction investigation toolkit.")
 
@@ -470,6 +474,7 @@ def _export_report(
     title: str = "ChainSherlock 區塊鏈幣流分析報告",
     report_id: str | None = None,
     timezone: str = "UTC",
+    investigation=None,
 ) -> None:
     evidence_paths = (
         *source_files,
@@ -484,6 +489,7 @@ def _export_report(
     document = ReportComposer().compose(
         analysis,
         graph=graph,
+        investigation=investigation,
         target_address=target,
         chain=chain.value,
         source_type=report_type,
@@ -512,6 +518,210 @@ def _read_records(path: Path):
     return (value,)
 
 
+def _investigation_settings(
+    dormant_days: int,
+    funding_window_days: int,
+    batch_window_minutes: int,
+    timezone: str,
+):
+    return InvestigationSettings(
+        dormant_days=dormant_days,
+        funding_window_days=funding_window_days,
+        batch_window_minutes=batch_window_minutes,
+        timezone=timezone,
+    )
+
+
+def _investigation_labels(label_file: Path | None):
+    return LabelRegistry.import_file(label_file).records if label_file else ()
+
+
+@app.command("labels-import")
+def labels_import(
+    file: Path = typer.Argument(..., exists=True, dir_okay=False, readable=True),
+    output: Path = typer.Option(Path("data/labels/labels.json"), "--output"),
+) -> None:
+    """Import deterministic local labels from CSV, Excel, or JSON."""
+    registry = LabelRegistry.import_file(file)
+    registry.write(output)
+    typer.echo(f"Labels imported: {len(registry.records)}")
+    typer.echo(f"Labels: {output}")
+
+
+@app.command("labels-check")
+def labels_check(
+    address: str = typer.Argument(...),
+    chain: Chain = typer.Option(..., "--chain"),
+    label_file: Path = typer.Option(Path("data/labels/labels.json"), "--label-file"),
+) -> None:
+    """Check one normalized address against the local label registry."""
+    registry = LabelRegistry.import_file(label_file)
+    typer.echo(
+        json.dumps(
+            [AnalysisExporter.to_primitive(item) for item in registry.check(chain.value, address)],
+            ensure_ascii=False,
+            indent=2,
+        )
+    )
+
+
+@app.command("investigate-file")
+def investigate_file(
+    file: Path = typer.Argument(..., exists=True, dir_okay=False, readable=True),
+    target: str = typer.Option(..., "--target"),
+    chain: Chain | None = typer.Option(None, "--chain"),
+    timezone: str = typer.Option("Asia/Taipei", "--timezone"),
+    label_file: Path | None = typer.Option(None, "--label-file"),
+    dormant_days: int = typer.Option(30, "--dormant-days", min=1),
+    funding_window_days: int = typer.Option(30, "--funding-window-days", min=1),
+    batch_window_minutes: int = typer.Option(10, "--batch-window-minutes", min=1),
+    output: Path = typer.Option(Path("output/investigation_file"), "--output"),
+    report: bool = typer.Option(False, "--report"),
+    format: str = typer.Option("all", "--format"),
+) -> None:
+    """Run deterministic V6.5 investigation features on a transaction file."""
+    transactions = _domain_transactions(file)
+    selected_chain = chain or (
+        transactions[0].chain if transactions else Chain(detect_identifier(target).chain.value)
+    )
+    analysis = AnalysisEngine().analyze(transactions, target)
+    engine = InvestigationFeatureEngine(
+        _investigation_settings(
+            dormant_days, funding_window_days, batch_window_minutes, timezone
+        )
+    )
+    result = engine.analyze(
+        analysis, target, labels=_investigation_labels(label_file)
+    )
+    paths = InvestigationExporter().export_all(result, output)
+    if report:
+        AnalysisExporter().export_all(analysis, output)
+        graph = _report_graph(analysis, selected_chain, target, output, 20)
+        graph = engine.annotate_graph(graph, result)
+        GraphExporter().export_all(graph, output, GraphFilterOptions(top_counterparties=20))
+        _export_report(
+            analysis,
+            graph,
+            report_type="file",
+            target=target,
+            chain=selected_chain,
+            output=output,
+            source_files=(file,),
+            requested_format=format,
+            timezone=timezone,
+            investigation=result,
+        )
+    typer.echo(f"Investigation: {paths['investigation']}")
+
+
+def _investigate_provider(
+    identifier: str,
+    chain: Chain,
+    kind: str,
+    provider: str | None,
+    refresh: bool,
+    max_pages: int,
+    max_records: int,
+    output: Path,
+    settings: InvestigationSettings,
+    labels,
+    report: bool,
+    requested_format: str,
+):
+    provider_settings = load_config()
+    provider_settings.pagination.max_pages = max_pages
+    provider_settings.pagination.max_records = max_records
+    asyncio.run(
+        analyze_provider_identifier(
+            identifier=identifier,
+            chain=chain,
+            kind=kind,
+            settings=provider_settings,
+            output_dir=output,
+            provider=provider,
+            refresh=refresh,
+        )
+    )
+    value = json.loads((output / "analysis.json").read_text(encoding="utf-8"))
+    feature_target = identifier
+    if kind == "transaction" and value.get("flow", {}).get("edges"):
+        feature_target = value["flow"]["edges"][0]["source"]
+    engine = InvestigationFeatureEngine(settings)
+    result = engine.analyze_public_mapping(value, feature_target, labels=labels)
+    paths = InvestigationExporter().export_all(result, output)
+    if report:
+        graph_analysis = _analysis_from_json(output / "analysis.json")
+        graph = _report_graph(graph_analysis, chain, feature_target, output, 20)
+        graph = engine.annotate_graph(graph, result)
+        GraphExporter().export_all(graph, output, GraphFilterOptions(top_counterparties=20))
+        _export_report(
+            value,
+            graph,
+            report_type="provider",
+            target=feature_target,
+            chain=chain,
+            output=output,
+            requested_format=requested_format,
+            timezone=settings.timezone,
+            investigation=result,
+        )
+    typer.echo(f"Investigation: {paths['investigation']}")
+
+
+@app.command("investigate-address")
+def investigate_address(
+    address: str = typer.Argument(...),
+    chain: Chain | None = typer.Option(None, "--chain"),
+    provider: str | None = typer.Option(None, "--provider"),
+    refresh: bool = typer.Option(False, "--refresh"),
+    max_pages: int = typer.Option(100, "--max-pages", min=1),
+    max_records: int = typer.Option(100000, "--max-records", min=1),
+    timezone: str = typer.Option("Asia/Taipei", "--timezone"),
+    label_file: Path | None = typer.Option(None, "--label-file"),
+    dormant_days: int = typer.Option(30, "--dormant-days", min=1),
+    funding_window_days: int = typer.Option(30, "--funding-window-days", min=1),
+    batch_window_minutes: int = typer.Option(10, "--batch-window-minutes", min=1),
+    output: Path = typer.Option(Path("output/investigation_address"), "--output"),
+    report: bool = typer.Option(False, "--report"),
+    format: str = typer.Option("all", "--format"),
+) -> None:
+    """Run deterministic V6.5 investigation after Provider analysis."""
+    detected = detect_identifier(address)
+    selected_chain = chain or Chain(detected.chain.value)
+    _investigate_provider(
+        detected.value, selected_chain, "address", provider, refresh, max_pages,
+        max_records, output,
+        _investigation_settings(dormant_days, funding_window_days, batch_window_minutes, timezone),
+        _investigation_labels(label_file), report, format,
+    )
+
+
+@app.command("investigate-tx")
+def investigate_tx(
+    tx_hash: str = typer.Argument(...),
+    chain: Chain = typer.Option(..., "--chain"),
+    provider: str | None = typer.Option(None, "--provider"),
+    refresh: bool = typer.Option(False, "--refresh"),
+    max_pages: int = typer.Option(100, "--max-pages", min=1),
+    max_records: int = typer.Option(100000, "--max-records", min=1),
+    timezone: str = typer.Option("Asia/Taipei", "--timezone"),
+    label_file: Path | None = typer.Option(None, "--label-file"),
+    dormant_days: int = typer.Option(30, "--dormant-days", min=1),
+    funding_window_days: int = typer.Option(30, "--funding-window-days", min=1),
+    batch_window_minutes: int = typer.Option(10, "--batch-window-minutes", min=1),
+    output: Path = typer.Option(Path("output/investigation_tx"), "--output"),
+    report: bool = typer.Option(False, "--report"),
+    format: str = typer.Option("all", "--format"),
+) -> None:
+    """Run deterministic V6.5 investigation for one Provider transaction."""
+    _investigate_provider(
+        tx_hash, chain, "transaction", provider, refresh, max_pages, max_records,
+        output,
+        _investigation_settings(dormant_days, funding_window_days, batch_window_minutes, timezone),
+        _investigation_labels(label_file), report, format,
+    )
+
+
 @app.command("report-file")
 def report_file(
     file: Path = typer.Argument(..., exists=True, dir_okay=False, readable=True),
@@ -533,6 +743,14 @@ def report_file(
         analysis = AnalysisEngine().analyze(transactions, target)
         AnalysisExporter().export_all(analysis, destination)
         graph = _report_graph(analysis, chain, target, destination, top_counterparties) if include_graph else None
+        investigation = InvestigationFeatureEngine().analyze(analysis, target)
+        if graph is not None:
+            graph = InvestigationFeatureEngine.annotate_graph(graph, investigation)
+            GraphExporter().export_all(
+                graph,
+                destination,
+                GraphFilterOptions(top_counterparties=top_counterparties),
+            )
         _export_report(
             analysis,
             graph,
@@ -546,6 +764,7 @@ def report_file(
             title=title,
             report_id=report_id,
             timezone=timezone,
+            investigation=investigation,
         )
     except (ValueError, InvalidIdentifierError) as error:
         typer.echo(f"Report error: {error}", err=True)
@@ -587,7 +806,17 @@ def _provider_report(
     )
     graph_analysis = _analysis_from_json(output / "analysis.json")
     report_analysis = json.loads((output / "analysis.json").read_text(encoding="utf-8"))
+    investigation = InvestigationFeatureEngine().analyze_public_mapping(
+        report_analysis, identifier
+    )
     graph = _report_graph(graph_analysis, chain, identifier, output, top_counterparties) if include_graph else None
+    if graph is not None:
+        graph = InvestigationFeatureEngine.annotate_graph(graph, investigation)
+        GraphExporter().export_all(
+            graph,
+            output,
+            GraphFilterOptions(top_counterparties=top_counterparties),
+        )
     _export_report(
         report_analysis,
         graph,
@@ -600,6 +829,7 @@ def _provider_report(
         title=title,
         report_id=report_id,
         timezone=timezone,
+        investigation=investigation,
     )
 
 

@@ -34,7 +34,12 @@ class HtmlGraphRenderer:
                     node.node_id,
                     label=html.escape(node.label or node.address),
                     title=html.escape(title),
-                    color=node_color(node.category, node.is_target),
+                    color=node_color(
+                        node.category,
+                        node.is_target,
+                        node.metadata.get("operation_stage"),
+                        bool(node.metadata.get("funding_source")),
+                    ),
                     shape="star" if node.is_target else "dot",
                     size=30 if node.is_target else 15,
                 )

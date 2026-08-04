@@ -1,5 +1,14 @@
 # Changelog
 
+## V6.5
+
+- Added deterministic Investigation Feature Engine and public result models.
+- Added funding, stage, dormancy, activity, concentration, distribution, pattern, relationship, observation, and conclusion-fact features.
+- Added CSV/XLS/XLSX/JSON Local Label Registry and five investigation/label CLI commands.
+- Added evidence-linked exports, exact JSON round-trip, Report section, and Graph stage/funding styling.
+- Added 143 V6.5 tests, bounded benchmarks, and live TronGrid validation.
+- Added no AI, LLM, Risk/AML scoring, cross-chain, commercial intelligence API, or Web UI.
+
 ## Unreleased — V5
 
 - Added Graph Domain models, Builder, Factory, aggregation, filtering, styling, and safety limits.

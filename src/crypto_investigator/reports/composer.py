@@ -25,6 +25,7 @@ class ReportComposer:
         analysis,
         *,
         graph=None,
+        investigation=None,
         target_address: str | None = None,
         chain: str | None = None,
         source_type: str = "file",
@@ -41,10 +42,15 @@ class ReportComposer:
     ) -> ReportDocument:
         data = AnalysisExporter.to_primitive(analysis)
         graph_data = AnalysisExporter.to_primitive(graph) if graph else None
+        investigation_data = (
+            AnalysisExporter.to_primitive(investigation) if investigation else None
+        )
         if not isinstance(data, Mapping):
             data = self._namespace_to_mapping(data)
         if graph_data is not None and not isinstance(graph_data, Mapping):
             graph_data = self._namespace_to_mapping(graph_data)
+        if investigation_data is not None and not isinstance(investigation_data, Mapping):
+            investigation_data = self._namespace_to_mapping(investigation_data)
         evidence = tuple(
             replace(
                 item,
@@ -77,6 +83,7 @@ class ReportComposer:
             completeness,
             target_address,
             chain,
+            investigation_data,
         )
         conclusion = self._conclusion(completeness, len(provider_errors), rejected_count)
         providers = tuple(
@@ -145,6 +152,7 @@ class ReportComposer:
         completeness,
         target_address,
         chain,
+        investigation,
     ):
         summary = data.get("summary", {})
         statistics = data.get("statistics", {})
@@ -271,6 +279,31 @@ class ReportComposer:
                     "Provider 狀態",
                     9,
                     tables=(self._records_table("providers", "Provider 狀態", statuses[:100]),),
+                )
+            )
+        if investigation:
+            facts = investigation.get("conclusion_facts", {})
+            behavior = investigation.get("behavior", {})
+            sections.append(
+                ReportSection(
+                    "investigation",
+                    "調查特徵",
+                    11,
+                    (
+                        "本節為 deterministic rule engine 結果，不使用 AI 或自然語言推理。",
+                    ),
+                    tables=(
+                        self._mapping_table(
+                            "investigation_behavior",
+                            "行為摘要",
+                            behavior,
+                        ),
+                        self._mapping_table(
+                            "investigation_facts",
+                            "Conclusion Facts",
+                            facts,
+                        ),
+                    ),
                 )
             )
         if errors:

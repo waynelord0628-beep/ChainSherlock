@@ -1,0 +1,174 @@
+{
+  "edges": [
+    {
+      "amounts_by_asset": {
+        "ETH": "18.5"
+      },
+      "assets": [
+        "ETH"
+      ],
+      "direction": "incoming",
+      "edge_id": "ethereum:0x2222222222222222222222222222222222222222|ethereum:0x1111111111111111111111111111111111111111|incoming|ETH",
+      "first_seen": "2026-03-03T02:00:00+00:00",
+      "last_seen": "2026-09-09T08:00:00+00:00",
+      "metadata": {
+        "transaction_hashes_truncated": false
+      },
+      "source": "ethereum:0x2222222222222222222222222222222222222222",
+      "target": "ethereum:0x1111111111111111111111111111111111111111",
+      "transaction_count": 3,
+      "transaction_hashes": [
+        "0x0000000000000000000000000000000000000000000000000000000000000002",
+        "0x0000000000000000000000000000000000000000000000000000000000000004",
+        "0x0000000000000000000000000000000000000000000000000000000000000008"
+      ]
+    },
+    {
+      "amounts_by_asset": {
+        "ETH": "17.5"
+      },
+      "assets": [
+        "ETH"
+      ],
+      "direction": "outgoing",
+      "edge_id": "ethereum:0x1111111111111111111111111111111111111111|ethereum:0x2222222222222222222222222222222222222222|outgoing|ETH",
+      "first_seen": "2026-02-02T01:00:00+00:00",
+      "last_seen": "2026-08-08T07:00:00+00:00",
+      "metadata": {
+        "transaction_hashes_truncated": false
+      },
+      "source": "ethereum:0x1111111111111111111111111111111111111111",
+      "target": "ethereum:0x2222222222222222222222222222222222222222",
+      "transaction_count": 3,
+      "transaction_hashes": [
+        "0x0000000000000000000000000000000000000000000000000000000000000001",
+        "0x0000000000000000000000000000000000000000000000000000000000000005",
+        "0x0000000000000000000000000000000000000000000000000000000000000007"
+      ]
+    },
+    {
+      "amounts_by_asset": {
+        "USDT": "15.0"
+      },
+      "assets": [
+        "USDT"
+      ],
+      "direction": "outgoing",
+      "edge_id": "ethereum:0x1111111111111111111111111111111111111111|ethereum:0x2222222222222222222222222222222222222222|outgoing|USDT",
+      "first_seen": "2026-04-04T03:00:00+00:00",
+      "last_seen": "2026-10-10T09:00:00+00:00",
+      "metadata": {
+        "transaction_hashes_truncated": false
+      },
+      "source": "ethereum:0x1111111111111111111111111111111111111111",
+      "target": "ethereum:0x2222222222222222222222222222222222222222",
+      "transaction_count": 2,
+      "transaction_hashes": [
+        "0x0000000000000000000000000000000000000000000000000000000000000003",
+        "0x0000000000000000000000000000000000000000000000000000000000000009"
+      ]
+    },
+    {
+      "amounts_by_asset": {
+        "USDT": "9.0"
+      },
+      "assets": [
+        "USDT"
+      ],
+      "direction": "incoming",
+      "edge_id": "ethereum:0x2222222222222222222222222222222222222222|ethereum:0x1111111111111111111111111111111111111111|incoming|USDT",
+      "first_seen": "2026-01-01T00:00:00+00:00",
+      "last_seen": "2026-07-07T06:00:00+00:00",
+      "metadata": {
+        "transaction_hashes_truncated": false
+      },
+      "source": "ethereum:0x2222222222222222222222222222222222222222",
+      "target": "ethereum:0x1111111111111111111111111111111111111111",
+      "transaction_count": 2,
+      "transaction_hashes": [
+        "0x0000000000000000000000000000000000000000000000000000000000000000",
+        "0x0000000000000000000000000000000000000000000000000000000000000006"
+      ]
+    }
+  ],
+  "metadata": {
+    "chain": "ethereum",
+    "excluded_edge_count": 0,
+    "excluded_node_count": 0,
+    "filters": {
+      "date_from": null,
+      "date_to": null,
+      "exclude_addresses": [],
+      "exclude_assets": [],
+      "include_addresses": [],
+      "include_assets": [],
+      "incoming_only": false,
+      "maximum_edges": 200,
+      "maximum_nodes": 100,
+      "maximum_tooltip_length": 1000,
+      "maximum_transaction_hashes_per_edge": 100,
+      "minimum_transaction_count": 1,
+      "outgoing_only": false,
+      "sort_asset": null,
+      "sort_by": "transactions",
+      "top_counterparties": 20
+    },
+    "generated_at": "2026-08-04T07:39:20.515708+00:00",
+    "included_edge_count": 4,
+    "included_node_count": 2,
+    "missing_data": [],
+    "provider_errors": [],
+    "rejected_record_count": 0,
+    "source_completeness": "complete",
+    "source_transaction_count": 10,
+    "target_address": "0x1111111111111111111111111111111111111111",
+    "truncated": false,
+    "truncation_reason": null,
+    "warnings": []
+  },
+  "nodes": [
+    {
+      "address": "0x1111111111111111111111111111111111111111",
+      "assets": [
+        "ETH",
+        "USDT"
+      ],
+      "category": "unknown",
+      "chain": "ethereum",
+      "first_seen": "2026-01-01T00:00:00+00:00",
+      "incoming_count": 5,
+      "is_target": true,
+      "label": "0x1111111111111111111111111111111111111111",
+      "last_seen": "2026-10-10T09:00:00+00:00",
+      "metadata": {
+        "funding_source": false,
+        "operation_stage": "recovery"
+      },
+      "node_id": "ethereum:0x1111111111111111111111111111111111111111",
+      "outgoing_count": 5,
+      "transaction_count": 10
+    },
+    {
+      "address": "0x2222222222222222222222222222222222222222",
+      "assets": [
+        "ETH",
+        "USDT"
+      ],
+      "category": "unknown",
+      "chain": "ethereum",
+      "first_seen": "2026-01-01T00:00:00+00:00",
+      "incoming_count": 5,
+      "is_target": false,
+      "label": "0x2222222222222222222222222222222222222222",
+      "last_seen": "2026-10-10T09:00:00+00:00",
+      "metadata": {
+        "funding_source": true,
+        "operation_stage": null
+      },
+      "node_id": "ethereum:0x2222222222222222222222222222222222222222",
+      "outgoing_count": 5,
+      "transaction_count": 10
+    }
+  ],
+  "warnings": []
+}

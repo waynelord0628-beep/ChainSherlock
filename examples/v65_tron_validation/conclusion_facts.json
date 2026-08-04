@@ -1,0 +1,292 @@
+{
+  "__tuple__": [
+    {
+      "__type__": "ConclusionFact",
+      "fact_code": "dominant_funder_exists",
+      "value": true,
+      "unit": null,
+      "confidence": "low",
+      "reason_codes": {
+        "__tuple__": [
+          "deterministic_rule"
+        ]
+      },
+      "evidence_refs": {
+        "__tuple__": []
+      },
+      "limitations": {
+        "__tuple__": []
+      }
+    },
+    {
+      "__type__": "ConclusionFact",
+      "fact_code": "dominant_funder_address",
+      "value": "TNJg619GpW92Ff7xBmqc49HYUwU4bUpYsR",
+      "unit": null,
+      "confidence": "low",
+      "reason_codes": {
+        "__tuple__": [
+          "deterministic_rule"
+        ]
+      },
+      "evidence_refs": {
+        "__tuple__": []
+      },
+      "limitations": {
+        "__tuple__": []
+      }
+    },
+    {
+      "__type__": "ConclusionFact",
+      "fact_code": "funding_source_changed",
+      "value": true,
+      "unit": null,
+      "confidence": "low",
+      "reason_codes": {
+        "__tuple__": [
+          "deterministic_rule"
+        ]
+      },
+      "evidence_refs": {
+        "__tuple__": []
+      },
+      "limitations": {
+        "__tuple__": []
+      }
+    },
+    {
+      "__type__": "ConclusionFact",
+      "fact_code": "funding_transition_count",
+      "value": 1,
+      "unit": "count",
+      "confidence": "low",
+      "reason_codes": {
+        "__tuple__": [
+          "deterministic_rule"
+        ]
+      },
+      "evidence_refs": {
+        "__tuple__": []
+      },
+      "limitations": {
+        "__tuple__": []
+      }
+    },
+    {
+      "__type__": "ConclusionFact",
+      "fact_code": "dormant_period_detected",
+      "value": false,
+      "unit": null,
+      "confidence": "low",
+      "reason_codes": {
+        "__tuple__": [
+          "deterministic_rule"
+        ]
+      },
+      "evidence_refs": {
+        "__tuple__": []
+      },
+      "limitations": {
+        "__tuple__": []
+      }
+    },
+    {
+      "__type__": "ConclusionFact",
+      "fact_code": "longest_dormant_days",
+      "value": 0,
+      "unit": "days",
+      "confidence": "low",
+      "reason_codes": {
+        "__tuple__": [
+          "deterministic_rule"
+        ]
+      },
+      "evidence_refs": {
+        "__tuple__": []
+      },
+      "limitations": {
+        "__tuple__": []
+      }
+    },
+    {
+      "__type__": "ConclusionFact",
+      "fact_code": "reactivation_detected",
+      "value": false,
+      "unit": null,
+      "confidence": "low",
+      "reason_codes": {
+        "__tuple__": [
+          "deterministic_rule"
+        ]
+      },
+      "evidence_refs": {
+        "__tuple__": []
+      },
+      "limitations": {
+        "__tuple__": []
+      }
+    },
+    {
+      "__type__": "ConclusionFact",
+      "fact_code": "batch_incoming_detected",
+      "value": true,
+      "unit": null,
+      "confidence": "low",
+      "reason_codes": {
+        "__tuple__": [
+          "deterministic_rule"
+        ]
+      },
+      "evidence_refs": {
+        "__tuple__": []
+      },
+      "limitations": {
+        "__tuple__": []
+      }
+    },
+    {
+      "__type__": "ConclusionFact",
+      "fact_code": "batch_outgoing_detected",
+      "value": true,
+      "unit": null,
+      "confidence": "low",
+      "reason_codes": {
+        "__tuple__": [
+          "deterministic_rule"
+        ]
+      },
+      "evidence_refs": {
+        "__tuple__": []
+      },
+      "limitations": {
+        "__tuple__": []
+      }
+    },
+    {
+      "__type__": "ConclusionFact",
+      "fact_code": "fixed_amount_pattern_detected",
+      "value": true,
+      "unit": null,
+      "confidence": "low",
+      "reason_codes": {
+        "__tuple__": [
+          "deterministic_rule"
+        ]
+      },
+      "evidence_refs": {
+        "__tuple__": []
+      },
+      "limitations": {
+        "__tuple__": []
+      }
+    },
+    {
+      "__type__": "ConclusionFact",
+      "fact_code": "rapid_pass_through_detected",
+      "value": false,
+      "unit": null,
+      "confidence": "low",
+      "reason_codes": {
+        "__tuple__": [
+          "deterministic_rule"
+        ]
+      },
+      "evidence_refs": {
+        "__tuple__": []
+      },
+      "limitations": {
+        "__tuple__": []
+      }
+    },
+    {
+      "__type__": "ConclusionFact",
+      "fact_code": "service_candidate_count",
+      "value": 0,
+      "unit": "count",
+      "confidence": "low",
+      "reason_codes": {
+        "__tuple__": [
+          "deterministic_rule"
+        ]
+      },
+      "evidence_refs": {
+        "__tuple__": []
+      },
+      "limitations": {
+        "__tuple__": []
+      }
+    },
+    {
+      "__type__": "ConclusionFact",
+      "fact_code": "graph_truncated",
+      "value": false,
+      "unit": null,
+      "confidence": "low",
+      "reason_codes": {
+        "__tuple__": [
+          "deterministic_rule"
+        ]
+      },
+      "evidence_refs": {
+        "__tuple__": []
+      },
+      "limitations": {
+        "__tuple__": []
+      }
+    },
+    {
+      "__type__": "ConclusionFact",
+      "fact_code": "provider_truncated",
+      "value": false,
+      "unit": null,
+      "confidence": "low",
+      "reason_codes": {
+        "__tuple__": [
+          "deterministic_rule"
+        ]
+      },
+      "evidence_refs": {
+        "__tuple__": []
+      },
+      "limitations": {
+        "__tuple__": []
+      }
+    },
+    {
+      "__type__": "ConclusionFact",
+      "fact_code": "analysis_partial",
+      "value": true,
+      "unit": null,
+      "confidence": "low",
+      "reason_codes": {
+        "__tuple__": [
+          "deterministic_rule"
+        ]
+      },
+      "evidence_refs": {
+        "__tuple__": []
+      },
+      "limitations": {
+        "__tuple__": []
+      }
+    },
+    {
+      "__type__": "ConclusionFact",
+      "fact_code": "unknown_direction_count",
+      "value": 0,
+      "unit": "count",
+      "confidence": "low",
+      "reason_codes": {
+        "__tuple__": [
+          "deterministic_rule"
+        ]
+      },
+      "evidence_refs": {
+        "__tuple__": []
+      },
+      "limitations": {
+        "__tuple__": []
+      }
+    }
+  ]
+}

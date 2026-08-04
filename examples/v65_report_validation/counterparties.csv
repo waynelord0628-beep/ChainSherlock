@@ -1,0 +1,2 @@
+address,incoming_count,outgoing_count,incoming_amount_by_asset,outgoing_amount_by_asset,first_seen,last_seen,interaction_count,direction
+0x2222222222222222222222222222222222222222,5,5,"{""ETH"": ""18.5"", ""USDT"": ""9.0""}","{""ETH"": ""17.5"", ""USDT"": ""15.0""}",2026-01-01T00:00:00+00:00,2026-10-10T09:00:00+00:00,10,unknown

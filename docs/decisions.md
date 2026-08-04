@@ -1,5 +1,29 @@
 # Architecture Decisions
 
+## ADR-037: Investigation consumes public results only
+
+V6.5 accepts public AnalysisResult, GraphResult completeness metadata, and Local Labels. It does not inspect raw Provider, Importer, Normalizer, or HTTP internals.
+
+## ADR-038: Deterministic and evidence-linked output
+
+Stable ordering, settings snapshots, source-derived timestamps, structured warnings, reason codes, and evidence references make identical inputs produce identical results.
+
+## ADR-039: Asset and direction scopes remain separate
+
+Funding shares and distribution statistics are per asset. Direction reconciliation explicitly accounts for incoming, outgoing, self, neutral, unclassified, failed, and deduplicated records.
+
+## ADR-040: Holding time is a declared approximation
+
+Account-based chains use FIFO approximation with matched and unmatched amounts disclosed. Bitcoin is unsupported because account-based FIFO must not be presented as UTXO tracing.
+
+## ADR-041: Labels are local and conservative
+
+CSV, Excel, and JSON labels are normalized and matched locally. Rule-based categories are candidates, not identity or misconduct conclusions.
+
+## ADR-042: No risk or criminal conclusions
+
+Observations and Conclusion Facts report metrics and state changes only. V6.5 cannot output crime, fraud, money-laundering, suspect, or risk determinations.
+
 ## ADR-001: Explicit composition root
 
 `Application` owns runtime registries and constructs a shared `Context`. This keeps wiring separate from domain code.
