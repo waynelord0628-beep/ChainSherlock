@@ -1,0 +1,7 @@
+[
+  {
+    "format": "pdf",
+    "error_type": "PdfExportError",
+    "message": "A CJK font is required; configure CHAINSHERLOCK_PDF_CJK_FONT"
+  }
+]

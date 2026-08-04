@@ -585,10 +585,11 @@ def _provider_report(
             cache_ttl=cache_ttl,
         )
     )
-    analysis = _analysis_from_json(output / "analysis.json")
-    graph = _report_graph(analysis, chain, identifier, output, top_counterparties) if include_graph else None
+    graph_analysis = _analysis_from_json(output / "analysis.json")
+    report_analysis = json.loads((output / "analysis.json").read_text(encoding="utf-8"))
+    graph = _report_graph(graph_analysis, chain, identifier, output, top_counterparties) if include_graph else None
     _export_report(
-        analysis,
+        report_analysis,
         graph,
         report_type="provider",
         target=identifier,

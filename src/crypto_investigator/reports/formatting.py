@@ -20,6 +20,12 @@ def redact(value: Any) -> str:
         else:
             text = pattern.sub(r"\1[REDACTED]", text)
     text = re.sub(r"[A-Za-z]:\\[^\s]+|/(?:home|Users)/[^\s]+", "[PATH]", text)
+    text = re.sub(r"(?:\.\.[\\/])+", "[PATH]/", text)
+    text = re.sub(r"(?i)\bon[a-z]+\s*=", "[EVENT] ", text)
+    text = re.sub(r"(?i)javascript\s*:", "[SCRIPT] ", text)
+    if text.startswith(("=", "+", "-", "@")):
+        text = "'" + text
+    text = text.replace("<", "＜").replace(">", "＞")
     return text
 
 

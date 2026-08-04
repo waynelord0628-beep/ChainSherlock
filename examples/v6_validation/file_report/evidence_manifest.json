@@ -1,0 +1,26 @@
+[
+  {
+    "evidence_id": "E1",
+    "relative_path": "v5_graph_input.csv",
+    "sha256": "0a6c90e25af1949ac8dc9d6edf6c7491a6d04e5956f3c924206bac86a8b1e96c",
+    "size": 422,
+    "modified_at": "2026-08-04T06:06:51.612721+00:00",
+    "evidence_type": "source_file"
+  },
+  {
+    "evidence_id": "E2",
+    "relative_path": "v6_validation/file_report/analysis.json",
+    "sha256": "d3f9651acebf625b41901e5e106c4ac99bf5d316217ebd514cb17f1b25a6cd0c",
+    "size": 4025,
+    "modified_at": "2026-08-04T07:09:04.867767+00:00",
+    "evidence_type": "analysis"
+  },
+  {
+    "evidence_id": "E3",
+    "relative_path": "v6_validation/file_report/flow_graph.json",
+    "sha256": "833ba6c3b6c6a55857c54f717fe348377f9d518e6d69edc0157a3c8d42a02134",
+    "size": 5422,
+    "modified_at": "2026-08-04T07:09:04.872309+00:00",
+    "evidence_type": "flow_graph"
+  }
+]

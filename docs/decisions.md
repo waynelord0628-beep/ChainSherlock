@@ -135,3 +135,11 @@ PDF requires `CHAINSHERLOCK_PDF_CJK_FONT`; no font is bundled. A PDF failure is 
 ## ADR-034: Assets and paths remain separated
 
 Asset amounts are never summed across symbols. Output traversal is rejected, while absolute paths and credentials are redacted before presentation.
+
+## ADR-035: Provider reports compose from public analysis JSON
+
+The graph compatibility object remains limited to Graph construction. Report composition reads the complete public `analysis.json` artifact so Summary, Statistics, Counterparty and Timeline fields are not lost or recalculated.
+
+## ADR-036: Report typography and wide tables
+
+DOCX body Chinese uses 標楷體 and Latin text uses Times New Roman. Table Chinese uses 標楷體 and Latin, numbers, addresses and hashes use Consolas. PDF applies the configured CJK font and uses locally available Times New Roman／Consolas for Latin text, with portable built-in fallbacks. Tables wider than five fields render as deterministic field/value records in DOCX and PDF to remain readable on A4 pages.

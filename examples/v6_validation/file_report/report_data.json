@@ -1,0 +1,386 @@
+{
+  "title": "ChainSherlock 區塊鏈幣流分析報告",
+  "metadata": {
+    "report_id": "CSR-C34ADFEE6F16",
+    "generated_at": "2026-08-04T07:09:04.950749+00:00",
+    "report_version": "6",
+    "chain": "ethereum",
+    "target_address": "0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "target_type": "address",
+    "source_type": "file",
+    "source_files": [
+      "v5_graph_input.csv"
+    ],
+    "providers": [],
+    "analysis_completeness": "complete",
+    "graph_completeness": "complete",
+    "transaction_count": 3,
+    "rejected_record_count": 0,
+    "warning_count": 0,
+    "timezone": "UTC",
+    "language": "zh-TW",
+    "output_directory": "file_report"
+  },
+  "sections": [
+    {
+      "section_id": "cover",
+      "title": "封面",
+      "order": 1,
+      "content_blocks": [
+        "ChainSherlock"
+      ],
+      "tables": [],
+      "figures": [],
+      "evidence_refs": [],
+      "warnings": [],
+      "limitations": []
+    },
+    {
+      "section_id": "executive_summary",
+      "title": "執行摘要",
+      "order": 2,
+      "content_blocks": [
+        "共分析 3 筆交易。",
+        "資料完整度：complete。"
+      ],
+      "tables": [],
+      "figures": [],
+      "evidence_refs": [],
+      "warnings": [],
+      "limitations": []
+    },
+    {
+      "section_id": "completeness",
+      "title": "資料完整度",
+      "order": 3,
+      "content_blocks": [
+        "分析完整度：complete。",
+        "Provider 錯誤：0 筆。",
+        "被拒絕資料：0 筆。"
+      ],
+      "tables": [],
+      "figures": [],
+      "evidence_refs": [],
+      "warnings": [],
+      "limitations": []
+    },
+    {
+      "section_id": "data_sources",
+      "title": "資料來源",
+      "order": 3,
+      "content_blocks": [
+        "證據檔案數：3。"
+      ],
+      "tables": [],
+      "figures": [],
+      "evidence_refs": [
+        "E1",
+        "E2",
+        "E3"
+      ],
+      "warnings": [],
+      "limitations": []
+    },
+    {
+      "section_id": "target",
+      "title": "分析標的",
+      "order": 3,
+      "content_blocks": [
+        "標的：0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "鏈別：ethereum"
+      ],
+      "tables": [],
+      "figures": [],
+      "evidence_refs": [],
+      "warnings": [],
+      "limitations": []
+    },
+    {
+      "section_id": "analysis_summary",
+      "title": "分析摘要",
+      "order": 4,
+      "content_blocks": [],
+      "tables": [
+        {
+          "table_id": "summary",
+          "title": "摘要指標",
+          "columns": [
+            "指標",
+            "值"
+          ],
+          "rows": [
+            [
+              "first_seen",
+              "2026-01-01T00:00:00+00:00"
+            ],
+            [
+              "last_seen",
+              "2026-01-03T00:00:00+00:00"
+            ],
+            [
+              "transaction_count",
+              "3"
+            ],
+            [
+              "incoming_count",
+              "0"
+            ],
+            [
+              "outgoing_count",
+              "0"
+            ],
+            [
+              "unique_counterparties",
+              "0"
+            ],
+            [
+              "active_days",
+              "3"
+            ],
+            [
+              "unconfirmed_count",
+              "0"
+            ],
+            [
+              "missing_timestamp_count",
+              "0"
+            ]
+          ],
+          "omitted_count": 0
+        }
+      ],
+      "figures": [],
+      "evidence_refs": [],
+      "warnings": [],
+      "limitations": []
+    },
+    {
+      "section_id": "asset_flows",
+      "title": "資產流向",
+      "order": 5,
+      "content_blocks": [],
+      "tables": [
+        {
+          "table_id": "asset_flows",
+          "title": "依資產分離之流入／流出",
+          "columns": [
+            "資產",
+            "流入",
+            "流出"
+          ],
+          "rows": [],
+          "omitted_count": 0
+        }
+      ],
+      "figures": [],
+      "evidence_refs": [],
+      "warnings": [],
+      "limitations": []
+    },
+    {
+      "section_id": "timeline",
+      "title": "時間軸",
+      "order": 7,
+      "content_blocks": [
+        "每日區間數：3；每月區間數：1。"
+      ],
+      "tables": [],
+      "figures": [],
+      "evidence_refs": [],
+      "warnings": [],
+      "limitations": []
+    },
+    {
+      "section_id": "graph",
+      "title": "交易關係圖",
+      "order": 8,
+      "content_blocks": [
+        "節點：4；邊：3；截斷：False。"
+      ],
+      "tables": [],
+      "figures": [
+        {
+          "figure_id": "F1",
+          "title": "互動式交易關係圖",
+          "path": "flow.html",
+          "description": "離線 HTML 圖"
+        }
+      ],
+      "evidence_refs": [],
+      "warnings": [],
+      "limitations": []
+    },
+    {
+      "section_id": "observations",
+      "title": "客觀觀察",
+      "order": 12,
+      "content_blocks": [
+        "本節僅描述資料中的可驗證模式，不進行犯罪、風險或身分推論。"
+      ],
+      "tables": [],
+      "figures": [],
+      "evidence_refs": [],
+      "warnings": [],
+      "limitations": []
+    },
+    {
+      "section_id": "limitations",
+      "title": "資料限制",
+      "order": 13,
+      "content_blocks": [
+        "本報告不提供 AML、犯罪、風險或法律判定。",
+        "未知地址未進行 KYC、IP、地理位置或實體身分推論。"
+      ],
+      "tables": [],
+      "figures": [],
+      "evidence_refs": [],
+      "warnings": [],
+      "limitations": [
+        {
+          "code": "no_risk_assessment",
+          "description": "本報告不提供 AML、犯罪、風險或法律判定。"
+        },
+        {
+          "code": "no_identity_attribution",
+          "description": "未知地址未進行 KYC、IP、地理位置或實體身分推論。"
+        }
+      ]
+    },
+    {
+      "section_id": "conclusion",
+      "title": "結論",
+      "order": 14,
+      "content_blocks": [
+        "本報告已依目前取得的完整資料產生；內容僅為交易資料的描述性整理，不代表犯罪、風險或身分判定。"
+      ],
+      "tables": [],
+      "figures": [],
+      "evidence_refs": [],
+      "warnings": [],
+      "limitations": []
+    },
+    {
+      "section_id": "evidence_index",
+      "title": "Evidence Index",
+      "order": 15,
+      "content_blocks": [
+        "[E1] v5_graph_input.csv — 0a6c90e25af1949ac8dc9d6edf6c7491a6d04e5956f3c924206bac86a8b1e96c",
+        "[E2] analysis.json — d3f9651acebf625b41901e5e106c4ac99bf5d316217ebd514cb17f1b25a6cd0c",
+        "[E3] flow_graph.json — 833ba6c3b6c6a55857c54f717fe348377f9d518e6d69edc0157a3c8d42a02134"
+      ],
+      "tables": [],
+      "figures": [],
+      "evidence_refs": [
+        "E1",
+        "E2",
+        "E3"
+      ],
+      "warnings": [],
+      "limitations": []
+    },
+    {
+      "section_id": "appendix",
+      "title": "附錄",
+      "order": 16,
+      "content_blocks": [
+        "完整結構化資料請參閱 report_data.json。"
+      ],
+      "tables": [],
+      "figures": [],
+      "evidence_refs": [],
+      "warnings": [],
+      "limitations": []
+    }
+  ],
+  "evidence": [
+    {
+      "evidence_id": "E1",
+      "evidence_type": "source_file",
+      "source": "v5_graph_input.csv",
+      "source_reference": "v5_graph_input.csv",
+      "description": "Evidence file: v5_graph_input.csv",
+      "collected_at": "2026-08-04T07:09:04.935217+00:00",
+      "hash": "0a6c90e25af1949ac8dc9d6edf6c7491a6d04e5956f3c924206bac86a8b1e96c",
+      "chain": null,
+      "tx_hash": null,
+      "address": null,
+      "metadata": {
+        "size": 422,
+        "modified_at": "2026-08-04T06:06:51.612721+00:00"
+      }
+    },
+    {
+      "evidence_id": "E2",
+      "evidence_type": "analysis",
+      "source": "analysis.json",
+      "source_reference": "v6_validation/file_report/analysis.json",
+      "description": "Evidence file: analysis.json",
+      "collected_at": "2026-08-04T07:09:04.937217+00:00",
+      "hash": "d3f9651acebf625b41901e5e106c4ac99bf5d316217ebd514cb17f1b25a6cd0c",
+      "chain": null,
+      "tx_hash": null,
+      "address": null,
+      "metadata": {
+        "size": 4025,
+        "modified_at": "2026-08-04T07:09:04.867767+00:00"
+      }
+    },
+    {
+      "evidence_id": "E3",
+      "evidence_type": "flow_graph",
+      "source": "flow_graph.json",
+      "source_reference": "v6_validation/file_report/flow_graph.json",
+      "description": "Evidence file: flow_graph.json",
+      "collected_at": "2026-08-04T07:09:04.949763+00:00",
+      "hash": "833ba6c3b6c6a55857c54f717fe348377f9d518e6d69edc0157a3c8d42a02134",
+      "chain": null,
+      "tx_hash": null,
+      "address": null,
+      "metadata": {
+        "size": 5422,
+        "modified_at": "2026-08-04T07:09:04.872309+00:00"
+      }
+    }
+  ],
+  "citations": [
+    {
+      "citation_id": "C1",
+      "evidence_id": "E1",
+      "display_text": "[E1]",
+      "source": "v5_graph_input.csv",
+      "source_reference": "v5_graph_input.csv",
+      "section_id": "evidence_index"
+    },
+    {
+      "citation_id": "C2",
+      "evidence_id": "E2",
+      "display_text": "[E2]",
+      "source": "analysis.json",
+      "source_reference": "v6_validation/file_report/analysis.json",
+      "section_id": "evidence_index"
+    },
+    {
+      "citation_id": "C3",
+      "evidence_id": "E3",
+      "display_text": "[E3]",
+      "source": "flow_graph.json",
+      "source_reference": "v6_validation/file_report/flow_graph.json",
+      "section_id": "evidence_index"
+    }
+  ],
+  "warnings": [],
+  "limitations": [
+    {
+      "code": "no_risk_assessment",
+      "description": "本報告不提供 AML、犯罪、風險或法律判定。"
+    },
+    {
+      "code": "no_identity_attribution",
+      "description": "未知地址未進行 KYC、IP、地理位置或實體身分推論。"
+    }
+  ],
+  "conclusion": {
+    "completeness": "complete",
+    "text": "本報告已依目前取得的完整資料產生；內容僅為交易資料的描述性整理，不代表犯罪、風險或身分判定。"
+  }
+}

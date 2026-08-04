@@ -70,3 +70,4 @@ Future work must be approved and delivered one milestone at a time.
 ## After V6
 
 - V6 acceptance is complete. Do not begin V7 without an explicit prompt.
+- Keep the locally configured CJK font requirement documented; no font files are bundled.

@@ -1,0 +1,42 @@
+[
+  {
+    "provider": "trongrid",
+    "chain": "tron",
+    "capability": "address_transactions",
+    "fetched_at": "2026-08-04T07:02:05.515501+00:00",
+    "completeness": "partial",
+    "warnings": [
+      "Maximum record limit reached"
+    ],
+    "missing_data": [],
+    "status": "partial",
+    "fallback_attempted": false,
+    "fallback_result": null,
+    "final_completeness": "partial",
+    "truncated": true,
+    "truncation_reason": "max_records",
+    "fetched_records": 50,
+    "available_more": true,
+    "analysis_completeness": "partial"
+  },
+  {
+    "provider": "trongrid",
+    "chain": "tron",
+    "capability": "token_transfers",
+    "fetched_at": "2026-08-04T07:02:05.516528+00:00",
+    "completeness": "partial",
+    "warnings": [
+      "Maximum record limit reached"
+    ],
+    "missing_data": [],
+    "status": "partial",
+    "fallback_attempted": false,
+    "fallback_result": null,
+    "final_completeness": "partial",
+    "truncated": true,
+    "truncation_reason": "max_records",
+    "fetched_records": 50,
+    "available_more": true,
+    "analysis_completeness": "partial"
+  }
+]

@@ -1,6 +1,7 @@
 from pathlib import Path
 from typing import Any, Mapping
 from uuid import uuid4
+from dataclasses import replace
 
 from crypto_investigator.analyzers.export import AnalysisExporter
 from crypto_investigator.reports.citations import build_citations
@@ -44,6 +45,15 @@ class ReportComposer:
             data = self._namespace_to_mapping(data)
         if graph_data is not None and not isinstance(graph_data, Mapping):
             graph_data = self._namespace_to_mapping(graph_data)
+        evidence = tuple(
+            replace(
+                item,
+                source=redact(item.source),
+                source_reference=redact(item.source_reference),
+                description=redact(item.description),
+            )
+            for item in evidence
+        )
         metadata_source = data.get("metadata", {})
         completeness = str(metadata_source.get("completeness", "complete"))
         rejected_count = len(rejected_records) or int(
@@ -65,6 +75,8 @@ class ReportComposer:
             evidence,
             limitations,
             completeness,
+            target_address,
+            chain,
         )
         conclusion = self._conclusion(completeness, len(provider_errors), rejected_count)
         providers = tuple(
@@ -131,6 +143,8 @@ class ReportComposer:
         evidence,
         limitations,
         completeness,
+        target_address,
+        chain,
     ):
         summary = data.get("summary", {})
         statistics = data.get("statistics", {})
@@ -159,15 +173,19 @@ class ReportComposer:
                 "分析標的",
                 3,
                 (
-                    f"標的：{redact(data.get('metadata', {}).get('target_address', '—'))}",
-                    f"鏈別：{redact(data.get('metadata', {}).get('chain', '—'))}",
+                    f"標的：{redact(target_address or '—')}",
+                    f"鏈別：{redact(chain or '—')}",
                 ),
             ),
             ReportSection(
                 "completeness",
                 "資料完整度",
                 3,
-                (f"分析完整度：{completeness}。",),
+                (
+                    f"分析完整度：{completeness}。",
+                    f"Provider 錯誤：{len(errors)} 筆。",
+                    f"被拒絕資料：{len(rejected)} 筆。",
+                ),
             ),
             ReportSection(
                 "analysis_summary",

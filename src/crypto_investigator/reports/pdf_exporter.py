@@ -1,5 +1,7 @@
 import os
 from pathlib import Path
+import re
+from xml.sax.saxutils import escape
 
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.styles import getSampleStyleSheet
@@ -14,6 +16,35 @@ from crypto_investigator.reports.models import ReportDocument
 
 
 class PdfReportExporter:
+    def _page_number(self, canvas, doc) -> None:
+        canvas.saveState()
+        canvas.setFont(self._latin_font_name, 9)
+        canvas.drawCentredString(A4[0] / 2, 12 * mm, f"{doc.page}")
+        canvas.restoreState()
+
+    @staticmethod
+    def _register_optional_windows_font(filename: str, name: str, fallback: str) -> str:
+        windows = os.getenv("WINDIR")
+        candidate = Path(windows) / "Fonts" / filename if windows else None
+        if candidate and candidate.exists():
+            try:
+                pdfmetrics.registerFont(TTFont(name, str(candidate)))
+                return name
+            except Exception:
+                pass
+        return fallback
+
+    @staticmethod
+    def _styled_text(value: str, latin_font: str) -> str:
+        parts = []
+        for segment in re.findall(r"[\x00-\x7f]+|[^\x00-\x7f]+", str(value)):
+            escaped = escape(segment)
+            if segment.isascii():
+                parts.append(f'<font name="{latin_font}">{escaped}</font>')
+            else:
+                parts.append(escaped)
+        return "".join(parts)
+
     def write(
         self, document: ReportDocument, path: Path, font_path: Path | None = None
     ) -> Path:
@@ -29,22 +60,68 @@ class PdfReportExporter:
         try:
             font_name = "ChainSherlockCJK"
             pdfmetrics.registerFont(TTFont(font_name, str(configured)))
+            self._latin_font_name = self._register_optional_windows_font(
+                "times.ttf", "ChainSherlockTimes", "Times-Roman"
+            )
+            self._table_font_name = self._register_optional_windows_font(
+                "consola.ttf", "ChainSherlockConsolas", "Courier"
+            )
             styles = getSampleStyleSheet()
             for name in ("Title", "Heading1", "Heading2", "BodyText"):
                 styles[name].fontName = font_name
             story = [
-                Paragraph(document.title, styles["Title"]),
-                Paragraph(f"報告編號：{document.metadata.report_id}", styles["BodyText"]),
+                Paragraph(
+                    self._styled_text(document.title, self._latin_font_name),
+                    styles["Title"],
+                ),
+                Paragraph(
+                    self._styled_text(
+                        f"報告編號：{document.metadata.report_id}",
+                        self._latin_font_name,
+                    ),
+                    styles["BodyText"],
+                ),
                 Spacer(1, 5 * mm),
             ]
             for section in document.sections:
-                story.append(Paragraph(section.title, styles["Heading1"]))
+                story.append(
+                    Paragraph(
+                        self._styled_text(section.title, self._latin_font_name),
+                        styles["Heading1"],
+                    )
+                )
                 for block in section.content_blocks:
-                    story.append(Paragraph(block, styles["BodyText"]))
+                    story.append(
+                        Paragraph(
+                            self._styled_text(block, self._latin_font_name),
+                            styles["BodyText"],
+                        )
+                    )
                 for table in section.tables:
-                    data = [list(table.columns), *[list(row) for row in table.rows]]
+                    if len(table.columns) > 5:
+                        data = [["欄位", "值"]]
+                        for row_number, row in enumerate(table.rows, start=1):
+                            data.append([f"紀錄 {row_number}", ""])
+                            data.extend(
+                                [column, value]
+                                for column, value in zip(table.columns, row)
+                            )
+                        widths = (42 * mm, 123 * mm)
+                    else:
+                        data = [list(table.columns), *[list(row) for row in table.rows]]
+                        widths = tuple(165 * mm / len(table.columns) for _ in table.columns)
+                    data = [
+                        [
+                            Paragraph(
+                                self._styled_text(str(value), self._table_font_name),
+                                styles["BodyText"],
+                            )
+                            for value in row
+                        ]
+                        for row in data
+                    ]
                     if data and data[0]:
-                        rendered = Table(data, repeatRows=1)
+                        rendered = Table(data, repeatRows=1, colWidths=widths)
                         rendered.setStyle(
                             TableStyle(
                                 [
@@ -58,7 +135,15 @@ class PdfReportExporter:
                         story.append(rendered)
                 story.append(Spacer(1, 3 * mm))
             path.parent.mkdir(parents=True, exist_ok=True)
-            SimpleDocTemplate(str(path), pagesize=A4).build(story)
+            SimpleDocTemplate(
+                str(path),
+                pagesize=A4,
+                bottomMargin=20 * mm,
+            ).build(
+                story,
+                onFirstPage=self._page_number,
+                onLaterPages=self._page_number,
+            )
             return path
         except PdfExportError:
             raise

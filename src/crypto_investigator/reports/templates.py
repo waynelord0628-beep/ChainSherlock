@@ -13,6 +13,6 @@ def template_environment(*, html: bool = False) -> Environment:
         loader=FileSystemLoader(root),
         autoescape=True if html else False,
         undefined=StrictUndefined,
-        trim_blocks=True,
-        lstrip_blocks=True,
+        trim_blocks=html,
+        lstrip_blocks=html,
     )

@@ -84,3 +84,12 @@ V3 contains no Provider, blockchain API, graph rendering, report, Word/PDF, AI, 
 - 新增 80 項 V6 測試；完整測試為 305 passed。
 - 完成 100／10,000／100,000 筆 Report benchmark 與 example outputs。
 - V6 未加入 AI、Risk、Cross-chain、UI 或任何新分析邏輯。
+
+## V6 完整驗收
+
+- 以 `TR5WMAhpM9JkpouAT49X9pNHP8NPQkcGAE` 完成 TronGrid → V2 → V3 → V5 → V6 真實流程。
+- 修正 Provider 報告未使用完整公開 `analysis.json` 的問題，TRX／USDT 摘要與精度均已保留。
+- Markdown、離線 HTML、DOCX、PDF、Evidence manifest、JSON round-trip 與 partial export 均已實測。
+- DOCX 已用 Microsoft Word 實際開啟與列印渲染；PDF 已逐頁渲染檢查。
+- DOCX、PDF 與 HTML 列印樣式均套用：正文中文標楷體、英文與數字 Times New Roman；表格中文標楷體、英文與數字 Consolas。
+- 寬表格改用可跨頁的欄位／值版面，避免 A4 裁切。

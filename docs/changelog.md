@@ -73,3 +73,8 @@
 - Added Markdown, offline HTML, DOCX and configurable-CJK PDF exports.
 - Added partial export status/error artifacts and three report CLI workflows.
 - Added V6 examples, security coverage and report benchmarks.
+- Validated the complete TronGrid report flow with the requested TRON address.
+- Fixed Provider report composition to retain complete public analysis data.
+- Fixed Markdown table line breaks, DOCX/PDF page numbering, mixed-script fonts,
+  and wide-table overflow.
+- Hardened report text against event-handler, script, formula and traversal payloads.

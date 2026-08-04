@@ -16,10 +16,12 @@
 {% for table in section.tables %}
 ### {{ table.title }}
 
-| {% for column in table.columns %}{{ column }} |{% endfor %}
-|{% for column in table.columns %}---|{% endfor %}
-{% for row in table.rows %}| {% for value in row %}{{ value }} |{% endfor %}
+|{% for column in table.columns %} {{ column }} |{% endfor %}
+|{% for column in table.columns %} --- |{% endfor %}
+{% for row in table.rows %}
+|{% for value in row %} {{ value }} |{% endfor %}
 {% endfor %}
+
 {% endfor %}
 {% endfor %}
 

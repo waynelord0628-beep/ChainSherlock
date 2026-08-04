@@ -4,8 +4,10 @@ import hashlib
 import json
 from pathlib import Path
 from zipfile import ZipFile
+from types import SimpleNamespace
 
 import pytest
+import reportlab
 
 from crypto_investigator.analyzers.engine import AnalysisEngine
 from crypto_investigator.domain.transaction import Chain, Transaction
@@ -233,3 +235,90 @@ def test_export_status_files_are_valid_json(document, tmp_path):
     ReportExportCoordinator().export(document, tmp_path, "markdown")
     assert json.loads((tmp_path / "export_status.json").read_text(encoding="utf-8"))["status"] == "complete"
     assert json.loads((tmp_path / "export_errors.json").read_text(encoding="utf-8")) == []
+
+
+def test_public_analysis_json_mapping_preserves_summary_and_assets(analysis):
+    from crypto_investigator.analyzers.export import AnalysisExporter
+
+    value = AnalysisExporter.to_primitive(analysis)
+    document = ReportComposer().compose(value, target_address=TARGET, chain="ethereum")
+    summary = next(item for item in document.sections if item.section_id == "analysis_summary")
+    assets = next(item for item in document.sections if item.section_id == "asset_flows")
+    assert ("transaction_count", "2") in summary.tables[0].rows
+    assert {row[0] for row in assets.tables[0].rows} == {"ETH", "USDT"}
+
+
+def test_completeness_discloses_zero_provider_errors_and_rejections(document):
+    section = next(item for item in document.sections if item.section_id == "completeness")
+    assert "Provider 錯誤：0 筆。" in section.content_blocks
+    assert "被拒絕資料：0 筆。" in section.content_blocks
+
+
+@pytest.mark.parametrize(
+    "payload,unsafe",
+    [
+        ("<script>alert(1)</script>", "<script>"),
+        ("<img src=x onerror=alert(1)>", "<img"),
+        ("../../outside", "../../"),
+        ("api_key=fake-secret", "fake-secret"),
+    ],
+)
+def test_report_text_security_normalization(payload, unsafe):
+    assert unsafe not in redact(payload)
+
+
+def test_formula_like_text_is_neutralized():
+    assert redact("=HYPERLINK('x')").startswith("'=")
+
+
+def test_markdown_table_rows_have_line_breaks(document, tmp_path):
+    content = MarkdownReportExporter().write(document, tmp_path / "report.md").read_text(encoding="utf-8")
+    assert "| transaction_count | 2 |" in content
+
+
+def test_docx_contains_font_and_page_number_settings(document, tmp_path):
+    ReportExportCoordinator().export(document, tmp_path, "docx")
+    with ZipFile(tmp_path / "report.docx") as archive:
+        document_xml = archive.read("word/document.xml").decode("utf-8")
+        styles_xml = archive.read("word/styles.xml").decode("utf-8")
+        footer_xml = b"".join(
+            archive.read(name) for name in archive.namelist() if name.startswith("word/footer")
+        ).decode("utf-8")
+    assert "Times New Roman" in styles_xml
+    assert "標楷體" in styles_xml
+    assert "Consolas" in document_xml
+    assert 'w:instr="PAGE"' in footer_xml
+
+
+def test_pdf_has_page_number_and_valid_page(document, tmp_path):
+    font = Path(reportlab.__file__).parent / "fonts" / "Vera.ttf"
+    path = PdfReportExporter().write(document, tmp_path / "report.pdf", font)
+    content = path.read_bytes()
+    assert content.startswith(b"%PDF-")
+    assert b"/Type /Page" in content
+
+
+def test_malicious_content_is_safe_in_every_export(analysis, tmp_path, monkeypatch):
+    payload = (
+        "<script>alert(1)</script> "
+        "<img src=x onerror=alert(1)> "
+        "=HYPERLINK('x') ../../outside api_key=fake-secret"
+    )
+    document = ReportComposer().compose(analysis, title=payload)
+    font = Path(reportlab.__file__).parent / "fonts" / "Vera.ttf"
+    monkeypatch.setenv("CHAINSHERLOCK_PDF_CJK_FONT", str(font))
+    result = ReportExportCoordinator().export(document, tmp_path, "all")
+    assert result.status == "complete"
+    text_outputs = (
+        (tmp_path / "report.md").read_text(encoding="utf-8"),
+        (tmp_path / "report.html").read_text(encoding="utf-8"),
+        (tmp_path / "report_data.json").read_text(encoding="utf-8"),
+    )
+    with ZipFile(tmp_path / "report.docx") as archive:
+        docx_xml = archive.read("word/document.xml").decode("utf-8")
+    for content in (*text_outputs, docx_xml):
+        assert "<script>" not in content
+        assert "<img src=x" not in content
+        assert "../../outside" not in content
+        assert "fake-secret" not in content
+    assert (tmp_path / "report.pdf").read_bytes().startswith(b"%PDF-")

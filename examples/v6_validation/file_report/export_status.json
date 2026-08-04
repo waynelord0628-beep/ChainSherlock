@@ -1,0 +1,16 @@
+{
+  "status": "complete",
+  "requested_formats": [
+    "markdown",
+    "html",
+    "docx",
+    "pdf"
+  ],
+  "successful_formats": [
+    "markdown",
+    "html",
+    "docx",
+    "pdf"
+  ],
+  "failed_formats": []
+}
