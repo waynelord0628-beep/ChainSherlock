@@ -3,7 +3,7 @@ from pathlib import Path
 import re
 from xml.sax.saxutils import escape
 
-from reportlab.lib.pagesizes import A4
+from reportlab.lib.pagesizes import A4, landscape
 from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.lib.units import mm
 from reportlab.pdfbase import pdfmetrics
@@ -98,18 +98,12 @@ class PdfReportExporter:
                         )
                     )
                 for table in section.tables:
-                    if len(table.columns) > 5:
-                        data = [["欄位", "值"]]
-                        for row_number, row in enumerate(table.rows, start=1):
-                            data.append([f"紀錄 {row_number}", ""])
-                            data.extend(
-                                [column, value]
-                                for column, value in zip(table.columns, row)
-                            )
-                        widths = (42 * mm, 123 * mm)
-                    else:
-                        data = [list(table.columns), *[list(row) for row in table.rows]]
-                        widths = tuple(165 * mm / len(table.columns) for _ in table.columns)
+                    data = [list(table.columns), *[list(row) for row in table.rows]]
+                    available_width = 252 if len(table.columns) > 5 else 165
+                    widths = tuple(
+                        available_width * mm / len(table.columns)
+                        for _ in table.columns
+                    )
                     data = [
                         [
                             Paragraph(
@@ -137,7 +131,15 @@ class PdfReportExporter:
             path.parent.mkdir(parents=True, exist_ok=True)
             SimpleDocTemplate(
                 str(path),
-                pagesize=A4,
+                pagesize=(
+                    landscape(A4)
+                    if any(
+                        len(table.columns) > 5
+                        for item in document.sections
+                        for table in item.tables
+                    )
+                    else A4
+                ),
                 bottomMargin=20 * mm,
             ).build(
                 story,

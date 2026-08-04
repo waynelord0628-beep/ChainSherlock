@@ -1,4 +1,5 @@
 from pathlib import Path
+from decimal import Decimal
 from typing import Any, Mapping
 from uuid import uuid4
 from dataclasses import replace
@@ -51,6 +52,33 @@ class ReportComposer:
             graph_data = self._namespace_to_mapping(graph_data)
         if investigation_data is not None and not isinstance(investigation_data, Mapping):
             investigation_data = self._namespace_to_mapping(investigation_data)
+        if investigation_data:
+            evidence = evidence + tuple(
+                ReportEvidence(
+                    evidence_id=str(item.get("evidence_id")),
+                    evidence_type=str(item.get("feature", "investigation")),
+                    source="investigation_evidence.json",
+                    source_reference=str(
+                        item.get("source_reference", "AnalysisResult.flow")
+                    ),
+                    description=str(item.get("calculation", "")),
+                    collected_at=item.get("created_at"),
+                    tx_hash=(
+                        item.get("tx_hashes", [None])[0]
+                        if item.get("tx_hashes") else None
+                    ),
+                    address=(
+                        item.get("addresses", [None])[0]
+                        if item.get("addresses") else None
+                    ),
+                    metadata={
+                        "transaction_hashes": item.get("tx_hashes", []),
+                        "addresses": item.get("addresses", []),
+                        "parameters": item.get("parameters", {}),
+                    },
+                )
+                for item in investigation_data.get("evidence_refs", [])
+            )
         evidence = tuple(
             replace(
                 item,
@@ -85,7 +113,9 @@ class ReportComposer:
             chain,
             investigation_data,
         )
-        conclusion = self._conclusion(completeness, len(provider_errors), rejected_count)
+        conclusion = self._conclusion(
+            completeness, len(provider_errors), rejected_count, investigation_data
+        )
         providers = tuple(
             sorted(
                 {
@@ -282,28 +312,9 @@ class ReportComposer:
                 )
             )
         if investigation:
-            facts = investigation.get("conclusion_facts", {})
-            behavior = investigation.get("behavior", {})
-            sections.append(
-                ReportSection(
-                    "investigation",
-                    "調查特徵",
-                    11,
-                    (
-                        "本節為 deterministic rule engine 結果，不使用 AI 或自然語言推理。",
-                    ),
-                    tables=(
-                        self._mapping_table(
-                            "investigation_behavior",
-                            "行為摘要",
-                            behavior,
-                        ),
-                        self._mapping_table(
-                            "investigation_facts",
-                            "Conclusion Facts",
-                            facts,
-                        ),
-                    ),
+            sections.extend(
+                self._investigation_sections(
+                    investigation, data, completeness
                 )
             )
         if errors:
@@ -331,11 +342,20 @@ class ReportComposer:
             (
                 ReportSection("observations", "客觀觀察", 12, ("本節僅描述資料中的可驗證模式，不進行犯罪、風險或身分推論。",)),
                 ReportSection("limitations", "資料限制", 13, tuple(item.description for item in limitations), limitations=limitations),
-                ReportSection("conclusion", "結論", 14, (self._conclusion(completeness, len(errors), len(rejected)).text,)),
+                ReportSection(
+                    "conclusion",
+                    "結論",
+                    30,
+                    (
+                        self._conclusion(
+                            completeness, len(errors), len(rejected), investigation
+                        ).text,
+                    ),
+                ),
                 ReportSection(
                     "evidence_index",
                     "Evidence Index",
-                    15,
+                    31,
                     tuple(
                         f"[{item.evidence_id}] {item.source} — {item.hash or 'hash unavailable'}"
                         for item in evidence
@@ -346,7 +366,7 @@ class ReportComposer:
                 ReportSection(
                     "appendix",
                     "附錄",
-                    16,
+                    32,
                     ("完整結構化資料請參閱 report_data.json。",),
                 ),
             )
@@ -373,7 +393,36 @@ class ReportComposer:
         return tuple(values)
 
     @staticmethod
-    def _conclusion(completeness, error_count, rejected_count):
+    def _conclusion(completeness, error_count, rejected_count, investigation=None):
+        if investigation:
+            meta = investigation.get("structured_metadata") or {}
+            funding = investigation.get("funding", {})
+            patterns = investigation.get("transfer_patterns", {})
+            dormant = investigation.get("dormant_periods", [])
+            distribution = investigation.get("distribution_analysis") or {}
+            assets = ", ".join(meta.get("assets", [])) or "無"
+            source_from = meta.get("source_date_from") or "未知"
+            source_to = meta.get("source_date_to") or "未知"
+            rapid = any(
+                item.get("within_1_hour_ratio", 0)
+                for item in (distribution.get("statistics_by_asset") or {}).values()
+            )
+            text = (
+                f"本次分析期間為 {source_from} 至 {source_to}，共納入 "
+                f"{meta.get('source_transaction_count', 0)} 筆可供 Investigation 使用的交易邊，"
+                f"資料狀態為 {completeness}，涉及資產：{assets}。"
+                f"目前樣本的 funding concentration 為 "
+                f"{format_value(funding.get('concentration_by_asset', {}))}；"
+                f"來源切換 {len(funding.get('transitions', []))} 次；"
+                f"休眠區間 {len(dormant)} 個；"
+                f"batch incoming/outgoing 為 {patterns.get('batch_incoming_count', 0)}/"
+                f"{patterns.get('batch_outgoing_count', 0)}；"
+                f"固定金額模式為 {bool(any(patterns.get('fixed_amounts', {}).values()))}；"
+                f"一小時內 FIFO 配對比例非零為 {rapid}。"
+                "以上只描述目前樣本；Local Label 與 Provider 缺漏可能改變排行與模式。"
+                "僅依鏈上資料無法判定實際控制人、交易目的或犯罪意圖。"
+            )
+            return ReportConclusion(completeness, text)
         if completeness == "failed":
             text = "資料處理未形成足夠的有效交易結果；本報告僅記錄可驗證的失敗狀態與限制。"
         elif completeness == "partial":
@@ -381,6 +430,219 @@ class ReportComposer:
         else:
             text = "本報告已依目前取得的完整資料產生；內容僅為交易資料的描述性整理，不代表犯罪、風險或身分判定。"
         return ReportConclusion(completeness, text)
+
+    @classmethod
+    def _investigation_sections(cls, investigation, data, completeness):
+        reconciliation = investigation.get("direction_reconciliation") or {}
+        funding = investigation.get("funding") or {}
+        distribution = investigation.get("distribution_analysis") or {}
+        stages = investigation.get("stages") or []
+        dormant = investigation.get("dormant_periods") or []
+        patterns = investigation.get("transfer_patterns") or {}
+        services = investigation.get("services") or []
+        observations = investigation.get("observations") or []
+        facts = investigation.get("conclusion_fact_items") or []
+        source_rows = []
+        for asset, addresses in sorted(
+            (funding.get("top_sources_by_asset") or {}).items()
+        ):
+            indexed = {
+                item.get("address"): item for item in funding.get("sources", [])
+            }
+            for rank, address in enumerate(addresses[:10], 1):
+                item = indexed[address]
+                source_rows.append(
+                    (
+                        str(rank), asset, address,
+                        format_value(item.get("amounts_by_asset", {}).get(asset, 0)),
+                        format_value(item.get("share_by_asset", {}).get(asset, 0)),
+                        format_value(item.get("first_funding")),
+                        format_value(item.get("last_funding")),
+                    )
+                )
+        counterparty_rows = []
+        service_map = {item.get("address"): item.get("service_type") for item in services}
+        counterparties = data.get("counterparties", [])
+        outgoing_assets = sorted({
+            asset
+            for item in counterparties
+            for asset in item.get("outgoing_amount_by_asset", {})
+        })
+        for asset in outgoing_assets:
+            candidates = [
+                item for item in counterparties
+                if item.get("outgoing_amount_by_asset", {}).get(asset, 0)
+            ]
+            candidates.sort(
+                key=lambda item: (
+                    -Decimal(str(item["outgoing_amount_by_asset"][asset])),
+                    item.get("address", ""),
+                )
+            )
+            total = sum(
+                (
+                    Decimal(str(item["outgoing_amount_by_asset"][asset]))
+                    for item in candidates
+                ),
+                Decimal("0"),
+            )
+            for rank, item in enumerate(candidates[:10], 1):
+                incoming = item.get("incoming_amount_by_asset", {})
+                outgoing = item.get("outgoing_amount_by_asset", {})
+                counterparty_rows.append(
+                    (
+                        str(rank), item.get("address", ""), "",
+                        service_map.get(item.get("address"), "unknown candidate"),
+                        "outgoing", str(item.get("interaction_count", 0)), asset,
+                        format_value(incoming.get(asset, 0)),
+                        format_value(outgoing.get(asset, 0)),
+                        format_value(
+                            Decimal(str(outgoing.get(asset, 0))) / total
+                            if total else 0
+                        ),
+                        format_value(item.get("first_seen")),
+                        format_value(item.get("last_seen")),
+                    )
+                )
+        stage_rows = tuple(
+            (
+                item.get("stage", ""), format_value(item.get("started_at")),
+                format_value(item.get("ended_at")),
+                str(item.get("transaction_count", 0)),
+                format_value(item.get("assets", [])),
+                format_value(item.get("dominant_funding_sources", [])),
+                format_value(item.get("dominant_outgoing_counterparties", [])),
+                format_value(item.get("reason_codes", [])),
+                item.get("confidence", "low" if completeness != "complete" else "medium"),
+                format_value(item.get("evidence_refs", [])),
+            )
+            for item in stages
+        )
+        holding_rows = tuple(
+            (
+                asset,
+                format_value(item.get("matched_incoming_amount")),
+                format_value(item.get("matched_outgoing_amount")),
+                format_value(item.get("unmatched_incoming_amount")),
+                format_value(item.get("unmatched_outgoing_amount")),
+                format_value(item.get("average_holding_seconds")),
+                format_value(item.get("median_holding_seconds")),
+                format_value(item.get("within_5_minutes_ratio")),
+                format_value(item.get("within_1_hour_ratio")),
+                format_value(item.get("within_24_hours_ratio")),
+                str(item.get("pass_through_event_count", 0)),
+            )
+            for asset, item in sorted(
+                (distribution.get("statistics_by_asset") or {}).items()
+            )
+        )
+        observation_rows = tuple(
+            (
+                item.get("code", ""), item.get("factual_statement", ""),
+                format_value(item.get("metrics", {})),
+                format_value(item.get("reason_codes", [])),
+                format_value(item.get("evidence_refs", [])),
+                item.get("confidence", "medium"),
+                format_value(item.get("limitations", [])),
+            )
+            for item in observations
+        )
+        fact_rows = tuple(
+            (
+                item.get("fact_code", ""), format_value(item.get("value")),
+                format_value(item.get("unit")), item.get("confidence", "medium"),
+                format_value(item.get("reason_codes", [])),
+                format_value(item.get("evidence_refs", [])),
+                format_value(item.get("limitations", [])),
+            )
+            for item in facts
+        )
+        return (
+            ReportSection(
+                "investigation", "調查特徵", 10,
+                (
+                    "本節為 deterministic rule engine 結果，不使用 AI、風險分數或身分推論。",
+                    f"資料完整度：{completeness}。",
+                ),
+            ),
+            ReportSection(
+                "direction_reconciliation", "方向對帳", 11,
+                ("failed transaction 另行排除；目前數量列於表中。",),
+                tables=(cls._mapping_table("direction_reconciliation", "方向對帳", reconciliation),),
+            ),
+            ReportSection(
+                "funding_analysis", "各資產供款來源", 12,
+                tables=(
+                    ReportTable(
+                        "funding_sources", "各資產前十大供款來源",
+                        ("排名", "資產", "地址", "金額", "占比", "首次", "最後"),
+                        tuple(source_rows),
+                    ),
+                    cls._records_table(
+                        "funding_transitions", "供款來源變化",
+                        funding.get("transitions", []),
+                    ),
+                ),
+            ),
+            ReportSection(
+                "outgoing_distribution", "主要資金去向與角色候選", 13,
+                ("無 Local Label 時，service／exchange／payment／OTC 僅表示規則候選。",),
+                tables=(ReportTable(
+                    "counterparty_summary", "主要交易對手橫向摘要",
+                    ("排名", "地址", "標籤", "候選角色", "方向", "交易次數",
+                     "資產", "流入金額", "流出金額", "占比", "首次", "最後"),
+                    tuple(counterparty_rows),
+                ),),
+            ),
+            ReportSection(
+                "operation_stages", "運作階段", 14,
+                tables=(ReportTable(
+                    "operation_stages", "Operation Stages",
+                    ("階段", "開始", "結束", "交易數", "資產", "主要來源",
+                     "主要去向", "原因", "可信度", "Evidence"),
+                    stage_rows,
+                ),),
+            ),
+            ReportSection(
+                "dormancy", "休眠與重新啟用", 15,
+                (
+                    "partial 資料可能影響交易間隔；本報告不把資料邊界本身視為休眠證據。",
+                    f"目前偵測區間數：{len(dormant)}。",
+                ),
+                tables=(cls._records_table("dormancy", "休眠區間", dormant),) if dormant else (),
+            ),
+            ReportSection(
+                "holding_time", "資金停留時間", 16,
+                ("採 FIFO approximation、不得解讀為實際同一筆資金流向，且不跨資產配對。",),
+                tables=(ReportTable(
+                    "holding_time", "依資產分離之 FIFO 統計",
+                    ("資產", "配對流入", "配對流出", "未配對流入", "未配對流出",
+                     "平均秒數", "中位秒數", "5 分鐘內", "1 小時內", "24 小時內", "事件數"),
+                    holding_rows,
+                ),),
+            ),
+            ReportSection(
+                "transfer_patterns", "轉帳模式", 17,
+                ("門檻來自 settings snapshot；dust TRX 不列為重要固定金額模式。",),
+                tables=(cls._mapping_table("transfer_patterns", "模式摘要", patterns),),
+            ),
+            ReportSection(
+                "investigation_observations", "客觀觀察", 18,
+                tables=(ReportTable(
+                    "investigation_observations", "Deterministic Observations",
+                    ("代碼", "事實敘述", "數值", "原因", "Evidence", "可信度", "限制"),
+                    observation_rows,
+                ),),
+            ),
+            ReportSection(
+                "investigation_facts", "Conclusion Facts", 19,
+                tables=(ReportTable(
+                    "investigation_facts", "結論事實",
+                    ("Fact", "值", "單位", "可信度", "原因", "Evidence", "限制"),
+                    fact_rows,
+                ),),
+            ),
+        )
 
     @staticmethod
     def _mapping_table(table_id, title, values):

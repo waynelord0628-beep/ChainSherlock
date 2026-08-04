@@ -5,6 +5,10 @@
 - V6.5 acceptance is complete. Do not start V7 without a new explicit prompt.
 - Known limitations: no Bitcoin UTXO holding-time matching, cross-chain tracing, commercial label intelligence, or AI-generated narrative.
 - Future dependency additions require explicit need, lock update, and clean-environment validation.
+- Provider pagination remains bounded; expanded real-data validation may remain partial because of limits or rate limiting.
+- Candidate roles without Local Label remain unconfirmed candidates.
+- FIFO approximation is not provenance tracing and cannot identify the actual onward movement of a specific incoming transfer.
+- Pattern details beyond the current public summary remain limited; no new feature family was introduced during quality validation.
 
 ## V5 completed scope
 

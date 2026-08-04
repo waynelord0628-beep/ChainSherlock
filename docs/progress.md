@@ -16,6 +16,15 @@ V6.5 Investigation Feature Engine 已完成。
 
 未加入 AI、LLM、Risk/AML Score、Cross-chain、商業情資 API 或 Web UI。
 
+## V6.5 quality validation
+
+- 使用 `TR5WMAhpM9JkpouAT49X9pNHP8NPQkcGAE` 完成 TronGrid A/B 真實資料驗收。
+- 測試 A：address transactions 50、token transfers 50；100 筆進入分析、85 筆具完整 flow endpoints；資料期間 2026-07-16 至 2026-08-04。
+- 測試 B：address transactions 2,000、token transfers 500；2,500 筆進入分析、1,635 筆具完整 flow endpoints；資料期間 2026-01-01 至 2026-08-04。
+- 兩組均維持 partial；A 為 max_records 截斷，B 仍有更多 address records，不將 Provider records 宣稱為地址完整交易總數。
+- 修正方向對帳、資產金額排行、partial stage／dormancy 信心、dust TRX、Evidence traceability、Facts 一致性及 Report 橫向摘要表。
+- 10 個 Conclusion Facts 已由 regression tests 重新計算一致。
+
 ## V4 completion summary
 
 V4 Blockchain Provider Engine is implemented.

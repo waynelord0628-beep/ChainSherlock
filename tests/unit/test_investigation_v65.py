@@ -6,6 +6,7 @@ from pathlib import Path
 import pytest
 
 from crypto_investigator.analyzers.engine import AnalysisEngine
+from crypto_investigator.analyzers.export import AnalysisExporter
 from crypto_investigator.domain.transaction import Chain, Transaction
 from crypto_investigator.graphs.builder import GraphBuilder
 from crypto_investigator.graphs.styling import FUNDING_COLOR, STAGE_COLORS, node_color
@@ -439,3 +440,106 @@ def test_structured_conclusion_facts_avoid_prohibited_judgments(result):
     assert not prohibited.intersection(
         item.fact_code for item in result.conclusion_fact_items
     )
+
+
+def test_public_mapping_reconciles_records_missing_flow_endpoints(analysis):
+    value = AnalysisExporter.to_primitive(analysis)
+    value["summary"]["transaction_count"] = 12
+    value["summary"]["incoming_count"] = 7
+    value["summary"]["outgoing_count"] = 3
+    found = InvestigationFeatureEngine().analyze_public_mapping(value, TARGET)
+    reconciliation = found.direction_reconciliation
+    assert reconciliation.transaction_count == 12
+    assert reconciliation.unclassified_direction_count == 2
+    assert reconciliation.reconciled is True
+
+
+def test_partial_result_facts_and_observations_are_traceable(analysis):
+    partial = replace(analysis, metadata={**analysis.metadata, "completeness": "partial"})
+    found = InvestigationFeatureEngine().analyze(partial, TARGET)
+    assert all(item.evidence_refs for item in found.conclusion_fact_items)
+    assert all(item.confidence == "low" for item in found.observations)
+    assert all(item.limitations for item in found.observations)
+    assert "startup" not in {item.stage for item in found.stages}
+    assert found.dormant_periods == ()
+
+
+def test_dust_trx_is_not_fixed_amount_pattern():
+    start = datetime(2025, 1, 1, tzinfo=UTC)
+    records = tuple(
+        transaction(index, SOURCE_A, TARGET, "0.000001", start + timedelta(seconds=index), "TRX")
+        for index in range(1, 5)
+    )
+    found = InvestigationFeatureEngine().analyze(
+        AnalysisEngine().analyze(records, TARGET), TARGET
+    )
+    assert found.transfer_patterns.fixed_amounts["TRX"] == ()
+
+
+@pytest.mark.parametrize("section_id", [
+    "direction_reconciliation", "funding_analysis", "outgoing_distribution",
+    "operation_stages", "dormancy", "holding_time", "transfer_patterns",
+    "investigation_observations", "investigation_facts",
+])
+def test_report_has_quality_validation_sections(analysis, result, section_id):
+    report = ReportComposer().compose(analysis, investigation=result)
+    assert section_id in {section.section_id for section in report.sections}
+
+
+def test_counterparty_report_remains_horizontal(analysis, result):
+    report = ReportComposer().compose(analysis, investigation=result)
+    section = next(
+        item for item in report.sections
+        if item.section_id == "outgoing_distribution"
+    )
+    assert section.tables[0].columns[:4] == ("排名", "地址", "標籤", "候選角色")
+
+
+def test_report_evidence_index_includes_investigation_refs(analysis, result):
+    report = ReportComposer().compose(analysis, investigation=result)
+    assert "IF0" in {item.evidence_id for item in report.evidence}
+
+
+@pytest.mark.parametrize("fact_code", [
+    "dominant_funder_exists",
+    "dominant_funder_address",
+    "dominant_funder_share_by_asset",
+    "funding_source_changed",
+    "funding_transition_count",
+    "dormant_period_detected",
+    "longest_dormant_days",
+    "reactivation_detected",
+    "batch_incoming_detected",
+    "batch_outgoing_detected",
+])
+def test_conclusion_fact_recalculation_matches_features(result, fact_code):
+    expected = {
+        "dominant_funder_exists": bool(result.funding.sources),
+        "dominant_funder_address": {
+            asset: addresses[0]
+            for asset, addresses in result.funding.top_sources_by_asset.items()
+            if addresses
+        },
+        "dominant_funder_share_by_asset": result.funding.concentration_by_asset,
+        "funding_source_changed": bool(result.funding.transitions),
+        "funding_transition_count": len(result.funding.transitions),
+        "dormant_period_detected": bool(result.dormant_periods),
+        "longest_dormant_days": max(
+            (item.dormant_days for item in result.dormant_periods), default=0
+        ),
+        "reactivation_detected": any(
+            item.reactivated for item in result.dormant_periods
+        ),
+        "batch_incoming_detected": bool(
+            result.transfer_patterns.batch_incoming_count
+        ),
+        "batch_outgoing_detected": bool(
+            result.transfer_patterns.batch_outgoing_count
+        ),
+    }
+    fact = next(
+        item for item in result.conclusion_fact_items
+        if item.fact_code == fact_code
+    )
+    assert fact.value == expected[fact_code]
+    assert fact.evidence_refs

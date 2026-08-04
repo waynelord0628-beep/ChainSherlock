@@ -1,0 +1,404 @@
+{
+  "__tuple__": [
+    {
+      "__type__": "Observation",
+      "code": "funding_source_changed",
+      "occurred_at": {
+        "__datetime__": "2026-02-04T15:13:36+00:00"
+      },
+      "facts": {
+        "previous_source": "TAwhKSjUtqCfMDXB1S6PSw9AcFwifDFLAS",
+        "current_source": "TKvmRiZwRvtMftMH8Et232rbFNQLBMR3Ka"
+      },
+      "factual_statement": "主要供款來源由 TAwhKSjUtqCfMDXB1S6PSw9AcFwifDFLAS 變更為 TKvmRiZwRvtMftMH8Et232rbFNQLBMR3Ka。",
+      "metrics": {
+        "transition_count": 1
+      },
+      "reason_codes": {
+        "__tuple__": [
+          "monthly_dominant_source_changed"
+        ]
+      },
+      "evidence_refs": {
+        "__tuple__": [
+          "IF0"
+        ]
+      },
+      "confidence": "low",
+      "limitations": {
+        "__tuple__": [
+          "partial provider data may change this observation"
+        ]
+      }
+    },
+    {
+      "__type__": "Observation",
+      "code": "funding_source_changed",
+      "occurred_at": {
+        "__datetime__": "2026-03-06T15:05:03+00:00"
+      },
+      "facts": {
+        "previous_source": "TQeV4kBaMYzLYtpG9ujUtPz6tWdyXVm4FV",
+        "current_source": "TDsvtW6HTE7Y12huJHogJKVBk9oQv4VZzv"
+      },
+      "factual_statement": "主要供款來源由 TQeV4kBaMYzLYtpG9ujUtPz6tWdyXVm4FV 變更為 TDsvtW6HTE7Y12huJHogJKVBk9oQv4VZzv。",
+      "metrics": {
+        "transition_count": 1
+      },
+      "reason_codes": {
+        "__tuple__": [
+          "monthly_dominant_source_changed"
+        ]
+      },
+      "evidence_refs": {
+        "__tuple__": [
+          "IF0"
+        ]
+      },
+      "confidence": "low",
+      "limitations": {
+        "__tuple__": [
+          "partial provider data may change this observation"
+        ]
+      }
+    },
+    {
+      "__type__": "Observation",
+      "code": "funding_source_changed",
+      "occurred_at": {
+        "__datetime__": "2026-03-13T14:54:27+00:00"
+      },
+      "facts": {
+        "previous_source": "TKvmRiZwRvtMftMH8Et232rbFNQLBMR3Ka",
+        "current_source": "TA3yggVs3GhsNPLzsZBzazAXodAwMnNjNP"
+      },
+      "factual_statement": "主要供款來源由 TKvmRiZwRvtMftMH8Et232rbFNQLBMR3Ka 變更為 TA3yggVs3GhsNPLzsZBzazAXodAwMnNjNP。",
+      "metrics": {
+        "transition_count": 1
+      },
+      "reason_codes": {
+        "__tuple__": [
+          "monthly_dominant_source_changed"
+        ]
+      },
+      "evidence_refs": {
+        "__tuple__": [
+          "IF0"
+        ]
+      },
+      "confidence": "low",
+      "limitations": {
+        "__tuple__": [
+          "partial provider data may change this observation"
+        ]
+      }
+    },
+    {
+      "__type__": "Observation",
+      "code": "funding_source_changed",
+      "occurred_at": {
+        "__datetime__": "2026-04-06T07:52:27+00:00"
+      },
+      "facts": {
+        "previous_source": "TDsvtW6HTE7Y12huJHogJKVBk9oQv4VZzv",
+        "current_source": "TXXEhRWKthjhVq4DUchpkKV5WJuwyrPZ1R"
+      },
+      "factual_statement": "主要供款來源由 TDsvtW6HTE7Y12huJHogJKVBk9oQv4VZzv 變更為 TXXEhRWKthjhVq4DUchpkKV5WJuwyrPZ1R。",
+      "metrics": {
+        "transition_count": 1
+      },
+      "reason_codes": {
+        "__tuple__": [
+          "monthly_dominant_source_changed"
+        ]
+      },
+      "evidence_refs": {
+        "__tuple__": [
+          "IF0"
+        ]
+      },
+      "confidence": "low",
+      "limitations": {
+        "__tuple__": [
+          "partial provider data may change this observation"
+        ]
+      }
+    },
+    {
+      "__type__": "Observation",
+      "code": "funding_source_changed",
+      "occurred_at": {
+        "__datetime__": "2026-04-06T07:54:18+00:00"
+      },
+      "facts": {
+        "previous_source": "TA3yggVs3GhsNPLzsZBzazAXodAwMnNjNP",
+        "current_source": "TEc4s8P17nq5y39RES1yVGNQrTcH6HwZ1R"
+      },
+      "factual_statement": "主要供款來源由 TA3yggVs3GhsNPLzsZBzazAXodAwMnNjNP 變更為 TEc4s8P17nq5y39RES1yVGNQrTcH6HwZ1R。",
+      "metrics": {
+        "transition_count": 1
+      },
+      "reason_codes": {
+        "__tuple__": [
+          "monthly_dominant_source_changed"
+        ]
+      },
+      "evidence_refs": {
+        "__tuple__": [
+          "IF0"
+        ]
+      },
+      "confidence": "low",
+      "limitations": {
+        "__tuple__": [
+          "partial provider data may change this observation"
+        ]
+      }
+    },
+    {
+      "__type__": "Observation",
+      "code": "funding_source_changed",
+      "occurred_at": {
+        "__datetime__": "2026-05-01T22:18:09+00:00"
+      },
+      "facts": {
+        "previous_source": "TEc4s8P17nq5y39RES1yVGNQrTcH6HwZ1R",
+        "current_source": "TF9GXeiYpofE9BzF9qA9bVxQvD1gMh3eWd"
+      },
+      "factual_statement": "主要供款來源由 TEc4s8P17nq5y39RES1yVGNQrTcH6HwZ1R 變更為 TF9GXeiYpofE9BzF9qA9bVxQvD1gMh3eWd。",
+      "metrics": {
+        "transition_count": 1
+      },
+      "reason_codes": {
+        "__tuple__": [
+          "monthly_dominant_source_changed"
+        ]
+      },
+      "evidence_refs": {
+        "__tuple__": [
+          "IF0"
+        ]
+      },
+      "confidence": "low",
+      "limitations": {
+        "__tuple__": [
+          "partial provider data may change this observation"
+        ]
+      }
+    },
+    {
+      "__type__": "Observation",
+      "code": "funding_source_changed",
+      "occurred_at": {
+        "__datetime__": "2026-06-03T10:52:18+00:00"
+      },
+      "facts": {
+        "previous_source": "TF9GXeiYpofE9BzF9qA9bVxQvD1gMh3eWd",
+        "current_source": "TJQrTkFtpL2h4hKnAhwPYWYRBymRBR61Zt"
+      },
+      "factual_statement": "主要供款來源由 TF9GXeiYpofE9BzF9qA9bVxQvD1gMh3eWd 變更為 TJQrTkFtpL2h4hKnAhwPYWYRBymRBR61Zt。",
+      "metrics": {
+        "transition_count": 1
+      },
+      "reason_codes": {
+        "__tuple__": [
+          "monthly_dominant_source_changed"
+        ]
+      },
+      "evidence_refs": {
+        "__tuple__": [
+          "IF0"
+        ]
+      },
+      "confidence": "low",
+      "limitations": {
+        "__tuple__": [
+          "partial provider data may change this observation"
+        ]
+      }
+    },
+    {
+      "__type__": "Observation",
+      "code": "funding_source_changed",
+      "occurred_at": {
+        "__datetime__": "2026-06-05T11:02:45+00:00"
+      },
+      "facts": {
+        "previous_source": "TXXEhRWKthjhVq4DUchpkKV5WJuwyrPZ1R",
+        "current_source": "TCPEk4qeGVbn8b5U81DDd2uxipuyny6s4r"
+      },
+      "factual_statement": "主要供款來源由 TXXEhRWKthjhVq4DUchpkKV5WJuwyrPZ1R 變更為 TCPEk4qeGVbn8b5U81DDd2uxipuyny6s4r。",
+      "metrics": {
+        "transition_count": 1
+      },
+      "reason_codes": {
+        "__tuple__": [
+          "monthly_dominant_source_changed"
+        ]
+      },
+      "evidence_refs": {
+        "__tuple__": [
+          "IF0"
+        ]
+      },
+      "confidence": "low",
+      "limitations": {
+        "__tuple__": [
+          "partial provider data may change this observation"
+        ]
+      }
+    },
+    {
+      "__type__": "Observation",
+      "code": "funding_source_changed",
+      "occurred_at": {
+        "__datetime__": "2026-07-01T13:45:48+00:00"
+      },
+      "facts": {
+        "previous_source": "TCPEk4qeGVbn8b5U81DDd2uxipuyny6s4r",
+        "current_source": "TQeV4kBaMYzLYtpG9ujUtPz6tWdyXVm4FV"
+      },
+      "factual_statement": "主要供款來源由 TCPEk4qeGVbn8b5U81DDd2uxipuyny6s4r 變更為 TQeV4kBaMYzLYtpG9ujUtPz6tWdyXVm4FV。",
+      "metrics": {
+        "transition_count": 1
+      },
+      "reason_codes": {
+        "__tuple__": [
+          "monthly_dominant_source_changed"
+        ]
+      },
+      "evidence_refs": {
+        "__tuple__": [
+          "IF0"
+        ]
+      },
+      "confidence": "low",
+      "limitations": {
+        "__tuple__": [
+          "partial provider data may change this observation"
+        ]
+      }
+    },
+    {
+      "__type__": "Observation",
+      "code": "funding_source_changed",
+      "occurred_at": {
+        "__datetime__": "2026-07-22T03:20:00+00:00"
+      },
+      "facts": {
+        "previous_source": "TJQrTkFtpL2h4hKnAhwPYWYRBymRBR61Zt",
+        "current_source": "TF9GXeiYpofE9BzF9qA9bVxQvD1gMh3eWd"
+      },
+      "factual_statement": "主要供款來源由 TJQrTkFtpL2h4hKnAhwPYWYRBymRBR61Zt 變更為 TF9GXeiYpofE9BzF9qA9bVxQvD1gMh3eWd。",
+      "metrics": {
+        "transition_count": 1
+      },
+      "reason_codes": {
+        "__tuple__": [
+          "monthly_dominant_source_changed"
+        ]
+      },
+      "evidence_refs": {
+        "__tuple__": [
+          "IF0"
+        ]
+      },
+      "confidence": "low",
+      "limitations": {
+        "__tuple__": [
+          "partial provider data may change this observation"
+        ]
+      }
+    },
+    {
+      "__type__": "Observation",
+      "code": "funding_source_changed",
+      "occurred_at": {
+        "__datetime__": "2026-08-01T07:10:06+00:00"
+      },
+      "facts": {
+        "previous_source": "TF9GXeiYpofE9BzF9qA9bVxQvD1gMh3eWd",
+        "current_source": "TMJcb5gtU9mnmmMFxwKQpYk7LRxKKqyDkQ"
+      },
+      "factual_statement": "主要供款來源由 TF9GXeiYpofE9BzF9qA9bVxQvD1gMh3eWd 變更為 TMJcb5gtU9mnmmMFxwKQpYk7LRxKKqyDkQ。",
+      "metrics": {
+        "transition_count": 1
+      },
+      "reason_codes": {
+        "__tuple__": [
+          "monthly_dominant_source_changed"
+        ]
+      },
+      "evidence_refs": {
+        "__tuple__": [
+          "IF0"
+        ]
+      },
+      "confidence": "low",
+      "limitations": {
+        "__tuple__": [
+          "partial provider data may change this observation"
+        ]
+      }
+    },
+    {
+      "__type__": "Observation",
+      "code": "funding_source_changed",
+      "occurred_at": {
+        "__datetime__": "2026-08-02T16:02:51+00:00"
+      },
+      "facts": {
+        "previous_source": "TQeV4kBaMYzLYtpG9ujUtPz6tWdyXVm4FV",
+        "current_source": "TCPEk4qeGVbn8b5U81DDd2uxipuyny6s4r"
+      },
+      "factual_statement": "主要供款來源由 TQeV4kBaMYzLYtpG9ujUtPz6tWdyXVm4FV 變更為 TCPEk4qeGVbn8b5U81DDd2uxipuyny6s4r。",
+      "metrics": {
+        "transition_count": 1
+      },
+      "reason_codes": {
+        "__tuple__": [
+          "monthly_dominant_source_changed"
+        ]
+      },
+      "evidence_refs": {
+        "__tuple__": [
+          "IF0"
+        ]
+      },
+      "confidence": "low",
+      "limitations": {
+        "__tuple__": [
+          "partial provider data may change this observation"
+        ]
+      }
+    },
+    {
+      "__type__": "Observation",
+      "code": "batch_distribution",
+      "occurred_at": null,
+      "facts": {
+        "batch_count": 85
+      },
+      "factual_statement": "共有 85 個流出時間窗符合目前 batch rule。",
+      "metrics": {
+        "batch_window_count": 85
+      },
+      "reason_codes": {
+        "__tuple__": [
+          "batch_minimum_count_reached"
+        ]
+      },
+      "evidence_refs": {
+        "__tuple__": [
+          "IF0"
+        ]
+      },
+      "confidence": "low",
+      "limitations": {
+        "__tuple__": [
+          "partial provider data may change this observation"
+        ]
+      }
+    }
+  ]
+}

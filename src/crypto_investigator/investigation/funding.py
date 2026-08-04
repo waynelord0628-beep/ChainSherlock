@@ -65,26 +65,44 @@ def analyze_funding(edges, target_address: str | None) -> FundingAnalysis:
     monthly = defaultdict(list)
     for edge in incoming:
         if edge.timestamp:
-            monthly[edge.timestamp.strftime("%Y-%m")].append(edge)
+            monthly[(edge.asset, edge.timestamp.strftime("%Y-%m"))].append(edge)
     periods = []
-    for period, records in sorted(monthly.items()):
+    for (asset, period), records in sorted(monthly.items()):
         counts = defaultdict(int)
         for edge in records:
             counts[edge.source] += 1
         main = sorted(counts, key=lambda address: (-counts[address], address.casefold()))[0]
         periods.append(
-            FundingPeriod(period, main, len(counts), len(records), ratio(counts[main], len(records)))
+            FundingPeriod(
+                period, main, len(counts), len(records),
+                ratio(counts[main], len(records)), asset,
+            )
         )
     transitions = []
-    for previous, current in zip(periods, periods[1:]):
-        if previous.main_source and current.main_source and previous.main_source != current.main_source:
-            first = min(
-                edge.timestamp for edge in monthly[current.period]
-                if edge.timestamp and edge.source == current.main_source
-            )
-            transitions.append(
-                FundingTransition(first, previous.main_source, current.main_source)
-            )
+    by_asset_periods = defaultdict(list)
+    for period in periods:
+        by_asset_periods[period.asset].append(period)
+    for asset, asset_periods in sorted(by_asset_periods.items()):
+        for previous, current in zip(asset_periods, asset_periods[1:]):
+            if (
+                previous.main_source and current.main_source
+                and previous.main_source != current.main_source
+            ):
+                first = min(
+                    edge.timestamp for edge in monthly[(asset, current.period)]
+                    if edge.timestamp and edge.source == current.main_source
+                )
+                transitions.append(
+                    FundingTransition(
+                        first, previous.main_source, current.main_source,
+                        asset=asset,
+                        old_source_share=previous.concentration,
+                        new_source_share=current.concentration,
+                        reason_codes=("monthly_dominant_source_changed",),
+                        evidence_refs=("IF0",),
+                    )
+                )
+    transitions.sort(key=lambda item: (item.occurred_at, item.asset or ""))
     concentration = sources[0].transaction_ratio if sources else Decimal("0")
     by_asset = {}
     top_by_asset = {}

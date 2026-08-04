@@ -8,6 +8,11 @@
 - Added evidence-linked exports, exact JSON round-trip, Report section, and Graph stage/funding styling.
 - Added 143 V6.5 tests, bounded benchmarks, and live TronGrid validation.
 - Added no AI, LLM, Risk/AML scoring, cross-chain, commercial intelligence API, or Web UI.
+- Validated limited and expanded TronGrid samples against the same address.
+- Fixed public direction reconciliation to account for records without complete flow endpoints.
+- Changed report funding and outgoing rankings to asset-scoped amount ordering.
+- Prevented partial source boundaries from creating startup/dormancy claims and removed dust TRX from fixed-amount findings.
+- Added evidence-linked observations and conclusion facts plus readable landscape report tables.
 
 ## Unreleased — V5
 

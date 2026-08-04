@@ -56,7 +56,7 @@ class InvestigationFeatureEngine:
         edges = analysis.flow.edges
         funding = analyze_funding(edges, target_address)
         dormant = detect_dormant_periods(edges, self.settings.dormant_days)
-        stages = detect_operation_stages(edges, funding, dormant)
+        stages = detect_operation_stages(edges, funding, dormant, target_address)
         concentration = analyze_counterparty_concentration(analysis.counterparties)
         distribution = analyze_distribution(edges, target_address)
         chain = (
@@ -103,6 +103,31 @@ class InvestigationFeatureEngine:
         source_to = timestamps[-1] if timestamps else None
         analysis_metadata = getattr(analysis, "metadata", {}) or {}
         completeness = str(analysis_metadata.get("completeness", "complete"))
+        if completeness != "complete":
+            dormant = ()
+            stages = tuple(
+                replace(item, confidence="low")
+                for item in stages
+                if item.stage not in {"startup", "dormant", "recovery"}
+            )
+            observations = tuple(
+                replace(
+                    item,
+                    confidence="low",
+                    limitations=(
+                        "partial provider data may change this observation",
+                    ),
+                )
+                for item in observations
+                if item.code != "dormant_reactivation"
+            )
+            behavior = build_behavior(
+                analysis, funding, stages, dormant, concentration,
+                distribution, patterns,
+            )
+            conclusion = build_conclusion_facts(
+                funding, dormant, concentration, patterns
+            )
         deterministic_time = source_to or datetime(1970, 1, 1, tzinfo=UTC)
         settings_snapshot = {
             "dormant_days": self.settings.dormant_days,
@@ -216,6 +241,11 @@ class InvestigationFeatureEngine:
                 transaction_frequency=value.get("statistics", {}).get(
                     "transaction_frequency", 0
                 )
+            ),
+            summary=SimpleNamespace(
+                transaction_count=int(value.get("summary", {}).get("transaction_count", len(edges))),
+                incoming_count=int(value.get("summary", {}).get("incoming_count", 0)),
+                outgoing_count=int(value.get("summary", {}).get("outgoing_count", 0)),
             ),
             metadata=value.get("metadata", {}),
         )

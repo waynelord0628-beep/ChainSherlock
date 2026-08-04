@@ -21,7 +21,15 @@ def reconcile_directions(analysis, target_address: str) -> DirectionReconciliati
     metadata = getattr(analysis, "metadata", {}) or {}
     failed = int(metadata.get("failed_transaction_count", 0))
     duplicates = int(metadata.get("duplicate_removed_count", 0))
-    total = len(edges)
+    summary = getattr(analysis, "summary", None)
+    if summary is not None:
+        total = int(summary.transaction_count)
+        incoming = int(summary.incoming_count)
+        outgoing = int(summary.outgoing_count)
+        unexplained = total - incoming - outgoing - self_transfers - neutral
+        unclassified = max(0, unexplained)
+    else:
+        total = len(edges)
     reconciled = total == incoming + outgoing + self_transfers + neutral + unclassified
     return DirectionReconciliation(
         total,

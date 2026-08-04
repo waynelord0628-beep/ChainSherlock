@@ -1,0 +1,18 @@
+{
+  "first_seen": "2026-01-01T11:40:09+00:00",
+  "last_seen": "2026-08-04T00:29:54+00:00",
+  "transaction_count": 2500,
+  "incoming_count": 1026,
+  "outgoing_count": 946,
+  "unique_counterparties": 675,
+  "active_days": 173,
+  "assets": [
+    "0597 COM",
+    "TRX",
+    "USDT"
+  ],
+  "top_asset": "TRX",
+  "average_daily_transactions": 14.45086705202312,
+  "unconfirmed_count": 0,
+  "missing_timestamp_count": 0
+}

@@ -643,6 +643,7 @@ def _investigate_provider(
         )
     )
     value = json.loads((output / "analysis.json").read_text(encoding="utf-8"))
+    value.setdefault("metadata", {})["chain"] = chain.value
     feature_target = identifier
     if kind == "transaction" and value.get("flow", {}).get("edges"):
         feature_target = value["flow"]["edges"][0]["source"]

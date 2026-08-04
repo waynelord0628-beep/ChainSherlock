@@ -3,9 +3,25 @@ from crypto_investigator.investigation.investigation_result import ConclusionFac
 
 def structured_conclusion_facts(result, *, graph_truncated=False, provider_truncated=False):
     confidence = "low" if result.metadata.get("analysis_completeness") != "complete" else "high"
+    provider_truncated = provider_truncated or confidence == "low"
+    evidence = ("IF0",) if result.evidence_refs else ()
+    limitation = (
+        ("partial provider data may change this fact",)
+        if confidence == "low" else ()
+    )
+    dominant_by_asset = {
+        asset: addresses[0]
+        for asset, addresses in result.funding.top_sources_by_asset.items()
+        if addresses
+    }
     values = (
         ("dominant_funder_exists", bool(result.funding.sources), None),
-        ("dominant_funder_address", result.funding.sources[0].address if result.funding.sources else None, None),
+        ("dominant_funder_address", dominant_by_asset, "address_by_asset"),
+        (
+            "dominant_funder_share_by_asset",
+            result.funding.concentration_by_asset,
+            "ratio_by_asset",
+        ),
         ("funding_source_changed", bool(result.funding.transitions), None),
         ("funding_transition_count", len(result.funding.transitions), "count"),
         ("dormant_period_detected", bool(result.dormant_periods), None),
@@ -22,6 +38,9 @@ def structured_conclusion_facts(result, *, graph_truncated=False, provider_trunc
         ("unknown_direction_count", result.direction_reconciliation.unclassified_direction_count if result.direction_reconciliation else 0, "count"),
     )
     return tuple(
-        ConclusionFact(code, value, unit, confidence, ("deterministic_rule",))
+        ConclusionFact(
+            code, value, unit, confidence, ("deterministic_rule",),
+            evidence, limitation,
+        )
         for code, value, unit in values
     )

@@ -36,8 +36,13 @@ class DocxReportExporter:
         try:
             output = Document()
             section = output.sections[0]
-            section.page_width = Mm(210)
-            section.page_height = Mm(297)
+            has_wide_tables = any(
+                len(table.columns) > 5
+                for item in document.sections
+                for table in item.tables
+            )
+            section.page_width = Mm(297 if has_wide_tables else 210)
+            section.page_height = Mm(210 if has_wide_tables else 297)
             section.top_margin = section.bottom_margin = Mm(20)
             section.left_margin = section.right_margin = Mm(22)
             for style_name in ("Normal", "Title", "Heading 1", "Heading 2"):
@@ -66,15 +71,8 @@ class DocxReportExporter:
                     output.add_paragraph(block)
                 for table_data in report_section.tables:
                     output.add_heading(table_data.title, level=2)
-                    if len(table_data.columns) > 5:
-                        columns = ("欄位", "值")
-                        rows = []
-                        for row_number, row in enumerate(table_data.rows, start=1):
-                            rows.append((f"紀錄 {row_number}", ""))
-                            rows.extend(zip(table_data.columns, row))
-                    else:
-                        columns = table_data.columns
-                        rows = table_data.rows
+                    columns = table_data.columns
+                    rows = table_data.rows
                     table = output.add_table(
                         rows=1, cols=max(1, len(columns))
                     )

@@ -85,6 +85,7 @@ class FundingPeriod:
     source_count: int
     transaction_count: int
     concentration: Decimal
+    asset: str | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -138,6 +139,12 @@ class OperationStage:
     transaction_count: int
     transaction_frequency: Decimal
     concentration: Decimal
+    assets: tuple[str, ...] = ()
+    dominant_funding_sources: tuple[str, ...] = ()
+    dominant_outgoing_counterparties: tuple[str, ...] = ()
+    reason_codes: tuple[str, ...] = ()
+    evidence_refs: tuple[str, ...] = ()
+    confidence: str = "medium"
 
 
 @dataclass(frozen=True, slots=True)
@@ -230,6 +237,12 @@ class Observation:
     code: str
     occurred_at: datetime | None
     facts: Mapping[str, Any]
+    factual_statement: str = ""
+    metrics: Mapping[str, Any] = field(default_factory=dict)
+    reason_codes: tuple[str, ...] = ()
+    evidence_refs: tuple[str, ...] = ()
+    confidence: str = "medium"
+    limitations: tuple[str, ...] = ()
 
 
 @dataclass(frozen=True, slots=True)

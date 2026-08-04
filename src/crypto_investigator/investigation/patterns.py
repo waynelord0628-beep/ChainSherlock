@@ -54,6 +54,7 @@ def analyze_transfer_patterns(edges, target_address: str | None, settings) -> Tr
         asset: tuple(
             amount for amount, count in sorted(values.items())
             if count >= settings.fixed_amount_minimum_count
+            and not (asset.upper() == "TRX" and amount < Decimal("0.01"))
         )
         for asset, values in sorted(amount_counts.items())
     }

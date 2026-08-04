@@ -1,0 +1,1191 @@
+{
+  "__tuple__": [
+    {
+      "__type__": "InvestigationEvidenceRef",
+      "evidence_id": "IF0",
+      "feature": "analysis_scope",
+      "source_type": "analysis_flow",
+      "source_reference": "AnalysisResult.flow",
+      "tx_hashes": {
+        "__tuple__": [
+          "01bb0406a553c5ace6cacc22f67f4139603029bd8a6825787f95d67ca7e05bc9",
+          "042635c10252f5991d70fa8dedd3cc29daaffd496d3f26ab2d96549f8877f4b6",
+          "077d7b012ea7bf112d449f08a07cc4f81fd7acc8e38d493a7117df14ec132533",
+          "0ca5213ec69bdd4c11fcd54e1eef0dd8ab7c60862bf722026955d89641f9d663",
+          "0d239ba9bd3fbf9b936278d9932eac95ef602ce9ff5cd73e226fcdfe09554b4b",
+          "115e669b408727a7eb4c9550a2988408a05b17b3652b038fde4f713a18c69167",
+          "13ba662910805eff4a4c51db6570b0d4327e3b61eb90d014b71263f897df6825",
+          "15805b83a1cba97d1a96100407a11410246bdf32b4a49cab9ac1222f00030a6c",
+          "19aa5ef8994a72543e4d7375c48d7f300e1062168c1d4bb425601ca32e479b8e",
+          "29032e76e7084711acb660b42a8727d3122d9ff3838e1a246ea029f08cbba56c",
+          "29bd1f218208190d3f496b1a83bf7092c1e6613fc797b056a4b3aa30cdf77644",
+          "2c368672a76be6c940c06205d6fd4de46d0f232801dc3e4ce1bfb8d5670d00c0",
+          "32cba014758c98258b05ce3d0f29539914f4808ad1ef4032dad8f6f31946f47b",
+          "35e9b253c30f8015f62d69bc7cc0eb3b207f1721754f05e63416ae57c9d23461",
+          "36b34c892e20511292ace1810f97f29e378b63b216b181b16cd018b99b307dd6",
+          "3844278d528226b86345b92bc09eab5869e3357e595380b69ca350eb996f7071",
+          "386b822991b11c8a6540ef67c281657199285c1ceb70efd7ebd5d72a08b3fe77",
+          "400355e9a9faa5c28fef5ebdb40de1e3b6e3c95d5b6ba9f341efb6690c3e1ead",
+          "4351b5d163e5c13115a5a769444f61487e41d6f7f6ba9a59a8ea2acb58cbb1dd",
+          "460b62bd47daa8e7c156e3c632ba2f5b239ddca212531d5a4db2fbe03ed41a20",
+          "5091804154492c87c31323826aff914585553b87c5d2a177138345a3cca7ac9e",
+          "56c570bf5ffd2f90f6357a712cc8e796aa719e9472bbf1b21add92a4cf7a7d15",
+          "5c294af6e78b9b5561dc552649dd32fcaf06c6582aabaf5cecf11688cb34d625",
+          "5cb01fcef3072e4367298484596f1d0edd439f717d30f4529d0c9c2a5b3bfc3e",
+          "5d74bdabf9853185a26b9d69a9b718897254a6afbb6fea7deb280cda7f8249c2",
+          "5d7c10fc7ae71c5948763e0e4b25aa6ba7c9aad5d6979f48c176e2f90ad658ce",
+          "5e7e4178e3f8706efc03acab5c88806e5e62785c031f65f7945091d6aa96cc23",
+          "60436c2dc75cbbb35628c2c062fc838146b2eb3929f4963573d6ade7d7810c1b",
+          "62feb8599e5f1509be7f8191ee809b4f64d22f3fd1274f6b72a6dafb8087b555",
+          "64ede349b199f1b7678292d43335d4c6800bc617b50a5e7040976a74bf4f23ad",
+          "6d088ca82215cfd58fa1c919564b2ea402d16e96a281dae144faa16f97417204",
+          "6fa0aaded94196a0e449f80a7aeeb46c114b58fec1019b712714c1a1f5d434e3",
+          "793c6a61e49e0d764955e0c8c23b2b7a0ad5da323210679c778749d20adc3891",
+          "799633a7f04a93d0b912fb292d9c60f5289c72d10eb3b34f8ffa64c29d8994f5",
+          "7adcab622ddc3810155b80a7c4431d4d02fe609eab3a3d58c5ff848ebd0f861d",
+          "817802449a336f9406ace8d0467a4ec353a7832606319f6fd8e44d077266c68e",
+          "8290dfc9b719a91fb42d0c43f18df18948c06e8763225b7c35279088fa65a932",
+          "85513b01638181752ca2dc452f5425fbbfc3650bd7caa58c426af850634292c0",
+          "8da8287dc1e5235bd09928a2fa1084b8eeb8bae7b4c8ccec95e9b5dfca2aea53",
+          "8e5bf8439bb0e3487d65bf9ea2e7aa65863e8c8f80410b925e1e56c96eb183e4",
+          "90d0e62f569147691c2a7e16a0d82c207aff7a7503bc3fd1ec8a7a496a96fbdd",
+          "955b2dd7f6db54497f51a48e781c98550d12c387d731c363819d874b00f1c707",
+          "9649f1f566114d3f63e084446c4117318f9a2f92ccd7beaada08657b958c5c37",
+          "98f872831a2aa33e947000232a9d00ecb4b2dba13218842b8ca49ad6eec3473f",
+          "9afe1d1e5d2666c9a9b94e3a110dc48b88b03635df29a60d06e5cd3492fb1be3",
+          "9e3f3d010a9ec6a5b549a0ccdd5ab907468b3747050c0c34f93356b475a3b2dc",
+          "9ef89110d6d5f316a404a34903b8ef7ae85b35f6a06c229502a1e87aab017f0f",
+          "a3b37aacf2ca328c2aa7aa8ff19b880242030c9581e8c9d61322c1b9bc39c3ac",
+          "a46993552d0d87a45ca3e42214eb443ce456cb6261bcee0d21d06a29799d6936",
+          "aa393ad6cf4979c03f00b735d58f8d247d342bf225f8883592c5633dd87afc70",
+          "b17263be753303ece388274d22004cce56475cc2bb132bcdc661bdf18b32ecdf",
+          "b1df6043fb30ea2bc550c64f67b04ae091237d010a59ca68a79b31a64d663e0f",
+          "b4ce340516cdd765507736fd1213640a41129d4d3a1c98bccf4128f31e17818a",
+          "ba39fb9f1b477bf974784148e61018d94565cab01f3ad4b9302913aba9ad42ea",
+          "bb3df73f07eae0111e6a269e2fd80e948e08ec2f1879e0e0a3338431909ae7f8",
+          "be3859f88e3df982bfb5f2796c9c9f6cfed631986418cbcba886c552c141f20b",
+          "be6fdb49b6405f527e423cf6a3e1ef573bddeeff196478054372f67465f0bf90",
+          "c20c84ba47d5c6eb2a01be7e34bbcc3afe60d53672cce2de8d3af96acc74c37f",
+          "d14155ec6b5f6fa3801fbae083ee0b66da60daaee487293993cecf2bc8a88b3c",
+          "d1dd24e1de2f70e70690427a5c3a46c7bfe0786b6b49a3779714193fb3596418",
+          "d20ba136b15693f39f30bdea45fa102667444f3ac02b9779141d4a632aa15601",
+          "d38dc39b709a19df75f338e2d97867c6df75d5221d89f702f68269cde23736d2",
+          "d3f4ff50f980fb87640a1369df577275407dee8a8c4e1c0dd14a3600837de203",
+          "d3fd9da753732ea760342e4c0809ff5823dfbd384923f3f4d1c949a52340dc06",
+          "d59144861c68363dfc27cd1f0c7209925534b11581125f2466b429c4a6e01f9d",
+          "d877377b5686a713ab1837abcf7d572abcebcc4a117a0d4b496c80d5ddbe64b4",
+          "d90474716bdbbd4fe48d05d464ff777736031957d9aea9cec02caea9d2c195cb",
+          "da4b047fa740ed93b1ce31cd5ffb97f4f0ad6ba859bb1207f3ba2e370da89051",
+          "da748695a822d754ed929e9376459af974e06d3599db1671e68cf0fd93f9f87f",
+          "db162933e8cb9f5bf96ff1ddd546bf4eeb54b2a7cec6878472957af50b752479",
+          "dcafc9a0a4050fbc77de4ddf5006a498f00baca0e59e885023294f1e2b812a4d",
+          "dd218d2d7cf2a5795bdc6b00269e8419d315b135acd769e1cf6b4832271ac2e3",
+          "e0c9e48ec366a76774d13a61646d0cb8f74de84e36fbef1dff6e927b05584214",
+          "e150420fe011a06359e01e51aa1f8e470f13632016f2e5dc5008b2bd49acaa7e",
+          "e16d33e7db9cd6239373b48bfdf6ea60362038cc5f3d59e7e37841b2fed32fdc",
+          "e4892514b63934cbe64f614bb22af4de12dfd2d3b16b77e55fbf1994a7ae98fc",
+          "e4c5500c6516d4ba38ff21cc1641fc8336370d0dc069684bebf7672b2e272f6e",
+          "e86c60af3c04d37062bd023b4b143d01f12409b63b23ba6961a2af78f226b6dc",
+          "e96ebda14d545e39392fcbe074b232f5059d0ccd1182266e68be784421c10d18",
+          "eb83050fb848e9402cdc0f1440e8a084474bd16cbfbf29105d9d0db1e8604343",
+          "ee4be80714d19166313b272c423bab828207c5785299990847ad616c3dac366f",
+          "f140ede323d54ea161992f52cfec48e39b32d70a23cab4eb9e17dd90acf6e265",
+          "f8a014c95984b1294a61abbe4b3e685a00013091f18a8746730bb77f9b18905b",
+          "fb32e383786438297104802045bd28b471c15e0c2a8ae86ccd3f1fa2c96bed1c",
+          "ff3a3105450e33d148e2a9652962d9da79a3c5e76f519479f87f1a4021257795"
+        ]
+      },
+      "addresses": {
+        "__tuple__": [
+          "TAG34rBNHmYQGMPLqqLYVzwa3vmpKPiWid",
+          "TAJqGhk4wuGwoRN4vQgHTSfEt5GSyZ5f4r",
+          "TB5sjY3b6q7MyoTdBJSZnBKo75PMPCaJcR",
+          "TBMdhFK7zZ78kEn3bWYJk4KFAgAcr1yDkQ",
+          "TBdrxaXKRoANUfU71vm1iSL8gfjq6RXspQ",
+          "TBqSHttiAw3VkyLEWJRrPg58qftyFn3QjQ",
+          "TCETwsANVDgCSfdhkxPQuDp5DL46QWsCUk",
+          "TCPEk4qeGVbn8b5U81DDd2uxipuyny6s4r",
+          "TDBsuPYTtfEHzMp8gefe1NNtasMztKqLjx",
+          "TDMynGnRWYsyXLvcmsYpxefinu7d4xPARz",
+          "TDgJQUjpdij2RVFZKYXZKco278MNtnvqjx",
+          "TDorvbrv1exyB9cDEDkSRPunUNdVqo1qjx",
+          "TDsvtW6HTE7Y12huJHogJKVBk9oQv4VZzv",
+          "TEeDatfHoQpMuosApypU3BUSU2ePN1sxh4",
+          "TEvRZvoWPojaEkD7d2Bt8ffaqwFB3P1bRz",
+          "TF9GXeiYpofE9BzF9qA9bVxQvD1gMh3eWd",
+          "TFEX3QuJFW2chgCR4bHBKsCRpx6HWCps4r",
+          "TFaT6LYQzHQiN1jAXAgdwpZw7noX3xBmpA",
+          "TGWbZmW7W4G79jq6b8UZP6fqKN54siAiFB",
+          "TGfxmZiah1ER3o7E9F76kAsnPNgQ5afNMJ",
+          "TH1HtibNd8EXjb2UoTznZCSudcANtRfsBr",
+          "TH5o3k32Logwahvzt6h9hWJRqxjCkB1y2f",
+          "TH9t1UAQBKZb54J318rkgaDsyNHQfQBDRz",
+          "THCKaxcQ8dFV4soZkeiQdwuvkT4sQHUbRz",
+          "TJ1XcbcyMWN8frhNoHQMdzQN1UhbakHxh4",
+          "TJMUadmxstaJsnsK6my4vEDGCDiXMh3eWd",
+          "TJRt5xRh9c9KSGvMVm3KHHa5KrH4jGwy2f",
+          "TJkZsDeMWxNfGQJ8sSsvNUGFU6ckEZwxh4",
+          "TKQNcbT4d3C4DH6VDQEzAPdZKvJaNTddRz",
+          "TLaGjwhvA8XQYSxFAcAXy7Dvuue9eGYitv",
+          "TMJcK6TgJeYTQbpqCqXjsexLXwwGQqLeWd",
+          "TMJcb5gtU9mnmmMFxwKQpYk7LRxKKqyDkQ",
+          "TMRKUZ5dp8vTzTsLvca7rnphicnSUWpJHQ",
+          "TMSFq7YAiVsiUHRCzH6YfuAoCeAfWKwbWZ",
+          "TNJg619GpW92Ff7xBmqc49HYUwU4bUpYsR",
+          "TNXJULMxhdLy1MUe5Kx9ZNt5uFfq2XVUpa",
+          "TPBCxezfd85a95sjQmgPgwAxPZUcaJ3Upa",
+          "TPZVif5PejdBBUcVr7ocpM81EmHfwXAy2f",
+          "TPdnHnEAcYbejRwsdMHEdMYD9s6xDmjYpa",
+          "TPhzQpoexvACBcyEMNGvZy1QRXvLYsfNMJ",
+          "TQdosgTZGmtwd8G6TZe7tCFNX6ishRgDkQ",
+          "TQeV4kBaMYzLYtpG9ujUtPz6tWdyXVm4FV",
+          "TR5WMAhpM9JkpouAT49X9pNHP8NPQkcGAE",
+          "TRexcxMkfc4XNAE89kNB5bbTic4Ni2QnCn",
+          "TRome7bffj2FmBKVoVtqazVNvJz93bFvh4",
+          "TS7aw9SXuPj7SfPBa1YSkAvdG6JeYmkQJH",
+          "TS7eEbQgyZTjqNGewibkCKzEGyFLw4jh4r",
+          "TSgcCfqsRbMbdN4LuGkvKpXybQSbiKiB7h",
+          "TSguXpG9Bm8tEBt14uQn6Y4tfXdgnCGe5X",
+          "TSrRYUUz774oaPKsN7NRZnSqYqr5NwjDkQ",
+          "TTqr4d17ehUsBMWnm4WET5HfPCqPJZLnCn",
+          "TUbkVYkvQkFM8eMP3AciXevw3v678uaaMJ",
+          "TUevijYD489RDsVY1hYT9XncCG7gmf1DkQ",
+          "TUpUFqDmSZtZkWsYoSMuGeaP6AT3fVnNMJ",
+          "TVK4xGuVDQHqXk1CtRcJwdTTy7uwzauw6Q",
+          "TVTPiohxe8TnQeQ5rZ9fmSxzcrBdFCVe5n",
+          "TVwi2hVANZ2WiGJpNQXgEe1isAGRDvPNMJ",
+          "TW3GGtCsgNUXFYMGqBkyZ6qTcTRHvt3NJk",
+          "TWJB1GCiGXC8FnygMs33HEkbUmmeMqzuKZ",
+          "TXQAF8uk4zWuLrVywpkAVssdZULejXXXCn",
+          "TYBthuusLuoBykoJfxVp43UrBu7A3twqjx"
+        ]
+      },
+      "calculation": "deterministic feature calculation over public analysis flow",
+      "parameters": {
+        "edge_count": 85
+      },
+      "created_at": {
+        "__datetime__": "2026-08-04T00:29:54+00:00"
+      }
+    },
+    {
+      "__type__": "InvestigationEvidenceRef",
+      "evidence_id": "IF1",
+      "feature": "funding_source",
+      "source_type": "analysis_flow",
+      "source_reference": "AnalysisResult.flow",
+      "tx_hashes": {
+        "__tuple__": [
+          "817802449a336f9406ace8d0467a4ec353a7832606319f6fd8e44d077266c68e",
+          "8290dfc9b719a91fb42d0c43f18df18948c06e8763225b7c35279088fa65a932",
+          "d14155ec6b5f6fa3801fbae083ee0b66da60daaee487293993cecf2bc8a88b3c",
+          "f140ede323d54ea161992f52cfec48e39b32d70a23cab4eb9e17dd90acf6e265"
+        ]
+      },
+      "addresses": {
+        "__tuple__": [
+          "TNJg619GpW92Ff7xBmqc49HYUwU4bUpYsR"
+        ]
+      },
+      "calculation": "incoming transaction count / all incoming transactions",
+      "parameters": {
+        "rank": 1
+      },
+      "created_at": {
+        "__datetime__": "2026-08-04T00:29:54+00:00"
+      }
+    },
+    {
+      "__type__": "InvestigationEvidenceRef",
+      "evidence_id": "IF2",
+      "feature": "funding_source",
+      "source_type": "analysis_flow",
+      "source_reference": "AnalysisResult.flow",
+      "tx_hashes": {
+        "__tuple__": [
+          "042635c10252f5991d70fa8dedd3cc29daaffd496d3f26ab2d96549f8877f4b6",
+          "115e669b408727a7eb4c9550a2988408a05b17b3652b038fde4f713a18c69167",
+          "ba39fb9f1b477bf974784148e61018d94565cab01f3ad4b9302913aba9ad42ea"
+        ]
+      },
+      "addresses": {
+        "__tuple__": [
+          "TDsvtW6HTE7Y12huJHogJKVBk9oQv4VZzv"
+        ]
+      },
+      "calculation": "incoming transaction count / all incoming transactions",
+      "parameters": {
+        "rank": 2
+      },
+      "created_at": {
+        "__datetime__": "2026-08-04T00:29:54+00:00"
+      }
+    },
+    {
+      "__type__": "InvestigationEvidenceRef",
+      "evidence_id": "IF3",
+      "feature": "funding_source",
+      "source_type": "analysis_flow",
+      "source_reference": "AnalysisResult.flow",
+      "tx_hashes": {
+        "__tuple__": [
+          "a3b37aacf2ca328c2aa7aa8ff19b880242030c9581e8c9d61322c1b9bc39c3ac",
+          "d3f4ff50f980fb87640a1369df577275407dee8a8c4e1c0dd14a3600837de203"
+        ]
+      },
+      "addresses": {
+        "__tuple__": [
+          "TBdrxaXKRoANUfU71vm1iSL8gfjq6RXspQ"
+        ]
+      },
+      "calculation": "incoming transaction count / all incoming transactions",
+      "parameters": {
+        "rank": 3
+      },
+      "created_at": {
+        "__datetime__": "2026-08-04T00:29:54+00:00"
+      }
+    },
+    {
+      "__type__": "InvestigationEvidenceRef",
+      "evidence_id": "IF4",
+      "feature": "funding_source",
+      "source_type": "analysis_flow",
+      "source_reference": "AnalysisResult.flow",
+      "tx_hashes": {
+        "__tuple__": [
+          "b17263be753303ece388274d22004cce56475cc2bb132bcdc661bdf18b32ecdf",
+          "dd218d2d7cf2a5795bdc6b00269e8419d315b135acd769e1cf6b4832271ac2e3"
+        ]
+      },
+      "addresses": {
+        "__tuple__": [
+          "TCPEk4qeGVbn8b5U81DDd2uxipuyny6s4r"
+        ]
+      },
+      "calculation": "incoming transaction count / all incoming transactions",
+      "parameters": {
+        "rank": 4
+      },
+      "created_at": {
+        "__datetime__": "2026-08-04T00:29:54+00:00"
+      }
+    },
+    {
+      "__type__": "InvestigationEvidenceRef",
+      "evidence_id": "IF5",
+      "feature": "funding_source",
+      "source_type": "analysis_flow",
+      "source_reference": "AnalysisResult.flow",
+      "tx_hashes": {
+        "__tuple__": [
+          "0ca5213ec69bdd4c11fcd54e1eef0dd8ab7c60862bf722026955d89641f9d663",
+          "9ef89110d6d5f316a404a34903b8ef7ae85b35f6a06c229502a1e87aab017f0f"
+        ]
+      },
+      "addresses": {
+        "__tuple__": [
+          "TLaGjwhvA8XQYSxFAcAXy7Dvuue9eGYitv"
+        ]
+      },
+      "calculation": "incoming transaction count / all incoming transactions",
+      "parameters": {
+        "rank": 5
+      },
+      "created_at": {
+        "__datetime__": "2026-08-04T00:29:54+00:00"
+      }
+    },
+    {
+      "__type__": "InvestigationEvidenceRef",
+      "evidence_id": "IF6",
+      "feature": "funding_source",
+      "source_type": "analysis_flow",
+      "source_reference": "AnalysisResult.flow",
+      "tx_hashes": {
+        "__tuple__": [
+          "62feb8599e5f1509be7f8191ee809b4f64d22f3fd1274f6b72a6dafb8087b555",
+          "793c6a61e49e0d764955e0c8c23b2b7a0ad5da323210679c778749d20adc3891"
+        ]
+      },
+      "addresses": {
+        "__tuple__": [
+          "TMJcb5gtU9mnmmMFxwKQpYk7LRxKKqyDkQ"
+        ]
+      },
+      "calculation": "incoming transaction count / all incoming transactions",
+      "parameters": {
+        "rank": 6
+      },
+      "created_at": {
+        "__datetime__": "2026-08-04T00:29:54+00:00"
+      }
+    },
+    {
+      "__type__": "InvestigationEvidenceRef",
+      "evidence_id": "IF7",
+      "feature": "funding_source",
+      "source_type": "analysis_flow",
+      "source_reference": "AnalysisResult.flow",
+      "tx_hashes": {
+        "__tuple__": [
+          "5cb01fcef3072e4367298484596f1d0edd439f717d30f4529d0c9c2a5b3bfc3e",
+          "e4c5500c6516d4ba38ff21cc1641fc8336370d0dc069684bebf7672b2e272f6e"
+        ]
+      },
+      "addresses": {
+        "__tuple__": [
+          "TSrRYUUz774oaPKsN7NRZnSqYqr5NwjDkQ"
+        ]
+      },
+      "calculation": "incoming transaction count / all incoming transactions",
+      "parameters": {
+        "rank": 7
+      },
+      "created_at": {
+        "__datetime__": "2026-08-04T00:29:54+00:00"
+      }
+    },
+    {
+      "__type__": "InvestigationEvidenceRef",
+      "evidence_id": "IF8",
+      "feature": "funding_source",
+      "source_type": "analysis_flow",
+      "source_reference": "AnalysisResult.flow",
+      "tx_hashes": {
+        "__tuple__": [
+          "19aa5ef8994a72543e4d7375c48d7f300e1062168c1d4bb425601ca32e479b8e",
+          "e150420fe011a06359e01e51aa1f8e470f13632016f2e5dc5008b2bd49acaa7e"
+        ]
+      },
+      "addresses": {
+        "__tuple__": [
+          "TW3GGtCsgNUXFYMGqBkyZ6qTcTRHvt3NJk"
+        ]
+      },
+      "calculation": "incoming transaction count / all incoming transactions",
+      "parameters": {
+        "rank": 8
+      },
+      "created_at": {
+        "__datetime__": "2026-08-04T00:29:54+00:00"
+      }
+    },
+    {
+      "__type__": "InvestigationEvidenceRef",
+      "evidence_id": "IF9",
+      "feature": "funding_source",
+      "source_type": "analysis_flow",
+      "source_reference": "AnalysisResult.flow",
+      "tx_hashes": {
+        "__tuple__": [
+          "dcafc9a0a4050fbc77de4ddf5006a498f00baca0e59e885023294f1e2b812a4d"
+        ]
+      },
+      "addresses": {
+        "__tuple__": [
+          "TAJqGhk4wuGwoRN4vQgHTSfEt5GSyZ5f4r"
+        ]
+      },
+      "calculation": "incoming transaction count / all incoming transactions",
+      "parameters": {
+        "rank": 9
+      },
+      "created_at": {
+        "__datetime__": "2026-08-04T00:29:54+00:00"
+      }
+    },
+    {
+      "__type__": "InvestigationEvidenceRef",
+      "evidence_id": "IF10",
+      "feature": "funding_source",
+      "source_type": "analysis_flow",
+      "source_reference": "AnalysisResult.flow",
+      "tx_hashes": {
+        "__tuple__": [
+          "a46993552d0d87a45ca3e42214eb443ce456cb6261bcee0d21d06a29799d6936"
+        ]
+      },
+      "addresses": {
+        "__tuple__": [
+          "TBMdhFK7zZ78kEn3bWYJk4KFAgAcr1yDkQ"
+        ]
+      },
+      "calculation": "incoming transaction count / all incoming transactions",
+      "parameters": {
+        "rank": 10
+      },
+      "created_at": {
+        "__datetime__": "2026-08-04T00:29:54+00:00"
+      }
+    },
+    {
+      "__type__": "InvestigationEvidenceRef",
+      "evidence_id": "IF11",
+      "feature": "funding_source",
+      "source_type": "analysis_flow",
+      "source_reference": "AnalysisResult.flow",
+      "tx_hashes": {
+        "__tuple__": [
+          "5091804154492c87c31323826aff914585553b87c5d2a177138345a3cca7ac9e"
+        ]
+      },
+      "addresses": {
+        "__tuple__": [
+          "TCETwsANVDgCSfdhkxPQuDp5DL46QWsCUk"
+        ]
+      },
+      "calculation": "incoming transaction count / all incoming transactions",
+      "parameters": {
+        "rank": 11
+      },
+      "created_at": {
+        "__datetime__": "2026-08-04T00:29:54+00:00"
+      }
+    },
+    {
+      "__type__": "InvestigationEvidenceRef",
+      "evidence_id": "IF12",
+      "feature": "funding_source",
+      "source_type": "analysis_flow",
+      "source_reference": "AnalysisResult.flow",
+      "tx_hashes": {
+        "__tuple__": [
+          "8e5bf8439bb0e3487d65bf9ea2e7aa65863e8c8f80410b925e1e56c96eb183e4"
+        ]
+      },
+      "addresses": {
+        "__tuple__": [
+          "TDBsuPYTtfEHzMp8gefe1NNtasMztKqLjx"
+        ]
+      },
+      "calculation": "incoming transaction count / all incoming transactions",
+      "parameters": {
+        "rank": 12
+      },
+      "created_at": {
+        "__datetime__": "2026-08-04T00:29:54+00:00"
+      }
+    },
+    {
+      "__type__": "InvestigationEvidenceRef",
+      "evidence_id": "IF13",
+      "feature": "funding_source",
+      "source_type": "analysis_flow",
+      "source_reference": "AnalysisResult.flow",
+      "tx_hashes": {
+        "__tuple__": [
+          "2c368672a76be6c940c06205d6fd4de46d0f232801dc3e4ce1bfb8d5670d00c0"
+        ]
+      },
+      "addresses": {
+        "__tuple__": [
+          "TDgJQUjpdij2RVFZKYXZKco278MNtnvqjx"
+        ]
+      },
+      "calculation": "incoming transaction count / all incoming transactions",
+      "parameters": {
+        "rank": 13
+      },
+      "created_at": {
+        "__datetime__": "2026-08-04T00:29:54+00:00"
+      }
+    },
+    {
+      "__type__": "InvestigationEvidenceRef",
+      "evidence_id": "IF14",
+      "feature": "funding_source",
+      "source_type": "analysis_flow",
+      "source_reference": "AnalysisResult.flow",
+      "tx_hashes": {
+        "__tuple__": [
+          "db162933e8cb9f5bf96ff1ddd546bf4eeb54b2a7cec6878472957af50b752479"
+        ]
+      },
+      "addresses": {
+        "__tuple__": [
+          "TDMynGnRWYsyXLvcmsYpxefinu7d4xPARz"
+        ]
+      },
+      "calculation": "incoming transaction count / all incoming transactions",
+      "parameters": {
+        "rank": 14
+      },
+      "created_at": {
+        "__datetime__": "2026-08-04T00:29:54+00:00"
+      }
+    },
+    {
+      "__type__": "InvestigationEvidenceRef",
+      "evidence_id": "IF15",
+      "feature": "funding_source",
+      "source_type": "analysis_flow",
+      "source_reference": "AnalysisResult.flow",
+      "tx_hashes": {
+        "__tuple__": [
+          "35e9b253c30f8015f62d69bc7cc0eb3b207f1721754f05e63416ae57c9d23461"
+        ]
+      },
+      "addresses": {
+        "__tuple__": [
+          "TDorvbrv1exyB9cDEDkSRPunUNdVqo1qjx"
+        ]
+      },
+      "calculation": "incoming transaction count / all incoming transactions",
+      "parameters": {
+        "rank": 15
+      },
+      "created_at": {
+        "__datetime__": "2026-08-04T00:29:54+00:00"
+      }
+    },
+    {
+      "__type__": "InvestigationEvidenceRef",
+      "evidence_id": "IF16",
+      "feature": "funding_source",
+      "source_type": "analysis_flow",
+      "source_reference": "AnalysisResult.flow",
+      "tx_hashes": {
+        "__tuple__": [
+          "f8a014c95984b1294a61abbe4b3e685a00013091f18a8746730bb77f9b18905b"
+        ]
+      },
+      "addresses": {
+        "__tuple__": [
+          "TEeDatfHoQpMuosApypU3BUSU2ePN1sxh4"
+        ]
+      },
+      "calculation": "incoming transaction count / all incoming transactions",
+      "parameters": {
+        "rank": 16
+      },
+      "created_at": {
+        "__datetime__": "2026-08-04T00:29:54+00:00"
+      }
+    },
+    {
+      "__type__": "InvestigationEvidenceRef",
+      "evidence_id": "IF17",
+      "feature": "funding_source",
+      "source_type": "analysis_flow",
+      "source_reference": "AnalysisResult.flow",
+      "tx_hashes": {
+        "__tuple__": [
+          "fb32e383786438297104802045bd28b471c15e0c2a8ae86ccd3f1fa2c96bed1c"
+        ]
+      },
+      "addresses": {
+        "__tuple__": [
+          "TEvRZvoWPojaEkD7d2Bt8ffaqwFB3P1bRz"
+        ]
+      },
+      "calculation": "incoming transaction count / all incoming transactions",
+      "parameters": {
+        "rank": 17
+      },
+      "created_at": {
+        "__datetime__": "2026-08-04T00:29:54+00:00"
+      }
+    },
+    {
+      "__type__": "InvestigationEvidenceRef",
+      "evidence_id": "IF18",
+      "feature": "funding_source",
+      "source_type": "analysis_flow",
+      "source_reference": "AnalysisResult.flow",
+      "tx_hashes": {
+        "__tuple__": [
+          "d59144861c68363dfc27cd1f0c7209925534b11581125f2466b429c4a6e01f9d"
+        ]
+      },
+      "addresses": {
+        "__tuple__": [
+          "TF9GXeiYpofE9BzF9qA9bVxQvD1gMh3eWd"
+        ]
+      },
+      "calculation": "incoming transaction count / all incoming transactions",
+      "parameters": {
+        "rank": 18
+      },
+      "created_at": {
+        "__datetime__": "2026-08-04T00:29:54+00:00"
+      }
+    },
+    {
+      "__type__": "InvestigationEvidenceRef",
+      "evidence_id": "IF19",
+      "feature": "funding_source",
+      "source_type": "analysis_flow",
+      "source_reference": "AnalysisResult.flow",
+      "tx_hashes": {
+        "__tuple__": [
+          "460b62bd47daa8e7c156e3c632ba2f5b239ddca212531d5a4db2fbe03ed41a20"
+        ]
+      },
+      "addresses": {
+        "__tuple__": [
+          "TFEX3QuJFW2chgCR4bHBKsCRpx6HWCps4r"
+        ]
+      },
+      "calculation": "incoming transaction count / all incoming transactions",
+      "parameters": {
+        "rank": 19
+      },
+      "created_at": {
+        "__datetime__": "2026-08-04T00:29:54+00:00"
+      }
+    },
+    {
+      "__type__": "InvestigationEvidenceRef",
+      "evidence_id": "IF20",
+      "feature": "funding_source",
+      "source_type": "analysis_flow",
+      "source_reference": "AnalysisResult.flow",
+      "tx_hashes": {
+        "__tuple__": [
+          "eb83050fb848e9402cdc0f1440e8a084474bd16cbfbf29105d9d0db1e8604343"
+        ]
+      },
+      "addresses": {
+        "__tuple__": [
+          "TGfxmZiah1ER3o7E9F76kAsnPNgQ5afNMJ"
+        ]
+      },
+      "calculation": "incoming transaction count / all incoming transactions",
+      "parameters": {
+        "rank": 20
+      },
+      "created_at": {
+        "__datetime__": "2026-08-04T00:29:54+00:00"
+      }
+    },
+    {
+      "__type__": "InvestigationEvidenceRef",
+      "evidence_id": "IF21",
+      "feature": "funding_source",
+      "source_type": "analysis_flow",
+      "source_reference": "AnalysisResult.flow",
+      "tx_hashes": {
+        "__tuple__": [
+          "b1df6043fb30ea2bc550c64f67b04ae091237d010a59ca68a79b31a64d663e0f"
+        ]
+      },
+      "addresses": {
+        "__tuple__": [
+          "TH5o3k32Logwahvzt6h9hWJRqxjCkB1y2f"
+        ]
+      },
+      "calculation": "incoming transaction count / all incoming transactions",
+      "parameters": {
+        "rank": 21
+      },
+      "created_at": {
+        "__datetime__": "2026-08-04T00:29:54+00:00"
+      }
+    },
+    {
+      "__type__": "InvestigationEvidenceRef",
+      "evidence_id": "IF22",
+      "feature": "funding_source",
+      "source_type": "analysis_flow",
+      "source_reference": "AnalysisResult.flow",
+      "tx_hashes": {
+        "__tuple__": [
+          "d877377b5686a713ab1837abcf7d572abcebcc4a117a0d4b496c80d5ddbe64b4"
+        ]
+      },
+      "addresses": {
+        "__tuple__": [
+          "TH9t1UAQBKZb54J318rkgaDsyNHQfQBDRz"
+        ]
+      },
+      "calculation": "incoming transaction count / all incoming transactions",
+      "parameters": {
+        "rank": 22
+      },
+      "created_at": {
+        "__datetime__": "2026-08-04T00:29:54+00:00"
+      }
+    },
+    {
+      "__type__": "InvestigationEvidenceRef",
+      "evidence_id": "IF23",
+      "feature": "funding_source",
+      "source_type": "analysis_flow",
+      "source_reference": "AnalysisResult.flow",
+      "tx_hashes": {
+        "__tuple__": [
+          "90d0e62f569147691c2a7e16a0d82c207aff7a7503bc3fd1ec8a7a496a96fbdd"
+        ]
+      },
+      "addresses": {
+        "__tuple__": [
+          "TJkZsDeMWxNfGQJ8sSsvNUGFU6ckEZwxh4"
+        ]
+      },
+      "calculation": "incoming transaction count / all incoming transactions",
+      "parameters": {
+        "rank": 23
+      },
+      "created_at": {
+        "__datetime__": "2026-08-04T00:29:54+00:00"
+      }
+    },
+    {
+      "__type__": "InvestigationEvidenceRef",
+      "evidence_id": "IF24",
+      "feature": "funding_source",
+      "source_type": "analysis_flow",
+      "source_reference": "AnalysisResult.flow",
+      "tx_hashes": {
+        "__tuple__": [
+          "15805b83a1cba97d1a96100407a11410246bdf32b4a49cab9ac1222f00030a6c"
+        ]
+      },
+      "addresses": {
+        "__tuple__": [
+          "TJRt5xRh9c9KSGvMVm3KHHa5KrH4jGwy2f"
+        ]
+      },
+      "calculation": "incoming transaction count / all incoming transactions",
+      "parameters": {
+        "rank": 24
+      },
+      "created_at": {
+        "__datetime__": "2026-08-04T00:29:54+00:00"
+      }
+    },
+    {
+      "__type__": "InvestigationEvidenceRef",
+      "evidence_id": "IF25",
+      "feature": "funding_source",
+      "source_type": "analysis_flow",
+      "source_reference": "AnalysisResult.flow",
+      "tx_hashes": {
+        "__tuple__": [
+          "8da8287dc1e5235bd09928a2fa1084b8eeb8bae7b4c8ccec95e9b5dfca2aea53"
+        ]
+      },
+      "addresses": {
+        "__tuple__": [
+          "TKQNcbT4d3C4DH6VDQEzAPdZKvJaNTddRz"
+        ]
+      },
+      "calculation": "incoming transaction count / all incoming transactions",
+      "parameters": {
+        "rank": 25
+      },
+      "created_at": {
+        "__datetime__": "2026-08-04T00:29:54+00:00"
+      }
+    },
+    {
+      "__type__": "InvestigationEvidenceRef",
+      "evidence_id": "IF26",
+      "feature": "funding_source",
+      "source_type": "analysis_flow",
+      "source_reference": "AnalysisResult.flow",
+      "tx_hashes": {
+        "__tuple__": [
+          "400355e9a9faa5c28fef5ebdb40de1e3b6e3c95d5b6ba9f341efb6690c3e1ead"
+        ]
+      },
+      "addresses": {
+        "__tuple__": [
+          "TMJcK6TgJeYTQbpqCqXjsexLXwwGQqLeWd"
+        ]
+      },
+      "calculation": "incoming transaction count / all incoming transactions",
+      "parameters": {
+        "rank": 26
+      },
+      "created_at": {
+        "__datetime__": "2026-08-04T00:29:54+00:00"
+      }
+    },
+    {
+      "__type__": "InvestigationEvidenceRef",
+      "evidence_id": "IF27",
+      "feature": "funding_source",
+      "source_type": "analysis_flow",
+      "source_reference": "AnalysisResult.flow",
+      "tx_hashes": {
+        "__tuple__": [
+          "e86c60af3c04d37062bd023b4b143d01f12409b63b23ba6961a2af78f226b6dc"
+        ]
+      },
+      "addresses": {
+        "__tuple__": [
+          "TNXJULMxhdLy1MUe5Kx9ZNt5uFfq2XVUpa"
+        ]
+      },
+      "calculation": "incoming transaction count / all incoming transactions",
+      "parameters": {
+        "rank": 27
+      },
+      "created_at": {
+        "__datetime__": "2026-08-04T00:29:54+00:00"
+      }
+    },
+    {
+      "__type__": "InvestigationEvidenceRef",
+      "evidence_id": "IF28",
+      "feature": "funding_source",
+      "source_type": "analysis_flow",
+      "source_reference": "AnalysisResult.flow",
+      "tx_hashes": {
+        "__tuple__": [
+          "85513b01638181752ca2dc452f5425fbbfc3650bd7caa58c426af850634292c0"
+        ]
+      },
+      "addresses": {
+        "__tuple__": [
+          "TPBCxezfd85a95sjQmgPgwAxPZUcaJ3Upa"
+        ]
+      },
+      "calculation": "incoming transaction count / all incoming transactions",
+      "parameters": {
+        "rank": 28
+      },
+      "created_at": {
+        "__datetime__": "2026-08-04T00:29:54+00:00"
+      }
+    },
+    {
+      "__type__": "InvestigationEvidenceRef",
+      "evidence_id": "IF29",
+      "feature": "funding_source",
+      "source_type": "analysis_flow",
+      "source_reference": "AnalysisResult.flow",
+      "tx_hashes": {
+        "__tuple__": [
+          "6d088ca82215cfd58fa1c919564b2ea402d16e96a281dae144faa16f97417204"
+        ]
+      },
+      "addresses": {
+        "__tuple__": [
+          "TPdnHnEAcYbejRwsdMHEdMYD9s6xDmjYpa"
+        ]
+      },
+      "calculation": "incoming transaction count / all incoming transactions",
+      "parameters": {
+        "rank": 29
+      },
+      "created_at": {
+        "__datetime__": "2026-08-04T00:29:54+00:00"
+      }
+    },
+    {
+      "__type__": "InvestigationEvidenceRef",
+      "evidence_id": "IF30",
+      "feature": "funding_source",
+      "source_type": "analysis_flow",
+      "source_reference": "AnalysisResult.flow",
+      "tx_hashes": {
+        "__tuple__": [
+          "ff3a3105450e33d148e2a9652962d9da79a3c5e76f519479f87f1a4021257795"
+        ]
+      },
+      "addresses": {
+        "__tuple__": [
+          "TQdosgTZGmtwd8G6TZe7tCFNX6ishRgDkQ"
+        ]
+      },
+      "calculation": "incoming transaction count / all incoming transactions",
+      "parameters": {
+        "rank": 30
+      },
+      "created_at": {
+        "__datetime__": "2026-08-04T00:29:54+00:00"
+      }
+    },
+    {
+      "__type__": "InvestigationEvidenceRef",
+      "evidence_id": "IF31",
+      "feature": "funding_source",
+      "source_type": "analysis_flow",
+      "source_reference": "AnalysisResult.flow",
+      "tx_hashes": {
+        "__tuple__": [
+          "ee4be80714d19166313b272c423bab828207c5785299990847ad616c3dac366f"
+        ]
+      },
+      "addresses": {
+        "__tuple__": [
+          "TQeV4kBaMYzLYtpG9ujUtPz6tWdyXVm4FV"
+        ]
+      },
+      "calculation": "incoming transaction count / all incoming transactions",
+      "parameters": {
+        "rank": 31
+      },
+      "created_at": {
+        "__datetime__": "2026-08-04T00:29:54+00:00"
+      }
+    },
+    {
+      "__type__": "InvestigationEvidenceRef",
+      "evidence_id": "IF32",
+      "feature": "funding_source",
+      "source_type": "analysis_flow",
+      "source_reference": "AnalysisResult.flow",
+      "tx_hashes": {
+        "__tuple__": [
+          "da4b047fa740ed93b1ce31cd5ffb97f4f0ad6ba859bb1207f3ba2e370da89051"
+        ]
+      },
+      "addresses": {
+        "__tuple__": [
+          "TRome7bffj2FmBKVoVtqazVNvJz93bFvh4"
+        ]
+      },
+      "calculation": "incoming transaction count / all incoming transactions",
+      "parameters": {
+        "rank": 32
+      },
+      "created_at": {
+        "__datetime__": "2026-08-04T00:29:54+00:00"
+      }
+    },
+    {
+      "__type__": "InvestigationEvidenceRef",
+      "evidence_id": "IF33",
+      "feature": "funding_source",
+      "source_type": "analysis_flow",
+      "source_reference": "AnalysisResult.flow",
+      "tx_hashes": {
+        "__tuple__": [
+          "6fa0aaded94196a0e449f80a7aeeb46c114b58fec1019b712714c1a1f5d434e3"
+        ]
+      },
+      "addresses": {
+        "__tuple__": [
+          "TS7eEbQgyZTjqNGewibkCKzEGyFLw4jh4r"
+        ]
+      },
+      "calculation": "incoming transaction count / all incoming transactions",
+      "parameters": {
+        "rank": 33
+      },
+      "created_at": {
+        "__datetime__": "2026-08-04T00:29:54+00:00"
+      }
+    },
+    {
+      "__type__": "InvestigationEvidenceRef",
+      "evidence_id": "IF34",
+      "feature": "funding_source",
+      "source_type": "analysis_flow",
+      "source_reference": "AnalysisResult.flow",
+      "tx_hashes": {
+        "__tuple__": [
+          "be3859f88e3df982bfb5f2796c9c9f6cfed631986418cbcba886c552c141f20b"
+        ]
+      },
+      "addresses": {
+        "__tuple__": [
+          "TSgcCfqsRbMbdN4LuGkvKpXybQSbiKiB7h"
+        ]
+      },
+      "calculation": "incoming transaction count / all incoming transactions",
+      "parameters": {
+        "rank": 34
+      },
+      "created_at": {
+        "__datetime__": "2026-08-04T00:29:54+00:00"
+      }
+    },
+    {
+      "__type__": "InvestigationEvidenceRef",
+      "evidence_id": "IF35",
+      "feature": "funding_source",
+      "source_type": "analysis_flow",
+      "source_reference": "AnalysisResult.flow",
+      "tx_hashes": {
+        "__tuple__": [
+          "0d239ba9bd3fbf9b936278d9932eac95ef602ce9ff5cd73e226fcdfe09554b4b"
+        ]
+      },
+      "addresses": {
+        "__tuple__": [
+          "TSguXpG9Bm8tEBt14uQn6Y4tfXdgnCGe5X"
+        ]
+      },
+      "calculation": "incoming transaction count / all incoming transactions",
+      "parameters": {
+        "rank": 35
+      },
+      "created_at": {
+        "__datetime__": "2026-08-04T00:29:54+00:00"
+      }
+    },
+    {
+      "__type__": "InvestigationEvidenceRef",
+      "evidence_id": "IF36",
+      "feature": "funding_source",
+      "source_type": "analysis_flow",
+      "source_reference": "AnalysisResult.flow",
+      "tx_hashes": {
+        "__tuple__": [
+          "b4ce340516cdd765507736fd1213640a41129d4d3a1c98bccf4128f31e17818a"
+        ]
+      },
+      "addresses": {
+        "__tuple__": [
+          "TTqr4d17ehUsBMWnm4WET5HfPCqPJZLnCn"
+        ]
+      },
+      "calculation": "incoming transaction count / all incoming transactions",
+      "parameters": {
+        "rank": 36
+      },
+      "created_at": {
+        "__datetime__": "2026-08-04T00:29:54+00:00"
+      }
+    },
+    {
+      "__type__": "InvestigationEvidenceRef",
+      "evidence_id": "IF37",
+      "feature": "funding_source",
+      "source_type": "analysis_flow",
+      "source_reference": "AnalysisResult.flow",
+      "tx_hashes": {
+        "__tuple__": [
+          "aa393ad6cf4979c03f00b735d58f8d247d342bf225f8883592c5633dd87afc70"
+        ]
+      },
+      "addresses": {
+        "__tuple__": [
+          "TUbkVYkvQkFM8eMP3AciXevw3v678uaaMJ"
+        ]
+      },
+      "calculation": "incoming transaction count / all incoming transactions",
+      "parameters": {
+        "rank": 37
+      },
+      "created_at": {
+        "__datetime__": "2026-08-04T00:29:54+00:00"
+      }
+    },
+    {
+      "__type__": "InvestigationEvidenceRef",
+      "evidence_id": "IF38",
+      "feature": "funding_source",
+      "source_type": "analysis_flow",
+      "source_reference": "AnalysisResult.flow",
+      "tx_hashes": {
+        "__tuple__": [
+          "5d7c10fc7ae71c5948763e0e4b25aa6ba7c9aad5d6979f48c176e2f90ad658ce"
+        ]
+      },
+      "addresses": {
+        "__tuple__": [
+          "TUevijYD489RDsVY1hYT9XncCG7gmf1DkQ"
+        ]
+      },
+      "calculation": "incoming transaction count / all incoming transactions",
+      "parameters": {
+        "rank": 38
+      },
+      "created_at": {
+        "__datetime__": "2026-08-04T00:29:54+00:00"
+      }
+    },
+    {
+      "__type__": "InvestigationEvidenceRef",
+      "evidence_id": "IF39",
+      "feature": "funding_source",
+      "source_type": "analysis_flow",
+      "source_reference": "AnalysisResult.flow",
+      "tx_hashes": {
+        "__tuple__": [
+          "7adcab622ddc3810155b80a7c4431d4d02fe609eab3a3d58c5ff848ebd0f861d"
+        ]
+      },
+      "addresses": {
+        "__tuple__": [
+          "TUpUFqDmSZtZkWsYoSMuGeaP6AT3fVnNMJ"
+        ]
+      },
+      "calculation": "incoming transaction count / all incoming transactions",
+      "parameters": {
+        "rank": 39
+      },
+      "created_at": {
+        "__datetime__": "2026-08-04T00:29:54+00:00"
+      }
+    },
+    {
+      "__type__": "InvestigationEvidenceRef",
+      "evidence_id": "IF40",
+      "feature": "funding_source",
+      "source_type": "analysis_flow",
+      "source_reference": "AnalysisResult.flow",
+      "tx_hashes": {
+        "__tuple__": [
+          "29bd1f218208190d3f496b1a83bf7092c1e6613fc797b056a4b3aa30cdf77644"
+        ]
+      },
+      "addresses": {
+        "__tuple__": [
+          "TVwi2hVANZ2WiGJpNQXgEe1isAGRDvPNMJ"
+        ]
+      },
+      "calculation": "incoming transaction count / all incoming transactions",
+      "parameters": {
+        "rank": 40
+      },
+      "created_at": {
+        "__datetime__": "2026-08-04T00:29:54+00:00"
+      }
+    },
+    {
+      "__type__": "InvestigationEvidenceRef",
+      "evidence_id": "IF41",
+      "feature": "funding_source",
+      "source_type": "analysis_flow",
+      "source_reference": "AnalysisResult.flow",
+      "tx_hashes": {
+        "__tuple__": [
+          "64ede349b199f1b7678292d43335d4c6800bc617b50a5e7040976a74bf4f23ad"
+        ]
+      },
+      "addresses": {
+        "__tuple__": [
+          "TXQAF8uk4zWuLrVywpkAVssdZULejXXXCn"
+        ]
+      },
+      "calculation": "incoming transaction count / all incoming transactions",
+      "parameters": {
+        "rank": 41
+      },
+      "created_at": {
+        "__datetime__": "2026-08-04T00:29:54+00:00"
+      }
+    },
+    {
+      "__type__": "InvestigationEvidenceRef",
+      "evidence_id": "IF42",
+      "feature": "funding_source",
+      "source_type": "analysis_flow",
+      "source_reference": "AnalysisResult.flow",
+      "tx_hashes": {
+        "__tuple__": [
+          "077d7b012ea7bf112d449f08a07cc4f81fd7acc8e38d493a7117df14ec132533"
+        ]
+      },
+      "addresses": {
+        "__tuple__": [
+          "TYBthuusLuoBykoJfxVp43UrBu7A3twqjx"
+        ]
+      },
+      "calculation": "incoming transaction count / all incoming transactions",
+      "parameters": {
+        "rank": 42
+      },
+      "created_at": {
+        "__datetime__": "2026-08-04T00:29:54+00:00"
+      }
+    }
+  ]
+}

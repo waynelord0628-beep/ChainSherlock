@@ -24,6 +24,18 @@ CSV, Excel, and JSON labels are normalized and matched locally. Rule-based categ
 
 Observations and Conclusion Facts report metrics and state changes only. V6.5 cannot output crime, fraud, money-laundering, suspect, or risk determinations.
 
+## ADR-043: Partial boundaries cannot establish lifecycle stages
+
+For partial Provider data, V6.5 suppresses startup, dormancy, and reactivation claims that could be artifacts of the fetched date boundary. Remaining stages, observations, and facts use low confidence and disclose instability.
+
+## ADR-044: Rankings are asset-scoped amounts
+
+Funding and outgoing report rankings are calculated independently per asset by amount. Transaction-count ranking remains available only as a legacy compatibility field and is not presented as the primary funding ranking.
+
+## ADR-045: Investigation evidence joins the Report index
+
+Investigation evidence IDs are represented in ReportDocument evidence and retain transaction hashes, addresses, calculation method, parameters, and the public source artifact.
+
 ## ADR-001: Explicit composition root
 
 `Application` owns runtime registries and constructs a shared `Context`. This keeps wiring separate from domain code.
