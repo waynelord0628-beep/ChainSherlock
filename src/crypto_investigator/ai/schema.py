@@ -16,13 +16,13 @@ def _object(properties):
 
 def narrative_response_schema():
     paragraph = _object({
-        "text": {"type": "string"},
-        "citation_ids": {"type": "array", "items": {"type": "string"}},
+        "text": {"type": "string", "maxLength": 350},
+        "citation_ids": {"type": "array", "items": {"type": "string"}, "maxItems": 5},
     })
     section = _object({
         "section_id": {"type": "string"},
         "title": {"type": "string"},
-        "paragraphs": {"type": "array", "items": paragraph},
+        "paragraphs": {"type": "array", "items": paragraph, "maxItems": 2},
     })
     metadata = _object({
         "provider": {"type": "string"},
@@ -37,14 +37,14 @@ def narrative_response_schema():
     claim = _object({
         "claim_id": {"type": "string"},
         "section": {"type": "string"},
-        "statement": {"type": "string"},
+        "statement": {"type": "string", "maxLength": 280},
         "claim_type": {"type": "string"},
-        "fact_codes": {"type": "array", "items": {"type": "string"}},
-        "observation_ids": {"type": "array", "items": {"type": "string"}},
-        "evidence_ids": {"type": "array", "items": {"type": "string"}},
-        "numeric_values": {"type": "array", "items": {"type": "string"}},
+        "fact_codes": {"type": "array", "items": {"type": "string"}, "maxItems": 5},
+        "observation_ids": {"type": "array", "items": {"type": "string"}, "maxItems": 5},
+        "evidence_ids": {"type": "array", "items": {"type": "string"}, "maxItems": 5},
+        "numeric_values": {"type": "array", "items": {"type": "string"}, "maxItems": 5},
         "confidence": {"type": "string"},
-        "limitations": {"type": "array", "items": {"type": "string"}},
+        "limitations": {"type": "array", "items": {"type": "string"}, "maxItems": 3},
     })
     citation = _object({
         "citation_id": {"type": "string"},
@@ -68,7 +68,7 @@ def narrative_response_schema():
     ):
         properties[name] = _nullable(section)
     properties.update({
-        "claims": {"type": "array", "items": claim},
+        "claims": {"type": "array", "items": claim, "maxItems": 60},
         "citations": {"type": "array", "items": citation},
         "warnings": {"type": "array", "items": warning},
         "validation": validation,

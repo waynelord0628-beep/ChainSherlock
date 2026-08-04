@@ -10,12 +10,16 @@ class InputCompactor:
     def __init__(
         self,
         *,
-        top_funding_sources: int = 10,
-        top_outgoing_destinations: int = 10,
+        top_funding_sources: int = 5,
+        top_outgoing_destinations: int = 5,
         top_patterns: int = 20,
-        top_observations: int = 30,
+        top_observations: int = 20,
         top_roles: int = 20,
-        max_evidence_refs: int = 100,
+        top_funding_transitions: int = 10,
+        top_operation_stages: int = 10,
+        top_conclusion_facts: int = 30,
+        top_limitations: int = 15,
+        max_evidence_refs: int = 50,
         max_tx_hashes_per_item: int = 5,
         max_input_characters: int = 100_000,
     ):
@@ -41,10 +45,14 @@ class InputCompactor:
             value,
             funding_sources=bounded("funding_sources", value.funding_sources, self.limits["top_funding_sources"], lambda x: (x.get("rank", 10**9), x.get("address", ""))),
             outgoing_destinations=bounded("outgoing_destinations", value.outgoing_destinations, self.limits["top_outgoing_destinations"], lambda x: (-float(x.get("amount", x.get("transaction_count", 0))), str(x.get("address", "")))),
+            funding_transitions=bounded("funding_transitions", value.funding_transitions, self.limits["top_funding_transitions"], lambda x: (str(x.get("transition_at", x.get("occurred_at", ""))), str(x))),
+            operation_stages=bounded("operation_stages", value.operation_stages, self.limits["top_operation_stages"], lambda x: (str(x.get("started_at", "")), str(x.get("stage", "")))),
             transfer_patterns=bounded("transfer_patterns", value.transfer_patterns, self.limits["top_patterns"], lambda x: (str(x.get("pattern_type", "")), str(x))),
             observations=bounded("observations", value.observations, self.limits["top_observations"], lambda x: (str(x.get("occurred_at", "")), str(x.get("code", "")))),
+            conclusion_facts=bounded("conclusion_facts", value.conclusion_facts, self.limits["top_conclusion_facts"], lambda x: (str(x.get("fact_code", "")), str(x))),
             counterparty_roles=bounded("counterparty_roles", value.counterparty_roles, self.limits["top_roles"], lambda x: (str(x.get("role", "")), str(x.get("address", "")))),
             evidence_index=bounded("evidence_index", value.evidence_index, self.limits["max_evidence_refs"], lambda x: str(x.get("evidence_id", ""))),
+            limitations=bounded("limitations", value.limitations, self.limits["top_limitations"], str),
             omitted_counts=omitted,
         )
         result = replace(result, evidence_index=tuple(self._bound_hashes(item) for item in result.evidence_index))
@@ -105,12 +113,7 @@ class InputCompactor:
                 for item in value.observations
             ),
             conclusion_facts=tuple(
-                {
-                    **self._select(item, (
-                        "fact_code", "value", "unit", "confidence", "evidence_refs",
-                    )),
-                    "evidence_refs": tuple(item.get("evidence_refs", ()))[:5],
-                }
+                self._select(item, ("fact_code", "value", "unit"))
                 for item in value.conclusion_facts
             ),
             evidence_index=tuple(self._select(item, evidence_fields) for item in value.evidence_index),
@@ -118,12 +121,11 @@ class InputCompactor:
                 {
                     **self._select(item, (
                         "stage", "started_at", "ended_at", "transaction_count",
-                        "transaction_frequency", "concentration", "confidence",
-                        "evidence_refs",
+                        "transaction_frequency", "concentration",
                     )),
-                    "reason_codes": tuple(item.get("reason_codes", ()))[:3],
+                    "reason_codes": tuple(item.get("reason_codes", ()))[:2],
                 }
-                for item in value.operation_stages
+                for item in value.operation_stages[:8]
             ),
             dormancy=tuple(
                 self._select(item, (

@@ -85,6 +85,12 @@ class AIReportIntegrator:
                     for ref in section.evidence_refs
                 }
             ),
+            ai_input_tokens=getattr(narrative.metadata, "input_tokens", 0),
+            ai_output_token_limit=getattr(
+                narrative.metadata, "output_token_limit", 0
+            ),
+            ai_output_tokens=getattr(narrative.metadata, "output_tokens", 0),
+            ai_finish_reason=getattr(narrative.metadata, "finish_reason", None),
         )
         return replace(
             base,
@@ -113,6 +119,18 @@ class AIReportIntegrator:
             deterministic_section_count=len(base.sections),
             ai_section_count=0,
             evidence_reference_count=0,
+            ai_input_tokens=getattr(
+                getattr(narrative, "metadata", None), "input_tokens", 0
+            ),
+            ai_output_token_limit=getattr(
+                getattr(narrative, "metadata", None), "output_token_limit", 0
+            ),
+            ai_output_tokens=getattr(
+                getattr(narrative, "metadata", None), "output_tokens", 0
+            ),
+            ai_finish_reason=getattr(
+                getattr(narrative, "metadata", None), "finish_reason", None
+            ),
         )
         warning = ReportWarning(
             "ai_enrichment_fallback",

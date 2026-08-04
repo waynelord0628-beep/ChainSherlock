@@ -1258,6 +1258,13 @@ class MainWindow(QMainWindow):
                 f"<p class='muted'>產生時間：{_safe(item.get('created_at'))}<br>"
                 f"格式：{format_badges}<br>"
                 f"AI validation：{_safe(item.get('validation_status', 'not_requested'))}"
+                f"<br>AI：{_safe('enabled' if item.get('ai_enrichment_enabled') else 'disabled')}"
+                f"<br>Provider／Model：{_safe(item.get('ai_provider') or 'unavailable')}／"
+                f"{_safe(item.get('ai_model') or 'unavailable')}"
+                f"<br>Tokens：input {_safe(item.get('ai_input_tokens', 0))} ／ "
+                f"limit {_safe(item.get('ai_output_token_limit', 0))} ／ "
+                f"actual {_safe(item.get('ai_output_tokens', 0))}"
+                f"<br>Finish reason：{_safe(item.get('ai_finish_reason') or 'unavailable')}"
                 + (
                     f"<br>Fallback：{_safe(item.get('fallback_reason'))}"
                     if item.get("fallback_reason")

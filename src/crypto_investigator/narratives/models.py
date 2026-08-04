@@ -53,6 +53,12 @@ class NarrativeMetadata:
     fallback_used: bool
     input_sha256: str
     schema_version: str = "7.0"
+    input_tokens: int = 0
+    output_token_limit: int = 0
+    output_tokens: int = 0
+    finish_reason: str | None = None
+    validation_status: str = "not_checked"
+    fallback_reason: str | None = None
 
 
 @dataclass(frozen=True, slots=True)

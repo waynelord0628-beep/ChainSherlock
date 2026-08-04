@@ -40,6 +40,84 @@ def decode(value):
     return {key: decode(item) for key, item in value.items()}
 
 
+def decode_public_result(value):
+    """Load the untagged object produced by the strict external JSON schema."""
+    if isinstance(value, NarrativeResult):
+        return value
+    if not isinstance(value, dict) or not isinstance(value.get("metadata"), dict):
+        return value
+
+    def section(raw):
+        if raw is None:
+            return None
+        return models.NarrativeSection(
+            section_id=raw["section_id"],
+            title=raw["title"],
+            paragraphs=tuple(
+                models.NarrativeParagraph(
+                    text=item["text"],
+                    citation_ids=tuple(item.get("citation_ids", ())),
+                )
+                for item in raw.get("paragraphs", ())
+            ),
+        )
+
+    metadata = dict(value["metadata"])
+    metadata["generated_at"] = datetime.fromisoformat(
+        str(metadata["generated_at"]).replace("Z", "+00:00")
+    )
+    allowed_metadata = models.NarrativeMetadata.__dataclass_fields__
+    result_fields = {
+        name: section(value.get(name))
+        for name in models.NarrativeResult.__dataclass_fields__
+        if name.endswith(("summary", "profile", "narrative"))
+        or name in {"alternative_explanations", "investigative_leads", "limitations", "conclusion"}
+    }
+    result_fields.update(
+        metadata=models.NarrativeMetadata(
+            **{key: item for key, item in metadata.items() if key in allowed_metadata}
+        ),
+        claims=tuple(
+            models.NarrativeClaim(
+                **{
+                    **item,
+                    **{
+                        key: tuple(item.get(key, ()))
+                        for key in (
+                            "fact_codes", "observation_ids", "evidence_ids",
+                            "numeric_values", "limitations",
+                        )
+                    },
+                }
+            )
+            for item in value.get("claims", ())
+        ),
+        citations=tuple(
+            models.NarrativeCitation(**item) for item in value.get("citations", ())
+        ),
+        warnings=tuple(
+            models.NarrativeWarning(**item) for item in value.get("warnings", ())
+        ),
+        validation=models.NarrativeValidationResult(
+            **{
+                **value.get("validation", {"valid": False}),
+                "errors": tuple(value.get("validation", {}).get("errors", ())),
+                "warnings": tuple(value.get("validation", {}).get("warnings", ())),
+            }
+        ),
+        review_status=models.HumanReviewStatus(
+            value.get("review_status", "not_reviewed")
+        ),
+        reviewed_by=value.get("reviewed_by"),
+        reviewed_at=(
+            datetime.fromisoformat(str(value["reviewed_at"]).replace("Z", "+00:00"))
+            if value.get("reviewed_at") else None
+        ),
+        review_notes=value.get("review_notes"),
+    )
+    return NarrativeResult(**result_fields)
+
+
 class NarrativeExporter:
     def write(self, value, path: Path):
         path.parent.mkdir(parents=True, exist_ok=True)

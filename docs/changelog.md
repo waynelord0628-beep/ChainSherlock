@@ -226,3 +226,13 @@
 - Added complete pagination metadata for non-paginated Bitcoin transaction/UTXO calls.
 - Compacted engineering collections in human-facing tables while retaining full JSON.
 - Fixed a cold-start circular import between Provider service and Application exports.
+
+## V7.3 bounded AI output
+
+- Bounded compact facts, output paragraphs, claims and grounding references.
+- Replaced the legacy 1,800/2,000-token assumption with a content-aware
+  4,000–8,000 completion policy and 5,000 default.
+- Added explicit truncation/fallback metadata without storing prompts, request
+  bodies, credentials or local absolute paths.
+- Added Report UI metadata for provider/model, token counts, finish reason,
+  validation and fallback.

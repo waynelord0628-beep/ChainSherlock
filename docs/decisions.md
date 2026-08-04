@@ -479,3 +479,18 @@ Incoming address transactions retain only outputs paying the target. When the ta
 appears in inputs, transaction outputs are retained with the target as source so
 outgoing recipients and change remain distinguishable. Unrelated outputs from an
 incoming transaction are not address-analysis records.
+
+## ADR-044: AI reports use one bounded completion
+
+Professional AI enrichment receives only deterministically bounded structured
+facts. Output is bounded at schema and validation layers. The completion budget is
+content-aware with a 4,000 minimum, 5,000 default and 8,000 hard maximum. One report
+permits one model request; only timeout may receive the separately bounded retry.
+Length termination or incomplete structured output is never partially published.
+
+## ADR-045: AI runtime metadata is public-safe
+
+Reports may retain provider/model, input tokens, requested output limit, actual
+output tokens, finish reason, validation and fallback reason. They never retain the
+API key, Authorization header, complete prompt, request body, raw evidence or local
+absolute paths.

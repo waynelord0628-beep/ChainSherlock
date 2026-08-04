@@ -1,5 +1,16 @@
 # ChainSherlock
 
+## V7.3 Bounded Professional AI Enrichment
+
+AI 報告仍預設停用，且只在使用者明確啟用時呼叫一次。送出內容是經 deterministic
+排序與上限控制的 structured facts，不含 raw transactions、完整 Evidence Index、
+Provider response、request body、完整 prompt 或秘密。Completion budget 依 facts、
+observations 與章節數估算，預設 5,000、硬上限 8,000 tokens。
+
+若模型以 `finish_reason=length` 結束、JSON／schema／grounding／必要章節驗證失敗，
+系統不採用半成品、不自動重試，並保留完整 deterministic 報告及安全 fallback metadata。
+AI 成功時只附加受字數、claims 與 refs 上限控制的專業綜合章節，不複製既有表格。
+
 ## V8 Real Provider Execution Integration（Milestone 8）
 
 Desktop Execution 現在可將 Provider-only address/transaction Plan 接入既有

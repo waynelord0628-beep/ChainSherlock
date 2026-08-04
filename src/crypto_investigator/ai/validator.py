@@ -64,17 +64,45 @@ class NarrativeValidator:
         citation_ids = {item.citation_id for item in result.citations}
         for section_name in source.requested_sections:
             section = getattr(result, section_name, None)
+            if section is None:
+                errors.append(f"required_section_missing:{section_name}")
+                continue
             if section and section_name != "limitations":
                 cited = {cid for para in section.paragraphs for cid in para.citation_ids}
                 if not cited or not cited.issubset(citation_ids):
                     errors.append(f"section_citation:{section_name}")
         if source.completeness.lower() != "complete" and re.search(r"\bcomplete data\b|完整資料", text, re.I):
             errors.append("partial_promoted")
+        self._validate_output_budget(result, errors)
         return NarrativeValidationResult(
             valid=not errors,
             errors=tuple(dict.fromkeys(errors)),
             checked_claims=len(result.claims),
         )
+
+    @staticmethod
+    def _validate_output_budget(result, errors):
+        if len(result.claims) > 60:
+            errors.append("output_claim_limit")
+        for name in result.__dataclass_fields__:
+            section = getattr(result, name)
+            if not hasattr(section, "paragraphs"):
+                continue
+            if len(section.paragraphs) > 2:
+                errors.append(f"section_paragraph_limit:{name}")
+            claims = [item for item in result.claims if item.section in {name, section.section_id}]
+            if len(claims) > 5:
+                errors.append(f"section_claim_limit:{name}")
+            max_chars = 350 if name == "executive_summary" else 280
+            if any(len(item.text) > max_chars for item in section.paragraphs):
+                errors.append(f"section_length_limit:{name}")
+            for claim in claims:
+                if max(
+                    len(claim.fact_codes),
+                    len(claim.observation_ids),
+                    len(claim.evidence_ids),
+                ) > 5:
+                    errors.append(f"claim_ref_limit:{claim.claim_id}")
 
     def _validate_claim(self, claim: NarrativeClaim, evidence: set[str], numbers: set[Decimal], errors: list[str]):
         if claim.claim_type == "factual" and not claim.evidence_ids:

@@ -215,6 +215,10 @@ class CaseReportService:
             "validation_status": document.metadata.validation_status,
             "review_status": document.metadata.review_status,
             "fallback_reason": document.metadata.fallback_reason,
+            "ai_input_tokens": document.metadata.ai_input_tokens,
+            "ai_output_token_limit": document.metadata.ai_output_token_limit,
+            "ai_output_tokens": document.metadata.ai_output_tokens,
+            "ai_finish_reason": document.metadata.ai_finish_reason,
         }
         atomic_write_json(output / "case_report_version.json", summary)
         AuditLog(workspace).append(

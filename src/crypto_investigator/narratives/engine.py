@@ -7,6 +7,7 @@ from time import perf_counter
 
 from crypto_investigator.ai.factory import AIProviderFactory
 from crypto_investigator.ai.cache import AICache
+from crypto_investigator.ai.budget import completion_budget
 from crypto_investigator.ai.errors import AITimeoutError
 from crypto_investigator.ai.fallback import DeterministicFallbackProvider
 from crypto_investigator.ai.input_compactor import InputCompactor
@@ -18,7 +19,12 @@ from crypto_investigator.ai.settings import AISettings
 from crypto_investigator.ai.schema import narrative_response_schema
 from crypto_investigator.ai.validator import NarrativeValidator
 from crypto_investigator.narratives.composer import NarrativeInputBuilder
-from crypto_investigator.narratives.export import NarrativeExporter, decode, encode
+from crypto_investigator.narratives.export import (
+    NarrativeExporter,
+    decode,
+    decode_public_result,
+    encode,
+)
 
 
 class NarrativeEngine:
@@ -66,6 +72,12 @@ class NarrativeEngine:
         source = InputCompactor(max_input_characters=settings.max_input_characters).compact(
             raw_input, settings.privacy_mode, prompt_mode
         )
+        budget = completion_budget(
+            source, configured_tokens=settings.max_output_tokens
+        )
+        request_settings = replace(
+            settings, max_output_tokens=budget.requested_tokens
+        )
         prompt = PromptBuilder().build(source)
         if len(prompt) > settings.max_input_characters:
             source = replace(source, limitations=source.limitations + ("AI 輸入達硬性字元上限，已使用 deterministic fallback。",))
@@ -76,7 +88,11 @@ class NarrativeEngine:
         exporter.write(source, output / "narrative_input.json")
         errors: list[dict[str, str]] = []
         usage = AIUsage(settings.provider, settings.model)
-        response_metadata = {}
+        response_metadata = {
+            "requested_max_completion_tokens": budget.requested_tokens,
+            "estimated_minimum_completion_tokens": budget.estimated_minimum_tokens,
+            "completion_hard_cap": budget.hard_cap_tokens,
+        }
         result = None
         cache_hit = False
         started = perf_counter()
@@ -100,7 +116,9 @@ class NarrativeEngine:
                     result = None
             try:
                 if result is None:
-                    provider = AIProviderFactory.create(settings, mock_response=mock_response or "{}")
+                    provider = AIProviderFactory.create(
+                        request_settings, mock_response=mock_response or "{}"
+                    )
                     last_error = None
                     for attempt in range(settings.max_retries + 1):
                         try:
@@ -110,7 +128,9 @@ class NarrativeEngine:
                             usage = response.usage
                             response_metadata = dict(response.raw_metadata)
                             parser = ResponseParser()
-                            candidate = decode(parser.parse(response.content))
+                            candidate = decode_public_result(
+                                decode(parser.parse(response.content))
+                            )
                             response_metadata["parser_warnings"] = tuple(parser.warnings)
                             response_metadata["parser_diagnostics"] = parser.diagnostics
                             candidate = replace(
@@ -123,6 +143,12 @@ class NarrativeEngine:
                                     status="ai_complete",
                                     fallback_used=False,
                                     input_sha256=input_hash,
+                                    input_tokens=usage.input_tokens,
+                                    output_token_limit=budget.requested_tokens,
+                                    output_tokens=usage.output_tokens,
+                                    finish_reason=response_metadata.get("finish_reason"),
+                                    validation_status="passed",
+                                    fallback_reason=None,
                                 ),
                             )
                             candidate_validation = NarrativeValidator().validate(
@@ -196,12 +222,31 @@ class NarrativeEngine:
             result = DeterministicFallbackProvider().generate(source)
             validation = NarrativeValidator().validate(result, source)
         result = replace(result, validation=validation)
+        fallback = result.metadata.fallback_used
+        if fallback:
+            response_metadata.setdefault(
+                "fallback_reason", self._fallback_reason(errors, requested, settings.enabled)
+            )
+            response_metadata["fallback"] = True
+        else:
+            response_metadata["fallback"] = False
+        result = replace(
+            result,
+            metadata=replace(
+                result.metadata,
+                input_tokens=usage.input_tokens,
+                output_token_limit=budget.requested_tokens,
+                output_tokens=usage.output_tokens,
+                finish_reason=response_metadata.get("finish_reason"),
+                validation_status="passed" if not fallback else "failed",
+                fallback_reason=response_metadata.get("fallback_reason"),
+            ),
+        )
         exporter.write(result, output / "narrative.json")
         self._write(output / "narrative_validation.json", asdict(validation))
         self._write(output / "ai_usage.json", asdict(usage))
         self._write(output / "ai_response_metadata.json", response_metadata)
         self._write(output / "ai_errors.json", errors)
-        fallback = result.metadata.fallback_used
         status = AIStatus(
             enabled=settings.enabled, requested=requested, provider=result.metadata.provider,
             model=result.metadata.model, status="fallback" if fallback else "complete",
@@ -213,7 +258,9 @@ class NarrativeEngine:
             "prompt_version": PROMPT_VERSION, "provider": settings.provider,
             "model": settings.model, "settings": {
                 "temperature": settings.temperature,
-                "max_output_tokens": settings.max_output_tokens,
+                "max_output_tokens": budget.requested_tokens,
+                "configured_max_output_tokens": settings.max_output_tokens,
+                "completion_hard_cap": budget.hard_cap_tokens,
                 "privacy_mode": settings.privacy_mode,
             },
             "input_sha256": input_hash, "schema_version": source.schema_version,
@@ -241,3 +288,21 @@ class NarrativeEngine:
                 values.extend(paragraph.text.strip() for paragraph in section.paragraphs)
         values.extend(claim.statement.strip() for claim in result.claims)
         return tuple(values)
+
+    @staticmethod
+    def _fallback_reason(errors, requested, enabled):
+        if not requested:
+            return "not_requested"
+        if not enabled:
+            return "ai_disabled"
+        if not errors:
+            return "deterministic_fallback"
+        first = errors[0]
+        if first.get("finish_reason") == "length":
+            return "output_truncated"
+        error_type = str(first.get("type", "")).casefold()
+        if "parse" in error_type:
+            return "truncated_or_invalid_json"
+        if "schema" in error_type:
+            return "schema_validation_failed"
+        return "ai_validation_failed"

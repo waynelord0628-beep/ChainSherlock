@@ -10,9 +10,9 @@ class AISettings:
     api_key: str | None = None
     base_url: str = "https://api.openai.com/v1"
     timeout_seconds: int = 120
-    max_output_tokens: int = 2000
+    max_output_tokens: int = 5000
     temperature: float = 0
-    max_retries: int = 2
+    max_retries: int = 1
     max_input_characters: int = 100_000
     require_structured_output: bool = True
     allow_raw_transactions: bool = False
@@ -53,7 +53,7 @@ class AISettings:
                 os.getenv("CHAINSHERLOCK_AI_TIMEOUT_SECONDS", "120")
             ),
             max_output_tokens=int(
-                os.getenv("CHAINSHERLOCK_AI_MAX_TOKENS", "2000")
+                os.getenv("CHAINSHERLOCK_AI_MAX_TOKENS", "5000")
             ),
             temperature=float(
                 os.getenv("CHAINSHERLOCK_AI_TEMPERATURE", "0")

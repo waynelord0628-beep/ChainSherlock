@@ -311,3 +311,15 @@ V3 contains no Provider, blockchain API, graph rendering, report, Word/PDF, AI, 
 - Mock semantic output 10/10 完全一致；真實模型測試無 Key 時預設 skip。
 - 新增 `validate-ai` 人工驗收指令、品質 checklist 與 fallback/mock 四格式 benchmark。
 - V7/V7.1 regression tests 共 149 passed，另 1 項 real-AI integration test skipped。
+
+## V7.3 bounded AI report output
+
+- Compact input 改為每資產 Top 5、transitions/stages Top 10、observations 20、
+  facts 30、limitations 15、Evidence IDs 50，並逐集合記錄 omitted count。
+- Structured output 加入 section、paragraph、claim 與 refs 的硬性上限。
+- Completion policy 依內容估算，minimum 4,000、default 5,000、hard max 8,000。
+- `length`、截斷 JSON、schema、grounding 或必要章節失敗均不採用 AI 半成品；
+  不自動進行第二次呼叫，完整 deterministic report 保留。
+- Targeted：358 passed, 1 skipped；完整離線：1338 passed, 1 skipped；
+  `pip check` 無損壞相依。
+- V9 與 Windows 打包未開始。

@@ -129,6 +129,10 @@ class ReportMetadata:
     deterministic_section_count: int = 0
     ai_section_count: int = 0
     evidence_reference_count: int = 0
+    ai_input_tokens: int = 0
+    ai_output_token_limit: int = 0
+    ai_output_tokens: int = 0
+    ai_finish_reason: str | None = None
 
 
 @dataclass(frozen=True, slots=True)

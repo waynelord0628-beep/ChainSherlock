@@ -649,4 +649,20 @@ Windows packaging。不得直接開始 V9。
 - Exactly one real AI request was made. It returned HTTP 200 but ended at the 1,800
   output-token limit; no model content was accepted. The complete 32-section
   deterministic report was preserved as fallback in MD/HTML/DOCX/PDF.
-- No second paid-model request is permitted in this work.
+- That validation made no second paid-model request.
+
+## 20. V7.3 bounded structured-output repair
+
+- Compact AI input is deterministic and bounded; raw transactions, complete tables,
+  complete Evidence Index, Provider responses, local paths and credentials are
+  excluded.
+- Output schema and validator bound narrative size, paragraphs, claims and refs.
+- Completion policy is content-aware: minimum 4,000, default 5,000, hard maximum
+  8,000; AI remains disabled until explicitly enabled.
+- Length, JSON, schema, required-section and grounding failures retain the full
+  deterministic report and safe failure metadata. No partial AI text is published.
+- Report metadata/UI may show provider/model, token counts, finish reason,
+  validation and fallback only.
+- Offline validation: targeted `358 passed, 1 skipped`; full `1338 passed,
+  1 skipped`; `pip check` clean.
+- V9 and Windows packaging remain out of scope.

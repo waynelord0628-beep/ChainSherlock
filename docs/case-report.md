@@ -28,3 +28,11 @@ per-asset materiality moves dust/spam candidates to the appendix.
 AI enrichment is disabled by default and may only append grounded sections to the
 same complete ReportDocument. Failed Quality Gates preserve every deterministic
 section and table and record a safe fallback reason.
+
+AI input uses bounded top funding/destination, stage, observation, fact, limitation
+and Evidence-ID collections with explicit omitted counts. Each output section is
+limited to two paragraphs and five claims; claim refs are limited to five per
+category. Completion size is estimated from the compact facts and bounded to
+4,000–8,000 tokens. `finish_reason=length`, invalid/truncated JSON, missing required
+sections or failed grounding produce a deterministic fallback without a hidden
+second call. Report UI shows only safe runtime metadata.
