@@ -30,6 +30,14 @@ class SummaryAnalyzer:
             else None
         )
         active_dates = {timestamp.date() for timestamp in timestamps}
+        unconfirmed_count = sum(
+            1
+            for tx in transactions
+            if tx.metadata.get("source_record", {})
+            .get("source_metadata", {})
+            .get("confirmed")
+            is False
+        )
         return SummaryResult(
             first_seen=min(timestamps) if timestamps else None,
             last_seen=max(timestamps) if timestamps else None,
@@ -42,5 +50,9 @@ class SummaryAnalyzer:
             top_asset=top_asset,
             average_daily_transactions=(
                 len(transactions) / len(active_dates) if active_dates else 0.0
+            ),
+            unconfirmed_count=unconfirmed_count,
+            missing_timestamp_count=sum(
+                1 for transaction in transactions if transaction.timestamp is None
             ),
         )

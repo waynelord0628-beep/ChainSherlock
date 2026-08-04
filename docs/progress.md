@@ -13,6 +13,15 @@ V4 Blockchain Provider Engine is implemented.
 
 V4 adds no graph rendering, reports, AI, Agents, Risk/AML scoring, cross-chain, bridge, wallet, or OSINT functionality.
 
+## V4.2 completion summary
+
+- Missing capability data now triggers capability-scoped fallback and preserves primary errors.
+- Provider status and error outputs record fallback resolution and final completeness.
+- Shared pagination enforces hard per-capability `max_records` limits.
+- Unconfirmed Bitcoin transactions retain null timestamps and remain available to non-timeline analyzers.
+- Provider batches retain valid records and emit structured `rejected_records.json`.
+- Real API validation covers Etherscan failure fallback, Blockscout, TronGrid, and Blockstream.
+
 ## Current version
 
 V3 — Analysis Engine.

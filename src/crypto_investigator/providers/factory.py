@@ -31,6 +31,7 @@ class ProviderFactory:
             BlockscoutProvider(
                 os.getenv("BLOCKSCOUT_API_URL", "https://eth.blockscout.com"),
                 client=ProviderFactory._client("blockscout", settings, refresh, cache_ttl),
+                limits=limits,
             ),
             TronGridProvider(
                 os.getenv("TRONGRID_API_KEY", ""),

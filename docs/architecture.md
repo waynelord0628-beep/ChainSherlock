@@ -172,3 +172,11 @@ The Provider Layer owns HTTP, retries, rate limiting, pagination, cache primitiv
 Selection follows configured primary, capability check, request, then capability-scoped fallback. Successful capability results survive later failures. Status output records completeness, warnings, missing-data categories, and safe errors.
 
 Cache keys contain provider, chain, capability, normalized identifier, safe query parameters, and page/cursor; API keys are excluded. Pagination is bounded by `max_pages`, `max_records`, and `page_size`, and repeated cursors stop collection.
+
+## V4.2 reliability flow
+
+A partial primary result triggers fallback only when it declares missing capability data. A partial but sufficient result, such as an intentional record limit, does not trigger fallback. Primary and fallback records are merged and source-aware deduplication runs after collection.
+
+Provider pagination applies `max_records` per capability. An oversized page is sliced before records enter the Pipeline, no extra page is requested, and status records truncation details.
+
+Unconfirmed Bitcoin records may retain `timestamp = null` only when source metadata explicitly says `confirmed = false`. Timeline excludes them; Summary, Statistics, Counterparty, and Flow retain them. Provider batch validation is record-level and writes rejected records, while file-based V2 batches remain strict and atomic.

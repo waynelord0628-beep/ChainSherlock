@@ -75,3 +75,19 @@ Completeness, warnings, missing-data categories, and safe errors distinguish par
 ## ADR-019: Deduplication is source-aware
 
 Normal, token, internal, and Bitcoin input/output records use distinct stable identity keys; transaction hash alone is insufficient.
+
+## ADR-020: Partial fallback requires missing capability data
+
+A partial result triggers fallback only when `missing_data` identifies an incomplete capability. Truncation with usable data is sufficient and does not consume a fallback.
+
+## ADR-021: Unconfirmed Bitcoin timestamps remain null
+
+The Pipeline accepts a null timestamp only for Bitcoin records explicitly marked `confirmed = false`. No epoch or current-time value is fabricated.
+
+## ADR-022: Record limits are hard per capability
+
+Pagination slices an oversized response to the remaining capacity, stops immediately, and records truncation metadata. Providers cannot exceed the configured capability limit.
+
+## ADR-023: Provider rejection is record-level
+
+Provider batches may retain valid records and export rejected records with reasons and raw references. File-based V2 ingestion remains strict batch validation.

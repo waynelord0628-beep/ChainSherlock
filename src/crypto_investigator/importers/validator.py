@@ -31,7 +31,7 @@ class ValidationResult:
 
 
 class DataValidator:
-    required_fields = ("tx_hash", "timestamp", "amount")
+    required_fields = ("tx_hash", "amount")
 
     def validate(self, records: Iterable[Mapping[str, Any]]) -> ValidationResult:
         valid: list[dict[str, Any]] = []
@@ -75,6 +75,11 @@ class DataValidator:
             if self._is_empty(record.get(field)):
                 issues.append(ValidationIssue(row, field, "empty_value", "Required value is empty"))
 
+        if self._is_empty(record.get("timestamp")) and not self._allows_null_timestamp(record):
+            issues.append(
+                ValidationIssue(row, "timestamp", "empty_value", "Required value is empty")
+            )
+
         for field, value in record.items():
             if isinstance(value, str) and value.lstrip().startswith(FORMULA_PREFIXES):
                 issues.append(
@@ -97,6 +102,15 @@ class DataValidator:
             if not self._is_empty(value) and not is_valid_address(str(value).strip()):
                 issues.append(ValidationIssue(row, field, "invalid_address", "Address format is invalid"))
         return issues
+
+    @staticmethod
+    def _allows_null_timestamp(record: Mapping[str, Any]) -> bool:
+        metadata = record.get("source_metadata")
+        return (
+            str(record.get("chain") or "").casefold() == "bitcoin"
+            and isinstance(metadata, Mapping)
+            and metadata.get("confirmed") is False
+        )
 
     @staticmethod
     def _is_empty(value: Any) -> bool:

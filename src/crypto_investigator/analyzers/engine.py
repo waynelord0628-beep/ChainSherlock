@@ -27,6 +27,21 @@ class AnalysisEngine:
                 "Target address was not provided; unknown directions are not included "
                 "in directional or counterparty totals."
             )
+        missing_timestamp_count = sum(
+            1 for transaction in transactions if transaction.timestamp is None
+        )
+        unconfirmed_count = sum(
+            1
+            for transaction in transactions
+            if transaction.metadata.get("source_record", {})
+            .get("source_metadata", {})
+            .get("confirmed")
+            is False
+        )
+        if missing_timestamp_count:
+            warnings.append(
+                f"excluded_unconfirmed_without_timestamp={missing_timestamp_count}"
+            )
         return AnalysisResult(
             summary=results["summary"],
             statistics=results["statistics"],
@@ -37,6 +52,8 @@ class AnalysisEngine:
                 "transaction_count": len(transactions),
                 "target_address": target_address,
                 "analyzers": self.analyzer_names,
+                "unconfirmed_count": unconfirmed_count,
+                "missing_timestamp_count": missing_timestamp_count,
             },
             warnings=tuple(warnings),
         )

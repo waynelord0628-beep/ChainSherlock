@@ -49,6 +49,11 @@ def test_provider_output_writes_status_errors_and_raw(tmp_path: Path) -> None:
     assert paths["provider_status"].exists()
     assert paths["provider_errors"].exists()
     assert (tmp_path / "raw" / "etherscan.json").exists()
+    status = paths["provider_status"].read_text(encoding="utf-8")
+    errors = paths["provider_errors"].read_text(encoding="utf-8")
+    assert '"final_completeness": "partial"' in status
+    assert '"error_type": "ProviderTimeoutError"' in errors
+    assert '"fallback_attempted": false' in errors
 
 
 def test_provider_output_contains_no_api_key(tmp_path: Path) -> None:

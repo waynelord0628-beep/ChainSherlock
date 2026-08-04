@@ -1,4 +1,5 @@
 from datetime import datetime
+import json
 from typing import Any
 
 from crypto_investigator.domain.transaction import Chain
@@ -9,9 +10,11 @@ from crypto_investigator.providers.models import (
     Completeness,
     HealthCheck,
     ProviderCapability,
+    ProviderPage,
     ProviderRawRecord,
     ProviderResult,
 )
+from crypto_investigator.providers.pagination import PaginationLimits, paginate
 
 
 class BlockscoutProvider(BaseProvider):
@@ -29,11 +32,13 @@ class BlockscoutProvider(BaseProvider):
         base_url: str,
         *,
         client: ProviderHttpClient | None = None,
+        limits: PaginationLimits | None = None,
     ) -> None:
         self.base_url = base_url.rstrip("/")
         self.client = client or ProviderHttpClient(
             provider=self.name, chain=self.chain
         )
+        self.limits = limits or PaginationLimits(page_size=50)
 
     async def health_check(self) -> HealthCheck:
         try:
@@ -48,60 +53,54 @@ class BlockscoutProvider(BaseProvider):
 
     async def get_address_transactions(self, address: str, **kwargs) -> ProviderResult:
         capability = ProviderCapability.ADDRESS_TRANSACTIONS
-        payload = await self.client.request_json(
-            "GET",
-            f"{self.base_url}/api/v2/addresses/{address}/transactions",
-            capability=capability,
-        )
-        items = payload.get("items") if isinstance(payload, dict) else None
-        if not isinstance(items, list):
-            raise ProviderResponseError(
-                provider=self.name,
-                chain=self.chain,
-                capability=capability,
-                safe_message="Blockscout items must be a list",
-                missing_data_category=capability.value,
-            )
-        records = tuple(self._parse_transaction(item) for item in items)
-        warnings = (
-            ("Additional Blockscout pages are available but not fetched",)
-            if payload.get("next_page_params")
-            else ()
-        )
-        return ProviderResult(
-            self.name,
-            self.chain,
-            capability,
-            records,
-            Completeness.PARTIAL if warnings else (Completeness.COMPLETE if records else Completeness.EMPTY),
-            warnings=warnings,
-            pages_fetched=1,
+        return await self._paginate(
+            address, "transactions", capability, self._parse_transaction, kwargs
         )
 
     async def get_token_transfers(self, address: str, **kwargs) -> ProviderResult:
         capability = ProviderCapability.TOKEN_TRANSFERS
-        payload = await self.client.request_json(
-            "GET",
-            f"{self.base_url}/api/v2/addresses/{address}/token-transfers",
-            capability=capability,
+        return await self._paginate(
+            address, "token-transfers", capability, self._parse_token, kwargs
         )
-        items = payload.get("items") if isinstance(payload, dict) else None
-        if not isinstance(items, list):
-            raise ProviderResponseError(
-                provider=self.name,
-                chain=self.chain,
+
+    async def _paginate(
+        self, address: str, endpoint: str, capability, parser, options
+    ) -> ProviderResult:
+        limits = PaginationLimits(
+            max_pages=options.get("max_pages") or self.limits.max_pages,
+            max_records=options.get("max_records") or self.limits.max_records,
+            page_size=self.limits.page_size,
+        )
+
+        async def fetch(cursor: str | None, size: int) -> ProviderPage:
+            params = json.loads(cursor) if cursor else {}
+            payload = await self.client.request_json(
+                "GET",
+                f"{self.base_url}/api/v2/addresses/{address}/{endpoint}",
                 capability=capability,
-                safe_message="Blockscout items must be a list",
-                missing_data_category=capability.value,
+                params=params or None,
             )
-        records = tuple(self._parse_token(item) for item in items)
-        return ProviderResult(
-            self.name,
-            self.chain,
-            capability,
-            records,
-            Completeness.COMPLETE if records else Completeness.EMPTY,
-            pages_fetched=1,
+            items = payload.get("items") if isinstance(payload, dict) else None
+            if not isinstance(items, list):
+                raise ProviderResponseError(
+                    provider=self.name,
+                    chain=self.chain,
+                    capability=capability,
+                    safe_message="Blockscout items must be a list",
+                    missing_data_category=capability.value,
+                )
+            next_params = payload.get("next_page_params")
+            next_cursor = (
+                json.dumps(next_params, sort_keys=True) if next_params else None
+            )
+            return ProviderPage(tuple(parser(item) for item in items), next_cursor)
+
+        return await paginate(
+            provider=self.name,
+            chain=self.chain,
+            capability=capability,
+            fetch_page=fetch,
+            limits=limits,
         )
 
     def _parse_transaction(self, item: dict[str, Any]) -> ProviderRawRecord:

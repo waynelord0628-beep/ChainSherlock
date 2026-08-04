@@ -62,6 +62,10 @@ class ProviderResult:
     errors: tuple[Exception, ...] = ()
     missing_data: tuple[str, ...] = ()
     pages_fetched: int = 0
+    truncated: bool = False
+    truncation_reason: str | None = None
+    fetched_records: int = 0
+    available_more: bool = False
 
 
 @dataclass(frozen=True, slots=True)

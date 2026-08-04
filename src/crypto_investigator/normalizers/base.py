@@ -29,7 +29,7 @@ class BaseNormalizer(ABC):
         return Transaction(
             chain=self.chain,
             tx_hash=str(record["tx_hash"]).strip(),
-            timestamp=self._timestamp(record["timestamp"]),
+            timestamp=self._timestamp(record.get("timestamp")),
             block_number=self._optional_int(record.get("block_number")),
             from_address=self.normalize_address(record.get("from_address")),
             to_address=self.normalize_address(record.get("to_address")),
@@ -45,6 +45,7 @@ class BaseNormalizer(ABC):
                 record.get("transaction_type"),
                 TransactionType.UNKNOWN,
             ),
+            success=record.get("success"),
             metadata=Metadata({"source_record": dict(record)}),
         )
 
@@ -65,7 +66,9 @@ class BaseNormalizer(ABC):
         return int(value)
 
     @staticmethod
-    def _timestamp(value: Any) -> datetime:
+    def _timestamp(value: Any) -> datetime | None:
+        if value is None or not str(value).strip():
+            return None
         timestamp = value if isinstance(value, datetime) else parse_datetime(str(value))
         if timestamp.tzinfo is None:
             return timestamp.replace(tzinfo=UTC)

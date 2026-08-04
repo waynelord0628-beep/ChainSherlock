@@ -73,7 +73,17 @@ class ProviderCollector:
                     }[capability]
                     result = await getattr(candidate, method_name)(identifier)
                     results.append(result)
-                    break
+                    errors.extend(
+                        error
+                        for error in result.errors
+                        if isinstance(error, ProviderError)
+                    )
+                    should_fallback = (
+                        result.completeness is Completeness.PARTIAL
+                        and bool(result.missing_data)
+                    )
+                    if not should_fallback:
+                        break
                 except ProviderError as error:
                     errors.append(error)
         records = deduplicate_records(

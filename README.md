@@ -38,6 +38,8 @@ V3 adds a Domain-only Analysis Engine. It does not connect to blockchain provide
 
 V4 adds asynchronous Etherscan, Blockscout, TronGrid, and Blockstream Esplora adapters. Provider records always enter the existing V2 Pipeline before the existing V3 Analysis Engine. Configure secrets only through environment variables copied from `.env.example`.
 
+V4.2 hardens real-provider reliability: incomplete capabilities can fall back without losing primary data, pagination enforces a hard per-capability record limit, unconfirmed Bitcoin transactions retain a null timestamp, and invalid Provider records are reported without discarding valid records.
+
 ## Blockchain Providers
 
 - Ethereum: Etherscan primary, Blockscout fallback.
@@ -45,6 +47,7 @@ V4 adds asynchronous Etherscan, Blockscout, TronGrid, and Blockstream Esplora ad
 - Bitcoin: Blockstream Esplora.
 - Capabilities, bounded pagination, retries, partial failures, source-aware deduplication, and file cache primitives are explicit contracts.
 - Outputs add `provider_status.json`, `provider_errors.json`, and sanitized files under `raw/`.
+- Partial Provider batches also emit `rejected_records.json`; analysis metadata records `complete`, `partial`, or `failed`.
 
 ## Data Pipeline
 
@@ -175,6 +178,7 @@ Flow contains address nodes and transaction edges with direction, weight, asset,
 - V2: Data Pipeline delivering CSV/XLS/XLSX import, validation, normalization, Domain Transactions, and CSV/JSON export.
 - V3: Domain-only Summary, Statistics, Counterparty, Timeline, and Flow analysis.
 - V4: Blockchain Provider Engine feeding V2 Pipeline and V3 Analysis.
+- V4.2: Provider fallback, hard pagination limits, Bitcoin mempool timestamps, and partial-data reliability.
 - V5 and later: delivered as separately approved milestones.
 
 Graph rendering, reports, AI, risk, bridges, and cross-chain features remain outside V4 scope.

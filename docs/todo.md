@@ -1,5 +1,13 @@
 # Planned Work
 
+## V4.2 completed scope
+
+- Capability-scoped fallback for incomplete partial results.
+- Hard pagination record limits.
+- Unconfirmed Bitcoin null timestamp handling.
+- Provider record-level rejection and partial analysis output.
+- Provider status/error consistency and redaction verification.
+
 ## V4 completed scope
 
 - Ethereum, TRON, and Bitcoin Provider adapters.

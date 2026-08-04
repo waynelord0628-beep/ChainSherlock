@@ -33,6 +33,9 @@ async def paginate(
     warnings: list[str] = []
     errors: list[Exception] = []
     pages = 0
+    truncated = False
+    truncation_reason: str | None = None
+    available_more = False
 
     while pages < limits.max_pages and len(records) < limits.max_records:
         try:
@@ -44,6 +47,12 @@ async def paginate(
         pages += 1
         remaining = limits.max_records - len(records)
         records.extend(page.records[:remaining])
+        if len(page.records) > remaining:
+            truncated = True
+            truncation_reason = "max_records"
+            available_more = True
+            warnings.append("Maximum record limit reached")
+            break
         if not page.records or page.next_cursor is None:
             break
         if page.next_cursor in seen_cursors or page.next_cursor == cursor:
@@ -62,8 +71,15 @@ async def paginate(
 
     if pages >= limits.max_pages and cursor is not None:
         warnings.append("Maximum page limit reached")
-    if len(records) >= limits.max_records:
-        warnings.append("Maximum record limit reached")
+        truncated = True
+        truncation_reason = truncation_reason or "max_pages"
+        available_more = True
+    if len(records) >= limits.max_records and (available_more or cursor is not None):
+        if "Maximum record limit reached" not in warnings:
+            warnings.append("Maximum record limit reached")
+        truncated = True
+        truncation_reason = "max_records"
+        available_more = True
     completeness = (
         Completeness.PARTIAL
         if errors or warnings
@@ -79,4 +95,8 @@ async def paginate(
         errors=tuple(errors),
         missing_data=(capability.value,) if errors else (),
         pages_fetched=pages,
+        truncated=truncated,
+        truncation_reason=truncation_reason,
+        fetched_records=len(records),
+        available_more=available_more,
     )

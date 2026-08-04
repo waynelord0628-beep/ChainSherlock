@@ -1,4 +1,5 @@
 from pathlib import Path
+from dataclasses import replace
 
 from crypto_investigator.analyzers.base import AnalysisContext
 from crypto_investigator.analyzers.engine import AnalysisEngine
@@ -36,12 +37,52 @@ async def analyze_provider_identifier(
         collection = await collector.collect_transaction(
             chain, identifier, provider=provider
         )
-    transactions = DataPipeline().to_domain(
-        ProviderRecordImporter().load(collection.records)
+    provider_pipeline = ProviderRecordImporter().to_domain_partial(
+        collection.records, DataPipeline()
     )
+    transactions = provider_pipeline.transactions
     analysis = AnalysisEngine().analyze(
         transactions, identifier if kind == "address" else None
     )
+    rejected_count = len(provider_pipeline.rejected_records)
+    completeness = (
+        "failed"
+        if not transactions
+        and (
+            rejected_count
+            or collection.errors
+            or any(result.missing_data for result in collection.results)
+        )
+        else (
+            "partial"
+            if rejected_count
+            or collection.errors
+            or any(
+                result.completeness.value == "partial"
+                for result in collection.results
+            )
+            else "complete"
+        )
+    )
+    analysis = replace(
+        analysis,
+        metadata={
+            **analysis.metadata,
+            "rejected_record_count": rejected_count,
+            "completeness": completeness,
+        },
+        warnings=(
+            *analysis.warnings,
+            *((f"rejected_provider_records={rejected_count}",) if rejected_count else ()),
+        ),
+    )
     paths = AnalysisExporter().export_all(analysis, output_dir)
-    paths.update(write_provider_outputs(output_dir, collection))
+    paths.update(
+        write_provider_outputs(
+            output_dir,
+            collection,
+            rejected_records=provider_pipeline.rejected_records,
+            analysis_completeness=completeness,
+        )
+    )
     return paths

@@ -1,5 +1,14 @@
 # Changelog
 
+## Unreleased — V4.2
+
+- Fixed partial Provider results so missing capability data triggers fallback.
+- Added fallback resolution and structured error details to Provider outputs.
+- Enforced hard per-capability record limits across shared pagination.
+- Added explicit null timestamp handling for unconfirmed Bitcoin transactions.
+- Added Provider record-level rejection and `rejected_records.json`.
+- Validated Etherscan failure fallback, Blockscout, TronGrid, and Blockstream against live APIs.
+
 ## Unreleased — V4
 
 - Added Etherscan, Blockscout, TronGrid, and Blockstream Provider adapters.

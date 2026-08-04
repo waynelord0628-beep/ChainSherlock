@@ -18,6 +18,8 @@ class SummaryResult:
     assets: tuple[str, ...]
     top_asset: str | None
     average_daily_transactions: float
+    unconfirmed_count: int = 0
+    missing_timestamp_count: int = 0
 
 
 @dataclass(frozen=True, slots=True)
