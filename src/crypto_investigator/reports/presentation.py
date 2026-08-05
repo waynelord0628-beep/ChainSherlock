@@ -574,6 +574,7 @@ def _asset_first_sections(document, registry, material_assets):
         return registry.get(address, "—")
 
     important_address_roles = {}
+    important_address_context = {}
 
     def add_role(target_map, address, role):
         if not address:
@@ -585,9 +586,42 @@ def _asset_first_sections(document, registry, material_assets):
     def add_important_role(address, role):
         add_role(important_address_roles, address, role)
 
+    def add_important_context(
+        address,
+        *,
+        asset="—",
+        metric="—",
+        priority="中",
+        display_order=100,
+    ):
+        if not address:
+            return
+        context = important_address_context.setdefault(
+            address,
+            {
+                "assets": [],
+                "metrics": [],
+                "priorities": [],
+                "display_order": display_order,
+            },
+        )
+        context["display_order"] = min(context["display_order"], display_order)
+        if asset not in context["assets"]:
+            context["assets"].append(asset)
+        if metric not in context["metrics"]:
+            context["metrics"].append(metric)
+        if priority not in context["priorities"]:
+            context["priorities"].append(priority)
+
     target = document.metadata.target_address
     if target:
         add_important_role(target, "調查標的")
+        add_important_context(
+            target,
+            metric="本案分析標的",
+            priority="高",
+            display_order=0,
+        )
     sections = []
     all_ranking_rows = []
     path_rows = []
@@ -684,12 +718,46 @@ def _asset_first_sections(document, registry, material_assets):
         if source_rows:
             address = str(source_rows[0][2])
             add_important_role(address, f"{asset} 主要來源")
-        if outgoing:
-            address = str(outgoing[0][1])
-            add_important_role(address, f"{asset} 主要去向")
+            add_important_context(
+                address,
+                asset=asset,
+                metric=f"流入 {_display_amount_2(source_rows[0][3])}",
+                priority="高",
+                display_order=10 + asset_index,
+            )
+        outgoing_materiality = max(
+            Decimal("1"),
+            (_number(asset_row[2]) if asset_row else Decimal("0"))
+            * Decimal("0.001"),
+        )
+        material_outgoing = [
+            row for row in outgoing
+            if _number(row[6]) >= outgoing_materiality
+        ]
+        for rank, row in enumerate(material_outgoing[:3], 1):
+            address = str(row[1])
+            add_important_role(address, f"{asset} 主要去向 {rank}")
+            add_important_role(address, "後續追蹤優先地址")
+            add_important_context(
+                address,
+                asset=asset,
+                metric=(
+                    f"流出 {_display_amount_2(row[6])}／"
+                    f"互動 {row[3]} 次"
+                ),
+                priority="高" if rank == 1 else "中",
+                display_order=20 + (asset_index * 10) + rank,
+            )
         if frequent:
             address = str(frequent[0][1])
             add_important_role(address, f"{asset} 高頻交易對手")
+            add_important_context(
+                address,
+                asset=asset,
+                metric=f"互動 {frequent[0][3]} 次",
+                priority="中",
+                display_order=60 + asset_index,
+            )
 
         for category, rows in (
             ("主要資金來源", source_table_rows),
@@ -822,6 +890,12 @@ def _asset_first_sections(document, registry, material_assets):
     }
     for address, label in existing_labels.items():
         add_important_role(address, f"人工標籤：{label}")
+        add_important_context(
+            address,
+            metric="人工／Local Label",
+            priority="高",
+            display_order=50,
+        )
     for source_section in document.sections:
         if not source_section.section_id.startswith("ai_"):
             continue
@@ -837,31 +911,52 @@ def _asset_first_sections(document, registry, material_assets):
             for match in IDENTIFIER.finditer(str(value)):
                 add_important_role(match.group(0), "AI／綜合研判引用")
 
+    priority_order = {"高": 0, "中": 1, "低": 2}
     important_rows = tuple(
         (
             "／".join(roles),
             _full_address_reference(address, registry),
+            "／".join(important_address_context.get(address, {}).get("assets", ["—"])),
+            "；".join(important_address_context.get(address, {}).get("metrics", ["—"])),
+            existing_labels.get(address, "未標記"),
+            min(
+                important_address_context.get(address, {}).get("priorities", ["中"]),
+                key=lambda value: priority_order.get(value, 9),
+            ),
         )
         for address, roles in sorted(
             important_address_roles.items(),
-            key=lambda item: address_id(item[0]),
+            key=lambda item: (
+                important_address_context.get(item[0], {}).get(
+                    "display_order", 100
+                ),
+                address_id(item[0]),
+            ),
         )
     )
 
     return (
         ReportSection(
             "key_addresses",
-            "關鍵地址與角色摘要",
+            "關鍵地址對照表",
             30,
             (
-                "本節先列出主文反覆引用的重要地址。完整地址可直接複製；"
-                "括號內地址編號為本報告固定索引，候選角色不代表身分已確認。",
+                "本節位於資產分析之前，列出調查標的、主要來源、前三大重要去向、"
+                "高頻交易對手、既有 Label 與後續追蹤優先地址。完整地址可直接複製；"
+                "追蹤優先級只決定後續查詢順序，不代表風險或身分已確認。",
             ),
             tables=(
                 ReportTable(
                     "key_address_summary",
-                    "重要地址一覽表",
-                    ("角色", "完整地址（地址編號）"),
+                    "關鍵地址一覽表",
+                    (
+                        "調查角色",
+                        "完整地址（地址編號）",
+                        "資產",
+                        "金額／次數",
+                        "標籤狀態",
+                        "追蹤優先級",
+                    ),
                     important_rows,
                 ),
             ),
@@ -1567,11 +1662,22 @@ def prepare_report_for_display(document):
                 "報告類型：確定性分析報告"
                 if document.metadata.report_type == "deterministic"
                 else f"報告類型：{format_display_text(document.metadata.report_type, timezone)}",
+                "產品定位：地址剖繪與第一層資金流分析報告",
+                "英文名稱：Address Profile and First-Hop Fund Flow Analysis",
                 f"版本：{document.metadata.report_version}",
                 f"產製時間：{format_datetime(document.metadata.generated_at, timezone)}",
                 f"資料完整度：{document.metadata.analysis_completeness}",
                 f"審閱狀態：{document.metadata.review_status}",
                 f"本報告時間均以 {display_timezone(timezone)} 表示。",
+            )
+        elif section.section_id == "executive_summary":
+            content_blocks = (
+                *content_blocks,
+                "本報告已分析目標地址本身及第一層主要來源與去向；尚未對所有主要去向"
+                "展開下一層。尚未完成 transaction-level path tracing。",
+                "本報告屬目標地址剖繪及第一層資金流分析，尚未對主要去向執行完整"
+                "多層追蹤，故不據此確認最終下車點或資金最終受益人。",
+                "來源與去向並列僅為排名關聯摘要，不代表同一筆資金的確定流向。",
             )
         elif section.section_id == "evidence_index":
             source_tables = (_evidence_table(evidence),)
@@ -1584,7 +1690,8 @@ def prepare_report_for_display(document):
                 f"本次分析範圍共納入 {document.metadata.transaction_count:,} 筆交易；"
                 f"主要資產為 {'、'.join(material_assets) or 'unavailable'}。"
                 "已確認資料事實、規則式觀察與候選解釋均分層呈現；"
-                "地址身分、控制權、交易目的及法律性質仍須外部資料與人工查證。",
+                "地址身分、控制權、交易目的及法律性質仍須外部資料與人工查證。"
+                "本報告尚未完成多層追蹤，不據此確認最終下車點或資金最終受益人。",
             )
         elif section.section_id == "confirmed_facts":
             source_tables = (_confirmed_fact_table(document),)
@@ -1727,6 +1834,7 @@ def prepare_report_for_display(document):
     )
     return replace(
         document,
+        title="地址剖繪與第一層資金流分析報告",
         metadata=replace(
             document.metadata,
             generated_at=document.metadata.generated_at.astimezone(ZoneInfo(timezone)),
@@ -1740,6 +1848,7 @@ def prepare_report_for_display(document):
                 f"主要資產為 {'、'.join(material_assets) or 'unavailable'}。"
                 "已確認資料事實、規則式觀察與候選解釋均分層呈現；"
                 "地址身分、控制權、交易目的及法律性質仍須外部資料與人工查證。"
+                "本報告尚未完成多層追蹤，不據此確認最終下車點或資金最終受益人。"
             ),
         ),
     )

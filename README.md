@@ -1,485 +1,441 @@
 # ChainSherlock
 
-## V7.3 Bounded Professional AI Enrichment
+本機優先、證據可追溯的區塊鏈幣流調查平台。
 
-AI 報告仍預設停用，且只在使用者明確啟用時呼叫一次。送出內容是經 deterministic
-排序與上限控制的 structured facts，不含 raw transactions、完整 Evidence Index、
-Provider response、request body、完整 prompt 或秘密。Completion budget 依 facts、
-observations 與章節數估算。真實驗收後的安全預設為 3,500、最低 3,000、
-硬上限 8,000 tokens，GPT-5 使用 minimal reasoning。
+ChainSherlock 將 CSV、Excel 與公開區塊鏈 Provider 的交易資料，依序轉換為標準
+Domain Transaction，再進行統計分析、關係圖、規則式調查、案件管理與正式報告。
+系統預設不使用 AI；啟用 AI 時，它只補充通過 grounding 與 quality gates 的專業
+敘事，不會取代原始證據或確定性分析。
 
-若模型以 `finish_reason=length` 結束、JSON／schema／grounding／必要章節驗證失敗，
-系統不採用半成品、不自動重試，並保留完整 deterministic 報告及安全 fallback metadata。
-AI 成功時只附加受字數、claims 與 refs 上限控制的專業綜合章節，不複製既有表格。
-Grounding schema 會依案件動態列舉可用 Evidence、Fact 與 Observation IDs，
-paragraph 直接引用 Evidence ID，再由本機 deterministic 建立 citation objects。
+> 目前狀態：V8 封版階段
+>
+> 套件版本：`0.1.4`
+>
+> Python：`>=3.12`
+>
+> 最近離線驗收：`1455 passed, 1 skipped`，`pip check` 通過
+>
+> V9 與 Windows 安裝包尚未開始
 
-## V8 Real Provider Execution Integration（Milestone 8）
+## 核心原則
 
-Desktop Execution 現在可將 Provider-only address/transaction Plan 接入既有
-Etherscan／Blockscout、TronGrid 與 Blockstream，再沿用 V2～V7 的 Analysis、
-Graph 與 deterministic Investigation。Provider status、errors 與 rejected
-records 會成為案件內 immutable SHA-256 artifacts；structured Evidence 案件仍
-優先使用 M7 的離線流程。
+- **Local-first**：案件、Evidence、分析結果與報告預設保存在本機。
+- **Deterministic-first**：主要事實、統計、排名與 Investigation Features 皆由
+  可重複的規則式流程產生。
+- **Evidence-linked**：Evidence、Execution artifacts、報告與案件套件使用
+  SHA-256、相對路徑與可驗證 manifest。
+- **Asset-aware**：不同資產分開統計，不將 TRX、USDT、BTC、ETH 等數值直接相加。
+- **Scope-aware**：完整歷史、指定期間與快速預覽具有不同語意；部分資料不得冒充
+  完整歷史。
+- **Candidate is not Confirmed**：候選角色、服務型態或 Spam/Dust 判斷不會被描述成
+  已確認身分或犯罪結論。
+- **AI is optional**：AI 預設停用；失敗、截斷或驗證不通過時保留完整規則式報告。
 
-真實三鏈 bounded 驗收結果見 `docs/provider-execution-v8.md`。本功能不使用 AI，
-也不保存 API Key、Authorization header 或本機絕對路徑。
+## 能做什麼
 
-## V8.7.1 Windows CJK PDF Font Fallback
+| 能力 | 目前狀態 |
+|---|---|
+| CSV／XLS／XLSX 匯入、欄位映射與安全驗證 | 已完成 |
+| Ethereum／TRON／Bitcoin 正規化 | 已完成 |
+| Summary、Statistics、Counterparty、Timeline、Flow | 已完成 |
+| Etherscan、Blockscout、TronGrid、Blockstream | 已完成 |
+| Provider pagination、fallback、dedup、partial failure | 已完成 |
+| Graph JSON、GraphML、完全離線 HTML | 已完成 |
+| 規則式 Investigation Engine | 已完成 |
+| Markdown、離線 HTML、DOCX、PDF 報告 | 已完成 |
+| Evidence manifest、SHA-256、partial export | 已完成 |
+| Grounded AI Narrative／Professional Enrichment | 可選，預設停用 |
+| Case Workspace、Planner、Execution、Result、Audit | 已完成 |
+| PySide6 Desktop Investigation Workbench | 已完成 |
+| Windows 安裝包 | 尚未開始 |
+| V9 | 尚未開始 |
 
-PDF exporter 會依序使用明確傳入字型、`CHAINSHERLOCK_PDF_CJK_FONT`，以及
-Windows 系統標楷體（`kaiu.ttf`）。Windows 已安裝標楷體時不需要手動設定環境
-變數；`export_status.json` 只記錄字型名稱與來源，不記錄絕對路徑。若系統確實
-沒有可用 CJK 字型，仍保留其他格式並標記 partial。
-
-## V8 Offline Execution Integration（Milestone 7）
-
-Desktop UI 現在預設註冊受控的離線 StepHandler，可將案件內 immutable CSV／Excel
-Evidence 接入既有 Data Pipeline、Analysis、Investigation、Graph 與 deterministic
-Case Report。此流程不呼叫 Provider、不使用 AI，所有 execution artifacts 都保存
-於案件 workspace、使用相對路徑並登錄 SHA-256。
-
-```text
-Case Evidence -> Import/Normalize -> Analysis -> Investigation
-              -> Offline Graph -> Deterministic Report
-```
-
-有 structured Evidence 的地址 Plan 會明確使用 `case_evidence`，不顯示或呼叫
-Provider。沒有 CSV／Excel Evidence 的 Provider-only Plan 仍維持原本行為，且本
-Milestone 不替它註冊真實 Provider handler。
-
-## V8 Desktop Workflow Redesign（Milestone 6）
-
-Desktop UI 已改為案件調查流程導向：
-
-```text
-建立案件 → 確認線索／證據 → 設定 Goals → 產生並確認 Plan
-→ 執行 → 覆核結果 → Investigation → Graph → Report → 稽核
-```
-
-首頁提供主要操作、案件摘要、最近案件與系統狀態。案件建立採五步驟 Wizard；
-案件工作區使用左側階段導航，Plan、Execution、Result 與 Investigation 皆以
-人類可讀卡片、狀態 badge、timeline 與 dashboard 呈現，不再把原始 JSON
-作為主要 UI。
-
-## V8 Desktop UI（Milestone 5）
-
-ChainSherlock 現在提供本機 PySide6 案件工作台。可由下列任一方式啟動：
-
-```powershell
-python -m crypto_investigator
-python -m crypto_investigator ui
-python -m crypto_investigator ui --case-root cases
-```
-
-工作台提供案件清單、案件建立、Evidence、Goals、Planner、Execution 狀態、
-Case Result、Investigation、既有 Graph、Narrative、版本化報告、Audit 與安全設定。
-耗時作業透過背景 worker 執行；AI 預設停用，API Key、Authorization Header、
-Password、Prompt 與 Secrets 不會寫入 UI 設定檔。
-
-## V8 案件輸出（Milestone 4）
-
-V8 Milestone 4 將案件、調查計畫與 Execution artifacts 聚合為 `CaseResult`，
-並產生具版本保留的 Markdown、離線 HTML、DOCX 與 PDF 案件報告。報告明確
-區分已確認事實、確定性觀察與候選解釋。
-
-```powershell
-python -m crypto_investigator case-result <CASE_ID>
-python -m crypto_investigator case-report <CASE_ID> --format all
-python -m crypto_investigator case-export <CASE_ID> output\case --mode full
-python -m crypto_investigator case-package-validate output\case.chainsherlock-case.zip
-python -m crypto_investigator case-import output\case.chainsherlock-case.zip
-```
-
-套件模式包含 `full`、`report_only` 與 `deidentified`。套件使用 SHA-256
-manifest；匯入會檢查路徑穿越、符號連結、大小、壓縮比例與檔案雜湊。
-
-## V8 案件執行服務（Milestone 3）
-
-ChainSherlock 現已具備本機案件執行服務，可將經使用者確認的調查計畫交由
-registry-based Step Handler 執行。服務會保留步驟狀態、事件、checkpoint、artifact
-雜湊及案件 audit，並支援 partial failure、協作式取消、resume 與受限 retry。
-
-本階段僅提供 Application/Service API，不包含桌面 UI、案件報告整合或 Windows
-打包。實際 V2～V7 功能需透過明確註冊的 adapter handler 接入，Execution Service
-本身不直接依賴 Provider 或分析實作。
-
-> 目前版本：V6.5 Investigation Feature Engine
-
-V6.5 在既有分析、圖譜與報告流程之上加入可重複、可驗證的規則式調查特徵。它不使用 AI、LLM、風險分數或犯罪判斷。
-
-```text
-AnalysisResult + GraphResult + Provider completeness + Local labels
-                              |
-                              v
-                Investigation Feature Engine
-                              |
-                              v
-                    InvestigationResult
-```
-
-主要指令：
-
-```powershell
-python -m crypto_investigator investigate-file FILE --target ADDRESS
-python -m crypto_investigator investigate-address ADDRESS --chain tron
-python -m crypto_investigator investigate-tx TX_HASH --chain ethereum
-python -m crypto_investigator labels-import LABELS.csv
-python -m crypto_investigator labels-check ADDRESS --chain ethereum
-```
-
-輸出包含 `investigation.json`、`investigation_evidence.json`、
-`observations.json`、`conclusion_facts.json` 與 `label_matches.json`。
-金額依資產分開計算，JSON 保留 Decimal 與 timezone-aware datetime。
-
-ChainSherlock 是一套本機優先（local-first）的區塊鏈交易與幣流調查工具。
-
-**目前里程碑：** V5 Graph Engine
-
-**套件版本：** 0.1.2
+ChainSherlock 是調查輔助工具，不會僅依鏈上資料直接判定詐欺、洗錢、犯罪行為、
+實際控制人或法律責任。
 
 ## 安裝
 
-建議使用 Python 3.12 建立虛擬環境：
+建議在 Windows PowerShell 使用乾淨的 Python 3.12 虛擬環境：
 
 ```powershell
 py -3.12 -m venv .venv
 .\.venv\Scripts\Activate.ps1
+python -m pip install --upgrade pip
 pip install -e .
+pip check
 ```
 
-若要重現已驗證的完整相依環境：
+開發與測試：
+
+```powershell
+pip install -e ".[dev]"
+pytest -q -rs
+```
+
+若要重現已凍結的驗證環境：
 
 ```powershell
 pip install -r requirements.lock
 pip install -e .
 ```
 
+`requirements.lock` 記錄 Python 與完整套件版本；`pyproject.toml` 則使用相容版本
+範圍，避免把開發環境永久鎖死。
+
 ## 快速開始
+
+### Desktop UI
+
+直接啟動本機案件工作台：
+
+```powershell
+python -m crypto_investigator
+```
+
+或明確指定：
+
+```powershell
+python -m crypto_investigator ui
+python -m crypto_investigator ui --case-root cases
+```
+
+桌面案件流程：
+
+```text
+建立案件
+  -> 匯入 Evidence / 設定調查標的
+  -> 選擇 Goals
+  -> 產生並確認 Plan
+  -> Execution
+  -> Result / Investigation / Graph
+  -> Narrative（可選）
+  -> 四格式 Report
+  -> Audit / Case Package
+```
+
+### CLI
+
+查看所有指令：
 
 ```powershell
 python -m crypto_investigator --help
-python -m crypto_investigator detect 0x0000000000000000000000000000000000000000
+```
+
+分析本機交易檔：
+
+```powershell
 python -m crypto_investigator analyze-file transactions.csv
-python -m crypto_investigator providers
-python -m crypto_investigator analyze-address <ADDRESS>
-python -m crypto_investigator analyze-tx <TX_HASH> --chain ethereum
-pytest
+python -m crypto_investigator analyze-all transactions.csv --address <ADDRESS>
+python -m crypto_investigator investigate-file transactions.csv --target <ADDRESS>
+python -m crypto_investigator report-file transactions.csv --target <ADDRESS> --format all
 ```
 
-目前版本包含：
-
-- V2 Data Pipeline：匯入交易檔案、逐筆驗證、依鏈別正規化為 Domain Transaction，並輸出標準化資料。
-- V3 Analysis Engine：只接受 Domain Transaction，提供摘要、統計、交易對手、時間軸與 Flow 資料分析。
-- V4 Blockchain Provider Engine：透過 Etherscan、Blockscout、TronGrid 與 Blockstream Esplora 取得鏈上資料。
-- V4.2 Reliability Fixes：強化 fallback、分頁硬限制、Bitcoin 未確認交易與部分資料處理。
-- V5 Graph Engine：將 V3 Flow Data 建立為可篩選、可聚合且具安全上限的交易關係圖。
-
-Provider 資料不能直接進入 Analyzer，必須依序通過：
-
-`Provider -> Raw Record -> Validation -> Normalization -> Domain Transaction -> Analysis Engine`
-
-## 區塊鏈 Provider
-
-- Ethereum：Etherscan 為 primary，Blockscout 為 fallback。
-- TRON：TronGrid。
-- Bitcoin：Blockstream Esplora。
-- 支援 capability 宣告、健康檢查、非同步 HTTP、重試、rate limit、分頁限制與部分失敗。
-- 使用來源感知的 deduplication，避免同一筆 transfer 被重複計算。
-- 使用 `.env.example` 所列的環境變數設定 API Key；密鑰不會寫入 log、cache key 或輸出檔。
-
-地址分析範例：
+分析公開鏈上地址：
 
 ```powershell
-python -m crypto_investigator analyze-address <ADDRESS> `
-  --chain ethereum `
-  --max-pages 10 `
-  --max-records 1000 `
-  --output output\investigation
+python -m crypto_investigator analyze-address <ADDRESS> --chain tron
+python -m crypto_investigator investigate-address <ADDRESS> --chain tron
+python -m crypto_investigator report-address <ADDRESS> --chain tron --format all
 ```
 
-單筆交易分析：
-
-```powershell
-python -m crypto_investigator analyze-tx <TX_HASH> --chain bitcoin
-```
-
-Provider 工作流會額外輸出：
-
-- `provider_status.json`
-- `provider_errors.json`
-- `rejected_records.json`
-- `raw/`
-
-`analysis.json` metadata 會以 `complete`、`partial` 或 `failed` 表示資料完整度。
-
-## Graph Engine
-
-Graph Engine 只接受 V3 公開的 `AnalysisResult.flow`，不直接讀取 CSV、Provider Raw Record、Importer 或 Normalizer。
-
-檔案建立圖：
+建立離線 Graph：
 
 ```powershell
 python -m crypto_investigator graph-file transactions.csv `
-  --target 0x0000000000000000000000000000000000000000 `
+  --target <ADDRESS> `
   --max-nodes 100 `
   --max-edges 200
 ```
 
-地址建立圖：
+案件輸出與移轉：
 
 ```powershell
-python -m crypto_investigator graph-address <ADDRESS> `
-  --chain ethereum `
-  --max-records 1000 `
-  --top-counterparties 30
+python -m crypto_investigator case-result <CASE_ID>
+python -m crypto_investigator case-report <CASE_ID> --format all
+python -m crypto_investigator case-export <CASE_ID> `
+  --output output\case.chainsherlock-case.zip `
+  --mode full
+python -m crypto_investigator case-package-validate output\case.chainsherlock-case.zip
+python -m crypto_investigator case-import output\case.chainsherlock-case.zip
 ```
 
-Graph filter 支援：
+## 資料處理架構
 
-- top counterparties 與 minimum transaction count
-- include／exclude asset
-- include／exclude address
-- incoming-only／outgoing-only
-- date range
-- maximum nodes／edges
-- transactions、interactions 或指定資產排序
-
-Graph 輸出：
-
-- `flow_graph.json`：完整 GraphResult，可 round-trip。
-- `flow.graphml`：可由 NetworkX 重新載入，也可供 Gephi 使用。
-- `flow.html`：PyVis inline assets 產生的離線互動圖。
-
-所有圖形輸出都保留不同資產的金額分離。Target node 不會因安全限制被截斷，HTML label 與 tooltip 會先 escape，且 Provider credential 不會寫入 HTML。
-
-## Data Pipeline
-
-所有支援的資料來源都遵循同一方向：
-
-`Raw Data -> Importer -> Validation -> Normalizer -> Domain Transaction -> Export`
-
-檔案型 V2 Pipeline 採嚴格整批驗證：任何一筆資料不合法，整批會在 Domain conversion 與輸出之前停止。Provider 工作流則採逐筆驗證，保留有效資料並將無效資料寫入 `rejected_records.json`。
-
-Importer 不負責決定鏈別行為；鏈別正規化由 `NormalizerFactory` 統一選擇。
-
-## Importer 與支援格式
-
-- `.csv`：使用 pandas，並支援字元編碼偵測。
-- `.xls`：使用 pandas 與 xlrd。
-- `.xlsx`：使用 openpyxl 與 pandas，保留公式內容供安全驗證。
-- 欄位只使用明確 alias 對應；有歧義時要求使用 CLI 選項指定來源欄位。
-
-欄位覆寫範例：
-
-```powershell
-python -m crypto_investigator analyze-file transactions.csv `
-  --from-column sender `
-  --to-column receiver `
-  --amount-column value `
-  --asset-column symbol `
-  --time-column datetime `
-  --tx-column txid
-```
-
-標準化輸出：
-
-- `transactions_normalized.csv`
-- `summary.json`
-
-## Validation
-
-V2 會驗證：
-
-- 必填欄位
-- timestamp
-- 十進位金額
-- Ethereum、TRON 與 Bitcoin 地址格式
-- 重複交易
-- CSV／Excel formula injection
-
-Bitcoin 未確認交易只有在來源 metadata 明確標記 `confirmed = false` 時，才允許 `timestamp = null`。系統不會製造 `1970-01-01` 或目前時間作為替代值。
-
-## Normalizer
-
-- Ethereum 地址與 token contract 統一轉為小寫。
-- TRON Base58 地址保留原始表示。
-- Bitcoin 地址保留原始表示。
-- 所有 Normalizer 都產生相同且不依賴框架的 Domain Transaction。
-
-## Analysis Engine
-
-所有 Analyzer 只接受標準 Domain Transaction：
-
-`Domain Transaction -> Analyzer Factory -> Analyzer -> AnalysisResult -> Data Export`
-
-可用 Analyzer：
-
-- `summary`
-- `statistics`
-- `counterparty`
-- `timeline`
-- `flow`
-
-執行全部分析：
-
-```powershell
-python -m crypto_investigator analyze-all transactions.csv `
-  --address 0x0000000000000000000000000000000000000000
-```
-
-分別執行：
-
-```powershell
-python -m crypto_investigator analyze-summary transactions.csv --address <ADDRESS>
-python -m crypto_investigator analyze-counterparty transactions.csv --address <ADDRESS>
-python -m crypto_investigator analyze-timeline transactions.csv
-```
-
-完整輸出：
-
-- `analysis.json`
-- `summary.json`
-- `counterparties.csv`
-- `timeline.json`
-- `timeline.csv`
-- `flow.json`
-
-### Summary 與 Statistics
-
-Summary 包含觀察期間、交易數、方向統計、活躍天數、資產、交易對手與每日頻率。Statistics 依資產分開計算流入、流出、平均、中位數、最大值及最小值，不會將不同資產的金額相加。
-
-### Counterparty
-
-Counterparty 以選填的目標地址為基準，統計互動次數、首次／最後互動時間、關係方向，以及依資產分開的流入與流出金額。
-
-### Timeline
-
-Timeline 提供每日、每月、每小時與星期分布。缺少 timestamp 的未確認 Bitcoin 交易不會進入 Timeline，但仍保留在 Summary、Statistics、Counterparty 與 Flow。
-
-### Flow
-
-Flow 包含地址節點與交易邊，記錄方向、權重、資產及 timestamp。目前只輸出資料模型，不包含 NetworkX、PyVis、Mermaid、HTML 或圖形渲染。
-
-## 架構
-
-- `core`：應用程式組裝、執行環境與設定。
-- `core/pipeline.py`：可重用的 Data Pipeline。
-- `core/export.py`：標準化 CSV 與 JSON 輸出。
-- `domain`：不依賴框架的地址、資產、交易、交易對手與案件實體。
-- `importers`：檔案讀取、欄位映射與驗證。
-- `normalizers`：由 Factory 選擇的鏈別正規化。
-- `analyzers`：Domain-only Analyzer、結果模型、Factory、Engine 與資料輸出。
-- `providers`：非同步 Provider contract、Registry、Factory、fallback 與鏈別 adapter。
-- `graphs`：Graph Domain Model、Builder、Filtering、NetworkX adapter 與 JSON／GraphML／HTML export。
-- `cache`：具有安全 key、TTL、atomic write 與損毀恢復的檔案快取。
-- `plugins`：Plugin Protocol、Registry 與明確 Loader。
-- `tools`：預留的 Tool Protocol 與 Registry，目前沒有實作 Tool。
-- `shared`：預留給不依賴 Domain 的共用程式。
-- `constants`：全域穩定常數。
-- `docs`：開發進度、架構決策、待辦與變更紀錄。
-
-核心依賴方向：
+所有來源最終都必須進入同一條 Domain Pipeline：
 
 ```text
-Blockchain API / CSV / Excel
-            |
-            v
-Importer -> Validation -> Normalizer
-            |
-            v
-     Domain Transaction
-            |
-            v
-      Analysis Engine
+CSV / Excel / Blockchain Provider
+                 |
+                 v
+       Importer / Raw Record
+                 |
+                 v
+      Validation + Rejection
+                 |
+                 v
+        Chain Normalizer
+                 |
+                 v
+       Domain Transaction
+                 |
+        +--------+---------+
+        |                  |
+        v                  v
+ Analysis Engine       Graph Engine
+        |                  |
+        +--------+---------+
+                 v
+      Investigation Engine
+                 |
+        +--------+---------+
+        |                  |
+        v                  v
+ Deterministic Report   Optional AI Narrative
+        |                  |
+        +--------+---------+
+                 v
+       Case Result / Audit / Package
 ```
 
-Domain Layer 不依賴 Provider、HTTP client、Importer、Analyzer、圖形套件或 AI。
+Provider response 不會直接進入 Analyzer。這個邊界可避免 Importer Model、API Model、
+Graph Model 與案件模型混在一起，也讓 CSV 與鏈上 Provider 共用相同下游能力。
 
-## Roadmap
+## Analysis Scope 與完整度
 
-- V1.1：可擴充架構基礎，不新增業務功能。
-- V1.2：不依賴框架的 Domain Layer。
-- V2：CSV／XLS／XLSX Data Pipeline、驗證、正規化與標準輸出。
-- V3：Domain-only Summary、Statistics、Counterparty、Timeline 與 Flow 分析。
-- V4：Blockchain Provider Engine，串接既有 V2 Pipeline 與 V3 Analysis。
-- V4.2：Provider fallback、分頁硬限制、Bitcoin mempool timestamp 與部分資料可靠性。
-- V5：Graph Model、Graph Builder、Filtering、GraphML、JSON 與 offline HTML。
-- V5 之後：依核准的獨立 milestone 逐步開發。
+ChainSherlock 支援三種分析範圍：
 
-## V6 正式報告
+- `full_history`：required capabilities 必須翻頁到 Provider 明確結尾，且不得因
+  `max_pages` 或 `max_records` 提前停止，才可宣稱完整歷史。
+- `custom_date_range`：保存起訖、timezone 與 inclusive boundaries；報告只使用
+  「指定期間內」語意。
+- `quick_preview`：允許有限頁數／筆數，只供預覽，不代表完整首次交易、最後交易、
+  完整總額或完整交易數。
+
+報告會分別揭露：
+
+- retrieval completeness
+- asset classification completeness
+- material analysis scope
+- Provider completeness
+- Graph completeness
+- rejected／deduplicated／failed／unclassified counts
+
+## 支援的資料與鏈
+
+### 檔案
+
+- CSV：pandas + charset detection
+- XLS：pandas + xlrd
+- XLSX：pandas + openpyxl
+
+Importer 會檢查必填欄位、時間、Decimal 金額、地址、重複交易與試算表公式注入。
+欄位有歧義時不猜測，必須以 CLI 欄位參數明確指定。
+
+### Provider
+
+| 鏈 | Primary | Fallback／補充 |
+|---|---|---|
+| Ethereum | Etherscan | Blockscout |
+| TRON | TronGrid | — |
+| Bitcoin | Blockstream Esplora | — |
+
+Provider 層提供 capability 宣告、非同步 HTTP、timeout、有限 retry、rate limit、
+pagination、checkpoint、來源感知 dedup、fallback 與 partial result。
+
+環境變數範例位於 `.env.example`：
+
+```text
+ETHERSCAN_API_KEY=
+TRONGRID_API_KEY=
+BLOCKSCOUT_API_URL=
+BLOCKSTREAM_API_URL=https://blockstream.info/api
+```
+
+API Key 不會寫入 log、cache key、report、artifact、Audit 或 Git。
+
+## TRON 資產處理
+
+TRON 資料採嚴格資產分類：
+
+- 原生 TRX：`TransferContract` 且資產為 `TRX`
+- TRC10／其他資產：`TransferAssetContract`，保留原始 symbol／asset ID
+- TRC20：依 token contract 與 symbol 獨立分類
+- 未知項目：`unknown_tron_asset`，不得自動歸入 TRX
+
+微額 TRX、Dust、Spam 或宣傳型資產候選不會被無聲刪除。原始 Evidence 永遠保留；
+主要報告可依可逆的 materiality policy 排除低重要性項目，詳細原因與數值保留於
+技術資料供人工覆核。
+
+## Investigation Engine
+
+V6.5 規則式調查層不使用 AI，主要提供：
+
+- Funding source、占比、集中度與來源切換
+- Operation stages、Dormancy 與 Recovery
+- Counterparty concentration、Herfindahl Index、Gini、Entropy
+- Local／Static／CSV Label 與候選服務型態
+- Holding time、FIFO approximation
+- Fixed amount、整數金額與 batch pattern
+- Relationship、Behavior Summary、Observations、Conclusion Facts
+
+輸出保持 Decimal 精度、timezone-aware datetime 與可追溯 Fact／Observation／
+Evidence ID。
+
+## Graph Engine
+
+Graph Engine 只接受公開的 `AnalysisResult.flow`，不直接讀取 Provider raw response。
+
+輸出：
+
+- `flow_graph.json`
+- `flow.graphml`
+- `flow.html`（完全離線）
+
+Graph 可依資產、地址、方向、日期、交易次數及最大節點／邊數篩選。Provider
+完整度與 Graph 截斷狀態分開保存，避免把完整 Provider 資料誤寫成完整圖譜。
+
+## 正式報告
+
+目前正式產品定位為「地址剖繪與第一層資金流分析報告」
+（Address Profile and First-Hop Fund Flow Analysis）。它會呈現目標地址與第一層
+主要來源／去向，但不會把排行組合冒充 transaction-level path，也不宣稱已完成
+多層追蹤或確認最終下車點。
+
+支援：
+
+- Markdown
+- 完全離線 HTML
+- DOCX
+- PDF
+- `report_data.json`
+- `evidence_manifest.json`
+- `export_status.json`
+- `export_errors.json`
+
+正式報告會：
+
+- 以案件 timezone 顯示人類可讀時間
+- 依資產分章，不做跨資產加總
+- 分開呈現已確認資料事實、規則式觀察與候選解釋
+- 揭露資料範圍、完整度、Provider／Graph 狀態與限制
+- 使用 Address Registry 保存完整可複製地址
+- 將 record-level mapping 與低重要性工程資料移至技術附件
+- 對 Evidence artifact 建立 SHA-256
+- 在 PDF 失敗時保留其他成功格式並標記 partial
+
+Windows 會優先使用系統標楷體輸出 CJK PDF，也可覆寫：
 
 ```powershell
-python -m crypto_investigator report-file data.csv --target <ADDRESS> --format all
-python -m crypto_investigator report-address <ADDRESS> --format all
-python -m crypto_investigator report-tx <TX_HASH> --chain ethereum --format all
+$env:CHAINSHERLOCK_PDF_CJK_FONT="C:\path\to\cjk-font.ttf"
 ```
 
-支援 Markdown、離線 HTML、DOCX 與 PDF，並一律產生 `report_data.json`、`evidence_manifest.json`、`export_status.json` 與 `export_errors.json`。PDF 中文需先設定本機字體：
+字型絕對路徑不會保存於正式 artifact。
+
+## AI Narrative（可選）
+
+AI 預設關閉。只有使用者明確啟用時才會呼叫 OpenAI-compatible Provider。
 
 ```powershell
-$env:CHAINSHERLOCK_PDF_CJK_FONT="C:\path\to\your-cjk-font.ttf"
+python -m crypto_investigator narrate-investigation investigation.json `
+  --output output\narrative
 ```
 
-Windows 會自動使用系統標楷體；環境變數只用於覆寫。無可用 CJK 字型時 PDF
-會明確失敗，但其他成功格式仍保留，整體狀態為 `partial`。報告會揭露資料完整度、
-Provider 缺口、被拒絕紀錄與證據 SHA-256；不輸出 API Key、Authorization header
-或本機絕對路徑。不同資產只分別呈現，不做跨資產加總或估值。
+AI 只接收經壓縮與排序的 structured facts，不接收：
 
-V6 不包含 AI、Risk／AML 評分、Bridge、Cross-chain、OSINT、Web UI 或錢包操作。
-# V7：AI 調查敘事
+- raw transaction list
+- 原始 Evidence 附件
+- 完整 Provider response
+- API Key／Authorization Header
+- 完整 request body／prompt log
+- 本機絕對路徑
 
-ChainSherlock V7 新增 grounded、evidence-linked 的調查敘事層。AI 預設關閉，且只接收
-V6.5 `InvestigationResult` 壓縮後的結構化摘要；不讀取原始交易、CSV/Excel 或 Provider
-raw response，也不進行犯罪、洗錢、詐欺、身分或風險判定。
+輸出必須通過 JSON schema、numeric、citation、reference、candidate preservation、
+hallucination 與禁止用語驗證。任何驗證失敗都不採用半成品，並保留完整規則式報告。
+
+## Case、Evidence 與 Audit
+
+V8 案件層提供：
+
+- opaque safe `case_id`
+- atomic `case.json` write
+- immutable Evidence copy
+- SHA-256、size、type、imported time
+- 僅保存 workspace 相對路徑
+- append-only hash-chain Audit Log
+- schema migration 與未知欄位保留
+- Planner confirmation gate
+- cooperative cancellation、checkpoint、resume、bounded retry
+- versioned reports
+- full／report-only／deidentified case package
+
+案件套件匯入會檢查路徑穿越、symbolic link、檔案大小、壓縮比例與 manifest hash。
+
+## 專案結構
+
+```text
+src/crypto_investigator/
+├─ core/            # Application、Context、Settings、Pipeline
+├─ domain/          # Address、Asset、Transaction、Counterparty、Case
+├─ importers/       # CSV／Excel／Provider raw record
+├─ normalizers/     # Ethereum／TRON／Bitcoin
+├─ analyzers/       # Summary／Statistics／Counterparty／Timeline／Flow
+├─ providers/       # Etherscan／Blockscout／TronGrid／Blockstream
+├─ graphs/          # Graph model、filter、aggregation、export
+├─ investigation/   # Deterministic Investigation Features
+├─ narratives/      # Grounded narrative
+├─ ai/              # Optional AI provider、schema、validator、fallback
+├─ reports/         # MD／HTML／DOCX／PDF／manifest
+├─ cases/           # Case、Workspace、Evidence、Audit、Migration
+├─ planner/         # Goals、Plan、validation、confirmation
+├─ application/     # Execution、Case Result、Report、Package services
+├─ services/        # Step、artifact、state adapters
+├─ ui/              # PySide6 Desktop Workbench
+├─ plugins/         # Plugin Protocol、Registry、Loader
+├─ tools/           # Tool Protocol、Registry
+└─ cli.py           # Typer CLI
+```
+
+更完整的架構與恢復上下文：
+
+- [`docs/architecture.md`](docs/architecture.md)
+- [`docs/progress.md`](docs/progress.md)
+- [`docs/decisions.md`](docs/decisions.md)
+- [`docs/changelog.md`](docs/changelog.md)
+- [`docs/todo.md`](docs/todo.md)
+- [`docs/fund-tracing.md`](docs/fund-tracing.md)
+- [`PROJECT_RECOVERY_CONTEXT.md`](PROJECT_RECOVERY_CONTEXT.md)
+
+## 版本歷程
+
+| 版本 | 主要成果 |
+|---|---|
+| V1 | CLI、設定、identifier detection 與基礎資料模型 |
+| V1.1 | Core、Plugin Registry、Tool Registry、共用架構邊界 |
+| V1.2 | Framework-independent Domain Layer |
+| V2 | CSV／Excel Data Pipeline、Validation、Normalizer、Dependency Freeze |
+| V3 | Domain-only Analysis Engine |
+| V4／V4.2 | 三鏈 Provider、fallback、pagination、dedup、partial reliability |
+| V5 | Graph Engine 與離線視覺化 |
+| V6 | 四格式 Report Engine、Evidence manifest、partial export |
+| V6.5 | Deterministic Investigation Engine |
+| V7～V7.3 | Grounded Narrative、離線重建、安全 OpenAI-compatible integration |
+| V8 M1～M4 | Case、Evidence、Audit、Planner、Execution、Result、Package |
+| V8 M5～M8 | Desktop Workbench、離線 Evidence 與真實 Provider Execution |
+| V8 封版修正 | Full History scope、TRON 資產分類、專業報告與一致性驗收 |
+
+目前不自行開始 V9，也尚未進行 Windows 安裝包封裝。
+
+## 測試
 
 ```powershell
-python -m crypto_investigator narrate-investigation investigation.json --output output/narrative
-python -m crypto_investigator narrate-file transactions.csv --target ADDRESS --output output/narrative
-python -m crypto_investigator narrate-address ADDRESS --output output/narrative
+pytest -q -rs
+python -m pip check
 ```
 
-只有明確加入 `--ai` 才會呼叫外部 OpenAI-compatible provider。設定 provider/model 時請將
-API key 放入環境變數，不要貼入命令、報告或提交至 Git。可用 `--privacy-mode strict`,
-`standard`（預設）或 `off`；即使為 `off` 仍會遮罩 secrets 與本機絕對路徑。
+真實 Provider 與 AI integration tests 必須由人工明確配置；一般測試預設離線，
+不會產生額外 API 成本。
 
-V7 產生 `narrative_input.json`、`narrative.json`、`narrative_validation.json`、
-`ai_usage.json`、`prompt_manifest.json`、`ai_status.json` 與 `ai_errors.json`。
-無 API key、timeout、無效 JSON、引用或數字驗證失敗時，報告會保留並改用 deterministic
-fallback。AI 內容進入報告前必須通過 schema、claim、citation、numeric 與禁止用語驗證，
-且預設顯示「AI 內容尚未經人工確認」。使用 `--ai-max-tokens` 與
-`--ai-max-input-chars` 控制 token/輸入；未設定價格時 estimated cost 為 `null`。
+## License
 
-## V7.1 離線重建與模型驗收
-
-`narrate-investigation` 現在可直接讀取 `investigation.json`、
-`narrative_input.json` 或 `narrative.json` 並以 `--report` 離線重建報告；不會重新呼叫
-Provider、讀取原始 CSV/Excel 或依賴 AnalysisResult。artifact 未保存的欄位會標記
-`unavailable`，不會補造。
-
-真實模型只能由人工明確執行：
-
-```powershell
-python -m crypto_investigator validate-ai investigation.json `
-  --provider openai-compatible --model MODEL --runs 3 `
-  --privacy-mode standard --output output/real_ai_validation
-```
-
-API Key 僅能由 `CHAINSHERLOCK_AI_API_KEY` 環境變數提供。指令輸出
-`real_ai_validation.json`，不保存 Key；無 Key 時不會送出請求。Prompt 提供
-`standard` 與內部 deterministic `compact` 模式，compact 保留 Conclusion Facts、
-重要 Observations、完整度、限制與必要 Evidence IDs，同時移除重複欄位。
-
-## V8 封版前：分析範圍與專業報告
-
-案件建立與 Planner 共用 `AnalysisScope`。`full_history` 持續分頁到 Provider
-明確結尾，且只有鏈別 required capabilities 全部完成、pagination complete 且未
-截斷，才可使用完整歷史語意。`custom_date_range` 使用指定時區與 inclusive
-boundaries，範圍外交易不進入下游。`quick_preview` 有明確頁數／筆數上限，只供
-預覽，不代表完整首次、最後、總額或交易數。
-
-Ethereum 必要能力為 normal transactions 與 token transfers；TRON 為 native
-transactions 與 TRC20 transfers；Bitcoin 為 address transactions 與 UTXO/spend
-information。報告分離 Provider、正規化、Analysis、Investigation、Graph 及所有
-排除計數。AI 預設停用；啟用時只可在完整 deterministic `ReportDocument` 上新增
-已驗證章節，任何 Quality Gate 失敗均保留完整 deterministic report。
+目前 repository 尚未宣告正式授權條款。在加入 License 前，請勿假設本專案已採用
+任何開源授權。

@@ -13,7 +13,7 @@ iframe{width:100%;height:720px;border:1px solid #cbd5e1}@media print{iframe{disp
 </head>
 <body>
 {% for section in document.sections %}
-<section id="{{ section.section_id }}">{% if section.section_id == "cover" %}<h1>ChainSherlock 調查分析報告</h1><p class="subtitle">Blockchain Fund Flow Investigation Report</p>{% else %}<h2>{{ section.title }}</h2>{% endif %}
+<section id="{{ section.section_id }}">{% if section.section_id == "cover" %}<h1>{{ document.title }}</h1><p class="subtitle">Address Profile and First-Hop Fund Flow Analysis</p>{% else %}<h2>{{ section.title }}</h2>{% endif %}
 {% if section.section_id == "table_of_contents" %}<div class="toc-grid">{% for block in section.content_blocks %}<p>{{ block }}</p>{% endfor %}</div>{% else %}{% for block in section.content_blocks %}<p>{{ block }}</p>{% endfor %}{% endif %}
 {% for table in section.tables %}<h3>{{ table.title }}</h3><table><thead><tr>{% for column in table.columns %}<th>{{ column }}</th>{% endfor %}</tr></thead><tbody>{% for row in table.rows %}<tr>{% for value in row %}<td>{{ value }}</td>{% endfor %}</tr>{% endfor %}</tbody></table>{% endfor %}
 {% if section.section_id == "graph" %}<p><a href="flow.html">開啟離線互動圖</a></p><iframe src="flow.html" title="Transaction graph"></iframe>{% endif %}

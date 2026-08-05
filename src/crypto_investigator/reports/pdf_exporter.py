@@ -123,11 +123,24 @@ class PdfReportExporter:
         return tuple(available_width * mm * item / total for item in weights)
 
     def _page_number(self, canvas, doc) -> None:
+        current_page = doc.page
+        self._total_pages = max(
+            getattr(self, "_total_pages", 0),
+            current_page,
+        )
         canvas.saveState()
-        canvas.setFont(self._latin_font_name, 9)
+        canvas.setFont(self._footer_font_name, 9)
         canvas.drawString(18 * mm, 12 * mm, self._report_id)
-        canvas.drawCentredString(A4[0] / 2, 12 * mm, f"{doc.page}")
-        canvas.drawRightString(A4[0] - 18 * mm, 12 * mm, "UTC+8")
+        canvas.drawCentredString(
+            canvas._pagesize[0] / 2,
+            12 * mm,
+            f"第 {current_page} 頁，共 {self._total_pages} 頁",
+        )
+        canvas.drawRightString(
+            canvas._pagesize[0] - 18 * mm,
+            12 * mm,
+            "UTC+8",
+        )
         canvas.restoreState()
 
     @staticmethod
@@ -165,6 +178,7 @@ class PdfReportExporter:
         try:
             font_name = "ChainSherlockCJK"
             pdfmetrics.registerFont(TTFont(font_name, str(configured)))
+            self._footer_font_name = font_name
             self._latin_font_name = self._register_optional_windows_font(
                 "times.ttf", "ChainSherlockTimes", "Times-Roman"
             )
@@ -172,6 +186,7 @@ class PdfReportExporter:
                 "consola.ttf", "ChainSherlockConsolas", "Courier"
             )
             self._report_id = document.metadata.report_id
+            self._total_pages = 0
             styles = getSampleStyleSheet()
             for name in ("Title", "Heading1", "Heading2", "BodyText"):
                 styles[name].fontName = font_name
@@ -206,7 +221,7 @@ class PdfReportExporter:
                     story.append(
                         Paragraph(
                             self._styled_text(
-                                "ChainSherlock 調查分析報告",
+                            "ChainSherlock 地址剖繪與第一層資金流分析報告",
                                 self._latin_font_name,
                             ),
                             styles["Title"],
@@ -215,7 +230,7 @@ class PdfReportExporter:
                     story.append(
                         Paragraph(
                             self._styled_text(
-                                "Blockchain Fund Flow Investigation Report",
+                                "Address Profile and First-Hop Fund Flow Analysis",
                                 self._latin_font_name,
                             ),
                             styles["Heading2"],

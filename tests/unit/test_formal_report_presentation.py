@@ -1093,3 +1093,47 @@ def test_68_provider_complete_follow_up_does_not_claim_provider_gap():
     rendered = " ".join(follow_up.content_blocks)
     assert "Provider 缺漏" not in rendered
     assert "未標記地址身分" in rendered
+
+
+def test_69_key_address_table_precedes_asset_overview_and_analysis():
+    display = prepare_report_for_display(_two_asset_document())
+    ids = [section.section_id for section in display.sections]
+    assert ids.index("key_addresses") < ids.index("asset_flows")
+    assert ids.index("key_addresses") < ids.index("asset_analysis_usdt")
+
+
+def test_70_key_address_table_is_complete_and_trace_prioritized():
+    display = prepare_report_for_display(_two_asset_document())
+    table = next(
+        table
+        for table in _section(display, "key_addresses").tables
+        if table.table_id == "key_address_summary"
+    )
+    assert table.columns == (
+        "調查角色",
+        "完整地址（地址編號）",
+        "資產",
+        "金額／次數",
+        "標籤狀態",
+        "追蹤優先級",
+    )
+    assert any("調查標的" in row[0] and ADDRESS in row[1] for row in table.rows)
+    assert any("後續追蹤優先地址" in row[0] for row in table.rows)
+    assert all("…" not in row[1] for row in table.rows)
+
+
+def test_71_report_is_explicitly_first_hop_not_off_ramp_confirmation():
+    display = prepare_report_for_display(_two_asset_document())
+    rendered = str(
+        tuple(
+            (section.title, section.content_blocks, section.tables)
+            for section in display.sections
+        )
+    )
+    assert display.title == "地址剖繪與第一層資金流分析報告"
+    assert "Address Profile and First-Hop Fund Flow Analysis" in rendered
+    assert "尚未完成 transaction-level path tracing" in rendered
+    assert "不據此確認最終下車點或資金最終受益人" in rendered
+    assert "來源與去向並列僅為排名關聯摘要" in rendered
+    assert "已確認最終下車點" not in rendered
+    assert "已完成多層追蹤" not in rendered

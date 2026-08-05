@@ -66,6 +66,10 @@ class DocxReportExporter:
         field = OxmlElement("w:fldSimple")
         field.set(qn("w:instr"), "PAGE")
         run._r.addnext(field)
+        paragraph.add_run(" 頁，共 ")
+        total = OxmlElement("w:fldSimple")
+        total.set(qn("w:instr"), "NUMPAGES")
+        paragraph._p.append(total)
         paragraph.add_run(" 頁")
 
     def write(self, document: ReportDocument, path: Path) -> Path:
@@ -105,14 +109,16 @@ class DocxReportExporter:
                     output.add_paragraph()
                     title = output.add_paragraph()
                     title.alignment = WD_ALIGN_PARAGRAPH.CENTER
-                    run = title.add_run("ChainSherlock 調查分析報告")
+                    run = title.add_run(
+                        "ChainSherlock 地址剖繪與第一層資金流分析報告"
+                    )
                     run.bold = True
                     run.font.size = Pt(26)
                     self._set_run_font(run)
                     subtitle = output.add_paragraph()
                     subtitle.alignment = WD_ALIGN_PARAGRAPH.CENTER
                     run = subtitle.add_run(
-                        "Blockchain Fund Flow Investigation Report"
+                        "Address Profile and First-Hop Fund Flow Analysis"
                     )
                     run.font.size = Pt(15)
                     self._set_run_font(run)

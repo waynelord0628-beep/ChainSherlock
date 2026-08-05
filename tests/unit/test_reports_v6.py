@@ -315,6 +315,7 @@ def test_docx_contains_font_and_page_number_settings(document, tmp_path):
     assert "標楷體" in styles_xml
     assert "Consolas" in document_xml
     assert 'w:instr="PAGE"' in footer_xml
+    assert 'w:instr="NUMPAGES"' in footer_xml
 
 
 def test_pdf_has_page_number_and_valid_page(document, tmp_path):
