@@ -183,6 +183,78 @@ def _completeness(document: ReportDocument) -> ReportSection:
     )
 
 
+def _analysis_tools(document: ReportDocument) -> ReportSection:
+    metadata = document.metadata
+    provider_names = {
+        "trongrid": "TronGrid",
+        "etherscan": "Etherscan",
+        "blockscout": "Blockscout",
+        "blockstream": "Blockstream",
+    }
+    providers = "、".join(
+        provider_names.get(str(value).casefold(), str(value))
+        for value in metadata.providers
+    ) or "既有結構化案件資料"
+    graph_status = (
+        "完整"
+        if metadata.graph_completeness == "complete"
+        else "部分／受安全上限限制"
+    )
+    return ReportSection(
+        "analysis_tools",
+        "分析工具與方法說明",
+        21,
+        (
+            "• 本節說明本報告使用的資料來源、處理引擎與輸出工具；"
+            "工具狀態只表示本次工作流程是否完成，不代表地址身分或交易目的已確認。",
+        ),
+        tables=(
+            ReportTable(
+                "analysis_tools_summary",
+                "本次使用工具",
+                ("工具／模組", "用途", "本次產出", "狀態"),
+                (
+                    (
+                        providers,
+                        "取得目標地址鏈上交易與資產活動",
+                        f"{metadata.provider_raw_record_count:,} 筆原始紀錄",
+                        (
+                            "完整"
+                            if metadata.retrieval_completeness == "complete"
+                            else "部分"
+                        ),
+                    ),
+                    (
+                        "ChainSherlock Data Pipeline",
+                        "正規化、去重、方向辨識與資產分類",
+                        f"{metadata.normalized_record_count:,} 筆正規化紀錄",
+                        "已完成",
+                    ),
+                    (
+                        "Deterministic Investigation Engine",
+                        "計算第一層來源／去向、集中度、時間及行為觀察",
+                        "規則式 Facts、Observations 與候選結果",
+                        "已完成",
+                    ),
+                    (
+                        "Graph Engine",
+                        "建立地址與交易關係圖",
+                        f"{metadata.graph_node_count:,} 個節點／"
+                        f"{metadata.graph_edge_count:,} 條邊",
+                        graph_status,
+                    ),
+                    (
+                        "Report Engine",
+                        "組成正式報告並輸出四種格式及證據索引",
+                        "Markdown／HTML／DOCX／PDF",
+                        "已完成",
+                    ),
+                ),
+            ),
+        ),
+    )
+
+
 def _asset_facts(document: ReportDocument) -> ReportSection:
     product = document.metadata.first_hop_product or {}
     assets = product.get("assets") or ()
@@ -591,6 +663,7 @@ def build_productized_sections(
         return ()
     return (
         _executive_summary(document, registry),
+        _analysis_tools(document),
         _completeness(document),
         _asset_facts(document),
         _principal_structure(document),
