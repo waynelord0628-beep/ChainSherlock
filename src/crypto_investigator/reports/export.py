@@ -68,10 +68,13 @@ class ReportExportCoordinator:
             writer.writerows(address_registry_rows(document))
         files["address_registry"] = registry_path.name
         files.update(write_forensic_artifacts(document, root))
-        display_document = attach_deterministic_chart_assets(
-            prepare_report_for_display(document),
-            root,
-        )
+        if document.metadata.report_type == "deterministic_multihop_trace":
+            display_document = document
+        else:
+            display_document = attach_deterministic_chart_assets(
+                prepare_report_for_display(document),
+                root,
+            )
 
         for name in selected:
             filename, exporter_type = self.exporters[name]

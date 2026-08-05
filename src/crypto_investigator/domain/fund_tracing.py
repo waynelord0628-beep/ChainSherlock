@@ -25,6 +25,31 @@ class AllocationMethod(StrEnum):
     MANUAL = "manual"
 
 
+class TraceDirection(StrEnum):
+    FORWARD = "forward"
+    BACKWARD = "backward"
+    BIDIRECTIONAL = "bidirectional"
+
+
+class TraceRunStatus(StrEnum):
+    PLANNED = "planned"
+    RUNNING = "running"
+    PARTIAL = "partial"
+    COMPLETED = "completed"
+    CANCELLED = "cancelled"
+    FAILED = "failed"
+
+
+class FlowPatternType(StrEnum):
+    AGGREGATION = "aggregation"
+    DISPERSION = "dispersion"
+    RETURN_FLOW = "return_flow"
+    CYCLIC_FLOW = "cyclic_flow"
+    SHARED_COUNTERPARTY = "shared_counterparty"
+    REVENUE_SHARE_CANDIDATE = "revenue_share_candidate"
+    OFF_RAMP_CONTACT = "off_ramp_contact"
+
+
 class StopConditionType(StrEnum):
     CONFIRMED_EXCHANGE_OR_VASP = "confirmed_exchange_or_vasp"
     PAYMENT_SERVICE = "payment_service"
@@ -46,6 +71,8 @@ def _public_value(value: Any) -> Any:
     if isinstance(value, datetime):
         return value.isoformat()
     if isinstance(value, tuple):
+        return [_public_value(item) for item in value]
+    if isinstance(value, list):
         return [_public_value(item) for item in value]
     if isinstance(value, dict):
         return {key: _public_value(item) for key, item in value.items()}
@@ -115,6 +142,139 @@ class TraceScope(SerializableTraceContract):
     asset_filters: tuple[str, ...] = ()
     date_from: datetime | None = None
     date_to: datetime | None = None
+    direction: TraceDirection = TraceDirection.BIDIRECTIONAL
+    timezone: str = "Asia/Taipei"
+
+    def __post_init__(self) -> None:
+        if self.max_depth < 1:
+            raise ValueError("max_depth must be at least 1")
+        if self.max_nodes < 1 or self.max_records < 1:
+            raise ValueError("trace safety limits must be positive")
+        if self.min_material_amount < 0:
+            raise ValueError("min_material_amount cannot be negative")
+        if self.date_from and self.date_to and self.date_from > self.date_to:
+            raise ValueError("date_from cannot be after date_to")
+
+
+@dataclass(frozen=True, slots=True)
+class FundLot(SerializableTraceContract):
+    """An incoming asset lot available for deterministic FIFO allocation."""
+
+    lot_id: str
+    source_transaction_hash: str
+    source_address: str
+    asset: str
+    original_amount: Decimal
+    remaining_amount: Decimal
+    received_at: datetime
+    evidence_refs: tuple[str, ...]
+
+    def __post_init__(self) -> None:
+        if not self.source_transaction_hash.strip() or not self.evidence_refs:
+            raise ValueError("A fund lot requires a transaction hash and evidence")
+        if self.original_amount <= 0:
+            raise ValueError("original_amount must be positive")
+        if not Decimal("0") <= self.remaining_amount <= self.original_amount:
+            raise ValueError("remaining_amount must be within the original lot")
+
+
+@dataclass(frozen=True, slots=True)
+class AllocationSlice(SerializableTraceContract):
+    """Analytical allocation; it never replaces the underlying transaction edge."""
+
+    allocation_id: str
+    lot_id: str
+    outgoing_edge_id: str
+    asset: str
+    amount: Decimal
+    method: AllocationMethod
+    evidence_refs: tuple[str, ...]
+
+    def __post_init__(self) -> None:
+        if self.amount <= 0:
+            raise ValueError("allocated amount must be positive")
+        if self.method is AllocationMethod.DIRECT_TRANSACTION:
+            raise ValueError("An allocation slice must use an analytical method")
+        if not self.evidence_refs:
+            raise ValueError("An allocation slice requires evidence")
+
+
+@dataclass(frozen=True, slots=True)
+class TraceFrontierItem(SerializableTraceContract):
+    address: str
+    chain: str
+    asset: str
+    hop: int
+    direction: TraceDirection
+    priority: Decimal
+    material_amount: Decimal
+    parent_edge_id: str | None = None
+    evidence_refs: tuple[str, ...] = ()
+
+    def __post_init__(self) -> None:
+        if self.hop < 0:
+            raise ValueError("hop cannot be negative")
+
+
+@dataclass(frozen=True, slots=True)
+class TraceCheckpoint(SerializableTraceContract):
+    """Serializable continuation state; provider secrets are intentionally absent."""
+
+    run_id: str
+    status: TraceRunStatus
+    frontier: tuple[TraceFrontierItem, ...]
+    visited_addresses: tuple[str, ...]
+    visited_transaction_hashes: tuple[str, ...]
+    provider_cursors: dict[str, str]
+    completed_edge_ids: tuple[str, ...]
+    saved_at: datetime
+    checkpoint_version: int = 1
+
+
+@dataclass(frozen=True, slots=True)
+class FlowPatternFinding(SerializableTraceContract):
+    finding_id: str
+    pattern_type: FlowPatternType
+    asset: str
+    hop: int
+    address_refs: tuple[str, ...]
+    metrics: dict[str, str]
+    reason_codes: tuple[str, ...]
+    confidence: Decimal
+    evidence_refs: tuple[str, ...]
+    candidate_only: bool = True
+    limitations: tuple[str, ...] = ()
+
+    def __post_init__(self) -> None:
+        if not Decimal("0") <= self.confidence <= Decimal("1"):
+            raise ValueError("confidence must be between 0 and 1")
+        if not self.evidence_refs:
+            raise ValueError("A flow-pattern finding requires evidence")
+
+
+@dataclass(frozen=True, slots=True)
+class TraceResult(SerializableTraceContract):
+    run_id: str
+    status: TraceRunStatus
+    seed: TraceSeed
+    scope: TraceScope
+    nodes: tuple[TraceNode, ...]
+    edges: tuple[TraceEdge, ...]
+    allocations: tuple[AllocationSlice, ...] = ()
+    patterns: tuple[FlowPatternFinding, ...] = ()
+    off_ramp_candidates: tuple["OffRampCandidate", ...] = ()
+    stop_conditions: tuple["StopCondition", ...] = ()
+    limitations: tuple[str, ...] = ()
+
+    def __post_init__(self) -> None:
+        allowed_assets = {asset.upper() for asset in self.scope.asset_filters}
+        if allowed_assets:
+            used_assets = {
+                item.asset.upper()
+                for item in (*self.nodes, *self.edges, *self.allocations)
+            }
+            if not used_assets.issubset(allowed_assets):
+                raise ValueError("Trace result contains an asset outside its scope")
 
 
 @dataclass(frozen=True, slots=True)
@@ -140,6 +300,7 @@ class OffRampCandidate(SerializableTraceContract):
     evidence_refs: tuple[str, ...]
     recommended_action: str
     limitations: tuple[str, ...] = field(default_factory=tuple)
+    category: str | None = None
 
     def __post_init__(self) -> None:
         if not self.evidence_refs:

@@ -522,3 +522,20 @@ warning. Missing periods remain unavailable.
 
 Deterministic materiality rule 先產生候選；AI 僅可補充說明。候選不得刪除原始交易、
 修改 Evidence 或被描述為已確認垃圾項目，並必須保留排除理由及人工覆核狀態。
+## ADR-051: 多層追蹤與第一層報告分離
+
+已封版的地址剖繪／第一層報告維持原模板。多層追蹤使用獨立
+`TraceResult`、Graph adapter、報告組合器與 `trace-address` 入口，避免換鏈或
+新增追蹤能力時改動既有報告呈現。
+
+## ADR-052: FIFO 是分析配置，不是交易事實
+
+真實交易 Edge 永遠保存 transaction hash、資產、時間與 Evidence。FIFO
+Allocation Slice 只配對同資產、先收到且尚未耗用的 Lot；不得描述為已證明
+同一筆資金的實際流向。
+
+## ADR-053: 下車點停止條件需要可信 Label
+
+行為態樣只能產生候選。只有 `manual_confirmed`、`trusted_local` 或
+`provider_label` 的服務類 Label 能形成停止條件；未驗證 Label 保留候選、
+限制與建議查證事項。

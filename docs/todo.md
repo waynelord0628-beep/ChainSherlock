@@ -194,3 +194,9 @@ Future work must be approved and delivered one milestone at a time.
 - Address Registry 因保存完整地址而增加技術附錄頁數；後續可加入使用者選擇的 registry 範圍。
 - Spam／Dust 的人工接受、撤銷與強制保留 UI 尚未納入本輪；目前 metadata 與報告介面已保留。
 - 不開始 V9 或 Windows 打包，等待下一個 Prompt。
+## Multi-hop tracing remaining
+
+- 在 API Key 可被執行程序安全讀取後，完成一次 bounded TronGrid 3 層驗收。
+- 為每個 Provider capability 完成可續跑 cursor checkpoint，不重抓已完成頁面。
+- 將 `TRACE_FUNDS` Planner Goal 接到 Case Execution 與 Desktop UI 狀態頁。
+- 使用完全合成案件完成 Windows UI 人工操作與取消／續跑驗收。

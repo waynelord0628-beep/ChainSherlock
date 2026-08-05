@@ -1,6 +1,7 @@
 from pathlib import Path
 import asyncio
 import os
+from dataclasses import replace
 from datetime import datetime
 from decimal import Decimal
 import json
@@ -45,6 +46,19 @@ from crypto_investigator.narratives.models import NarrativeInput, NarrativeResul
 from crypto_investigator.narratives.composer import NarrativeInputBuilder
 from crypto_investigator.reports.offline import OfflineReportComposer
 from crypto_investigator.reports.json_exporter import read_report_data
+from crypto_investigator.domain.fund_trace_engine import investigate_fund_trace
+from crypto_investigator.domain.fund_tracing import (
+    SeedType,
+    TraceDirection,
+    TraceRunStatus,
+    TraceScope,
+    TraceSeed,
+)
+from crypto_investigator.graphs.trace_adapter import trace_result_to_graph
+from crypto_investigator.providers.collector import ProviderCollector
+from crypto_investigator.providers.multihop import collect_multihop_edges
+from crypto_investigator.providers.selection import ProviderSelectionPolicy
+from crypto_investigator.reports.multihop import compose_multihop_report
 
 app = typer.Typer(help="ChainSherlock: local-first blockchain transaction investigation toolkit.")
 
@@ -1340,6 +1354,128 @@ def report_address(
         detected.value, chain or Chain(detected.chain.value), "address", provider,
         refresh, cache_ttl, max_pages, max_records, output, format, language,
         title, report_id, include_graph, top_counterparties, timezone, scope_type,
+    )
+
+
+@app.command("trace-address")
+def trace_address(
+    address: str = typer.Argument(..., help="Seed address."),
+    chain: Chain | None = typer.Option(None, "--chain"),
+    provider: str | None = typer.Option(None, "--provider"),
+    assets: str = typer.Option("USDT,TRX", "--assets"),
+    depth: int = typer.Option(3, "--depth", min=1, max=5),
+    direction: TraceDirection = typer.Option(
+        TraceDirection.BIDIRECTIONAL, "--direction"
+    ),
+    minimum_amount: str = typer.Option("0.01", "--minimum-amount"),
+    max_address_queries: int = typer.Option(20, "--max-address-queries", min=1),
+    max_pages_per_address: int = typer.Option(
+        10, "--max-pages-per-address", min=1
+    ),
+    max_records_per_address: int = typer.Option(
+        2000, "--max-records-per-address", min=1
+    ),
+    labels: Path | None = typer.Option(None, "--labels", exists=True),
+    output: Path = typer.Option(Path("output/multihop_trace"), "--output"),
+    config: Path = typer.Option(Path("config/default.yaml"), "--config", exists=True),
+) -> None:
+    """Run budgeted 1-5 hop deterministic tracing and export graph/report artifacts."""
+
+    detected = detect_identifier(address)
+    selected_chain = chain or Chain(detected.chain.value)
+    selected_assets = tuple(
+        dict.fromkeys(item.strip() for item in assets.split(",") if item.strip())
+    )
+    if not selected_assets:
+        raise typer.BadParameter("--assets requires at least one asset")
+    try:
+        parsed_minimum_amount = Decimal(minimum_amount)
+    except Exception as error:
+        raise typer.BadParameter("--minimum-amount must be numeric") from error
+    if parsed_minimum_amount < 0:
+        raise typer.BadParameter("--minimum-amount cannot be negative")
+    settings = load_config(config)
+    registry = ProviderFactory.create_registry(settings)
+    collector = ProviderCollector(ProviderSelectionPolicy(registry, settings))
+
+    async def fetch(identifier: str):
+        return await collector.collect_address(
+            selected_chain,
+            identifier,
+            provider=provider,
+            provider_options={
+                "max_pages": max_pages_per_address,
+                "max_records": max_records_per_address,
+            },
+        )
+
+    scope = TraceScope(
+        scope_type="bounded_multihop",
+        max_depth=depth,
+        max_nodes=max_address_queries,
+        max_records=max_address_queries * max_records_per_address,
+        min_material_amount=parsed_minimum_amount,
+        asset_filters=selected_assets,
+        direction=direction,
+        timezone="Asia/Taipei",
+    )
+    seed = TraceSeed(
+        SeedType.ADDRESS,
+        detected.value,
+        selected_chain.value,
+        None,
+        ("SEED-USER-INPUT",),
+    )
+    collected = asyncio.run(
+        collect_multihop_edges(
+            seed=seed,
+            scope=scope,
+            fetch_address=fetch,
+            max_address_queries=max_address_queries,
+        )
+    )
+    label_registry = LabelRegistry.import_file(labels) if labels else LabelRegistry()
+    result, _ = investigate_fund_trace(
+        run_id=f"TRACE-{datetime.now().strftime('%Y%m%d%H%M%S')}",
+        seed=seed,
+        scope=scope,
+        available_edges=collected.edges,
+        labels=label_registry,
+    )
+    if collected.status is not TraceRunStatus.COMPLETED:
+        result = replace(
+            result,
+            status=collected.status,
+            limitations=tuple(
+                dict.fromkeys((*result.limitations, *collected.limitations))
+            ),
+        )
+
+    output.mkdir(parents=True, exist_ok=True)
+    (output / "trace_result.json").write_text(
+        json.dumps(result.to_dict(), ensure_ascii=False, indent=2),
+        encoding="utf-8",
+    )
+    GraphExporter().export_all(trace_result_to_graph(result), output)
+    exported = ReportExportCoordinator().export(
+        compose_multihop_report(result),
+        output,
+        "all",
+    )
+    typer.echo(
+        json.dumps(
+            {
+                "status": result.status.value,
+                "address_queries": collected.address_query_count,
+                "provider_pages": collected.provider_page_count,
+                "trace_edges": len(result.edges),
+                "patterns": len(result.patterns),
+                "off_ramp_candidates": len(result.off_ramp_candidates),
+                "report_export": exported.status,
+            },
+            ensure_ascii=False,
+            indent=2,
+        )
     )
 
 

@@ -1,172 +1,87 @@
 # Evidence-based Fund Tracing and Off-ramp Workflow
 
-## 1. 目前產品邊界
+## 目前產品邊界
 
-ChainSherlock V8 現有正式報告定位為：
+目前正式報告仍是「地址剖繪與第一層資金流分析報告」。多層追蹤不得以來源、
+去向排名拼接成路徑；每條 Trace Edge 必須有真實交易雜湊與 Evidence。
 
-> 地址剖繪與第一層資金流分析報告
->
-> Address Profile and First-Hop Fund Flow Analysis
+## 標準調查設定
 
-目前能力會分析目標地址本身，並列出第一層主要來源、主要去向、高頻交易對手、
-行為模式及規則式觀察。它尚未：
+- 預設同時向前及向後追蹤，標準深度 3 層，可由調查人員提高至 5 層。
+- USDT、TRX 與其他資產各自追蹤，禁止跨資產加總或 FIFO 配對。
+- FIFO 是預設的分析配對方法，不代表識別出鏈上「同一筆」資金。
+- 每層套用重要性門檻、節點與紀錄安全上限；觸發上限即標記 partial。
+- Provider 未完整取得時保存 checkpoint，後續由游標續跑，不冒充完整結果。
 
-- 對所有主要去向取得下一層交易；
-- 建立 transaction-level path tracing；
-- 驗證跨多筆交易的資金配置關係；
-- 確認最終下車點、實際受益人或控制人。
+## 資料契約
 
-來源排行與去向排行只能並列為候選摘要，不得拼接成已確認資金路徑。
+### Seed
 
-## 2. Evidence Gate
+支援地址、交易雜湊、被害人匯款及指定流出交易。Seed 保存 chain、asset 與
+Evidence references。
 
-多層追蹤只能建立在已驗證的交易 artifact 上。每條 Trace Edge 必須具有真實
-transaction hash、資產、金額、時間與 Evidence references。Provider 不完整、
-交易不存在、資產不一致或 Evidence 無法驗證時，該 Edge 不得進入正式路徑。
+### Trace Node 與 Edge
 
-不同資產不得合併成同一條金額路徑；如需估值，必須另建有時間點與價格來源的
-valuation layer，不得修改原始資產數值。
+Node 保存 chain、address、asset、amount、timestamp、hop、role、label status
+及 Evidence。Edge 額外保存 from、to、真實 tx hash、allocation method 與
+confidence。沒有 tx hash 或 Evidence 的關係不得成為正式 Edge。
 
-## 3. Seed
+### FIFO Lot 與 Allocation
 
-支援的 Seed：
+流入交易建立 Fund Lot；流出依時間先後消耗相同資產的可用 Lot。
+Allocation Slice 是可重算的分析結果，原始 Edge 永遠保留。不得跨資產、
+不得使用晚於流出時間的 Lot，也不得分配超過原始流入金額。
 
-- address
-- transaction hash
-- victim transfer
-- selected outgoing transaction
+### Checkpoint
 
-Seed 至少保存 type、value、chain、asset（如適用）與 Evidence references。
+Checkpoint 保存 frontier、已訪地址、已訪交易、Provider cursor 與已完成
+Edge，不保存 API Key、Authorization Header 或完整 Provider response。
 
-## 4. Trace Node
+## 關聯與回流
 
-Trace Node 至少包含：
+規則式引擎後續至少辨識：
 
-- chain
-- address
-- transaction
-- asset
-- amount
-- timestamp
-- hop
-- role
-- label status
-- evidence refs
+- return flow：資金在後續層回到 Seed 或已訪地址；
+- cyclic flow：形成可驗證的交易循環；
+- shared counterparty：多條路徑出現共同來源或共同去向；
+- aggregation：多個來源在短期間集中至少數節點；
+- dispersion：單一或少數節點向多個地址分散；
+- revenue-share candidate：固定受款群、比例或週期重複，但只可稱候選。
 
-Role 與 Label 必須區分 confirmed、candidate、unlabeled 與 manual review。
+每個 finding 必須保存資產、hop、地址參照、量化 metrics、reason codes、
+confidence、Evidence 與限制。
 
-## 5. Trace Edge
+## 集中後分散的檢查順序
 
-Trace Edge 至少包含：
+1. 確認集中與分散均由真實交易 Edge 支持。
+2. 比較分散地址數、金額占比、時間窗口與重複週期。
+3. 檢查固定受款地址、固定比例、固定金額及共同標籤。
+4. 區分一次性分流、營運付款與重複分潤候選。
+5. 只有人工或可信 Label 能提高身分類語意；規律本身不能確認控制關係。
 
-- from
-- to
-- transaction hash
-- asset
-- amount
-- timestamp
-- allocation method
-- confidence
-- evidence refs
+## 下車點與停止條件
 
-允許的 allocation method 包括 direct transaction、FIFO、proportional 與 manual。
-除 direct transaction 外，配置方法屬分析模型，不得被描述成鏈上直接事實。
+停止條件包括已確認交易所／VASP、支付服務、OTC 候選、Mixer、Bridge、
+無後續流出、低於重要性門檻、達最大深度、Provider 不完整及人工停止。
 
-## 6. Trace Scope
+Off-ramp Candidate 必須保存完整地址、Label 與來源、收款金額及次數、
+首次／最後收款、後續行為、confidence、Evidence、限制與建議行動。
+沒有可信 Label 時只能標示候選，不能確認為交易所或最終受益人。
 
-每次追蹤必須明確保存：
+## 調查優先級
 
-- full history／custom period
-- max depth
-- max nodes
-- max records
-- minimum material amount
-- asset filters
-- date range
-- timezone
-- required capability completeness
+1. 金額較高且資料完整的路徑。
+2. 快速後續轉出、集中或突然分散的節點。
+3. 多路徑共同對手及回流節點。
+4. 已知或候選 VASP／服務商 Label。
+5. 重複比例、週期或固定受款群的分潤候選。
+6. 低重要性與 dust 資料保留於 Evidence，但預設不占用主要追蹤資源。
 
-任何安全上限被觸發時必須標記 partial，不得宣稱完整多層追蹤。
+## 預計交付順序
 
-## 7. Stop Conditions
-
-可序列化的停止條件：
-
-- confirmed exchange／VASP
-- payment service
-- OTC candidate
-- mixer
-- bridge
-- no further outgoing activity
-- below materiality threshold
-- max depth reached
-- provider incomplete
-- manual stop
-
-停止原因、觸發層級與 Evidence 必須保留。Candidate 類型停止條件不等於身分已確認。
-
-## 8. 第一層追查優先順序
-
-第一層主要去向採 deterministic priority：
-
-1. received amount descending
-2. interaction count descending
-3. rapid onward transfer
-4. aggregation behavior
-5. known or candidate VASP label
-6. materiality
-7. completeness
-
-排序只決定下一個查詢目標，不代表風險或犯罪程度。低於 materiality threshold 的
-4 TRX、8 TRX 等小額地址，不得與數千 TRX 的主要去向同等優先。
-
-本次 TRON fixture 的優先候選至少包括地址-003、地址-013及其他具有實質金額的
-第一層去向；真正展開前仍須重新驗證地址 mapping、Scope 與 Provider completeness。
-
-## 9. Off-ramp Candidate
-
-Off-ramp Candidate 至少保存：
-
-- address
-- label
-- label source
-- received amount
-- transaction count
-- first／last receipt
-- subsequent behavior
-- confidence
-- evidence
-- recommended legal／investigative action
-- limitations
-
-只有可信 Label 與交易 Evidence 支持時，才能使用「已確認 VASP」等較強語意。
-其他情況必須維持「候選」並提供人工覆核入口。
-
-## 10. 未來正式報告結構
-
-1. 調查目的與 Seed
-2. 關鍵地址對照表
-3. 資產與追蹤範圍
-4. 第一層資金流
-5. 第二層資金流
-6. 後續層級
-7. 分流與合流
-8. 主要資金路徑
-9. 已確認 VASP／服務商
-10. 下車點候選
-11. 調閱／凍結／扣押建議
-12. 未解決路徑
-13. 完整度與限制
-14. Evidence Index
-15. 技術附錄
-
-「主要資金路徑」中的每一條 Edge 都必須由真實交易支持。不得使用最大來源與
-最大去向排行組合代替 transaction-level tracing。
-
-## 11. 本階段不包含
-
-- 不呼叫 Provider 或 AI；
-- 不展開第二層地址；
-- 不產生下車點結果；
-- 不建立犯罪、洗錢或詐欺判斷；
-- 不開始 V9 或 Windows 打包。
+1. M1：公開資料契約、FIFO 配對與 checkpoint（離線）。
+2. M2：3–5 層雙向 frontier 執行器、去重、取消及續跑。
+3. M3：回流、共同對手、集中轉分散及分潤候選規則。
+4. M4：Label 驗證、下車點候選與停止條件。
+5. M5：合成案例回歸測試及 bounded Provider 驗收。
+6. M6：多層追蹤報告與 Graph；AI 僅協助敘事，不建立交易路徑。

@@ -1,6 +1,7 @@
 import os
 from pathlib import Path
 import re
+from functools import partial
 from xml.sax.saxutils import escape
 
 from reportlab.lib.pagesizes import A4, landscape
@@ -22,6 +23,7 @@ from reportlab.platypus import (
 from reportlab.platypus.tableofcontents import TableOfContents
 from reportlab.lib import colors
 from reportlab.graphics.shapes import Drawing, Rect, String
+from reportlab.pdfgen import canvas
 
 from crypto_investigator.reports.errors import PdfExportError
 from crypto_investigator.reports.formatting import abbreviate_identifier
@@ -48,6 +50,32 @@ class _ReportDocTemplate(SimpleDocTemplate):
         self.canv.bookmarkPage(key)
         self.canv.addOutlineEntry(title, key, level=0, closed=False)
         self.notify("TOCEntry", (0, title, self.page, key))
+
+
+class _NumberedCanvas(canvas.Canvas):
+    """Delay page emission so every footer receives the real total page count."""
+
+    def __init__(self, *args, footer_font: str, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._saved_page_states = []
+        self._footer_font = footer_font
+
+    def showPage(self):
+        self._saved_page_states.append(dict(self.__dict__))
+        self._startPage()
+
+    def save(self):
+        page_count = len(self._saved_page_states)
+        for state in self._saved_page_states:
+            self.__dict__.update(state)
+            self.setFont(self._footer_font, 9)
+            self.drawCentredString(
+                self._pagesize[0] / 2,
+                12 * mm,
+                f"\u7b2c {self._pageNumber} \u9801\uff0c\u5171 {page_count} \u9801",
+            )
+            super().showPage()
+        super().save()
 
 
 def resolve_cjk_font(
@@ -113,6 +141,8 @@ def pdf_typography_status() -> dict[str, dict[str, str | bool | None]]:
 class PdfReportExporter:
     @staticmethod
     def _report_subtitle(document: ReportDocument) -> str:
+        if document.metadata.report_type == "deterministic_multihop_trace":
+            return "Evidence-based Multi-hop Fund Tracing and Off-ramp Candidate Analysis"
         return (
             "TRX Sub-Asset Analysis and Counterparty Overview"
             if document.metadata.principal_asset_coverage == "missing"
@@ -694,8 +724,10 @@ class PdfReportExporter:
                 bottomMargin=20 * mm,
             ).multiBuild(
                 story,
-                onFirstPage=self._page_number,
-                onLaterPages=self._page_number,
+                canvasmaker=partial(
+                    _NumberedCanvas,
+                    footer_font=self._footer_font_name,
+                ),
             )
             return path
         except PdfExportError:

@@ -138,6 +138,28 @@ python -m crypto_investigator investigate-address <ADDRESS> --chain tron
 python -m crypto_investigator report-address <ADDRESS> --chain tron --format all
 ```
 
+### 多層資金追蹤（開發驗收版）
+
+`trace-address` 與既有單地址報告分開，不會改變已封版的第一層報告模板。
+預設雙向追蹤 3 層，最多 5 層；USDT、TRX 分開計算，FIFO 只代表分析配對，
+不代表確認鏈上同一筆資金。
+
+```powershell
+python -m crypto_investigator trace-address <ADDRESS> `
+  --chain tron `
+  --assets USDT,TRX `
+  --depth 3 `
+  --direction bidirectional `
+  --minimum-amount 0.01 `
+  --max-address-queries 20 `
+  --max-pages-per-address 10 `
+  --output output\multihop_trace
+```
+
+輸出包含 `trace_result.json`、`flow_graph.json`、`flow.graphml`、離線
+`flow.html`，以及 Markdown、HTML、DOCX、PDF 報告。任何查詢、節點、紀錄或
+Provider 分頁上限被觸發時，結果會標記為 `partial`，不得視為完整資金路徑。
+
 建立離線 Graph：
 
 ```powershell
@@ -296,10 +318,12 @@ Graph 可依資產、地址、方向、日期、交易次數及最大節點／�
 
 ## 正式報告
 
-目前正式產品定位為「地址剖繪與第一層資金流分析報告」
+目前穩定正式產品定位為「地址剖繪與第一層資金流分析報告」
 （Address Profile and First-Hop Fund Flow Analysis）。它會呈現目標地址與第一層
 主要來源／去向，但不會把排行組合冒充 transaction-level path，也不宣稱已完成
-多層追蹤或確認最終下車點。
+多層追蹤或確認最終下車點。多層追蹤目前為獨立的開發驗收產品入口，
+使用真實交易 Edge、FIFO 配對、3～5 層雙向 frontier、回流／集中／分散候選、
+可信 Label 停止條件與下車點候選；尚未取代穩定的第一層正式報告。
 
 支援：
 

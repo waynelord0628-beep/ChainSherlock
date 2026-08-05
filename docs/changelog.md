@@ -286,3 +286,10 @@
 - Moved unknown, TRC10, spam and low-materiality records into reversible technical artifacts.
 - Added top-three first-hop investigation cards and evidence-bound deterministic insights.
 - Removed raw missing values, engineering enums and internal metadata from the main report.
+# V8 Multi-hop Fund Tracing（開發驗收）
+
+- 新增 evidence-backed TraceResult、FIFO allocations、checkpoint/resume。
+- 新增 3～5 層雙向追蹤、回流／集中／分散／分潤候選。
+- 新增可信 Label 下車點停止條件、Graph adapter 與獨立四格式報告。
+- 新增 `trace-address` CLI 與 Provider 查詢預算控制。
+- 修正 PDF 真實總頁數與多層報告寬表拆分。

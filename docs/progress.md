@@ -394,3 +394,15 @@ V3 contains no Provider, blockchain API, graph rendering, report, Word/PDF, AI, 
 - 新增規則式調查洞察、non_material_assets.csv 與 technical_exclusions.json。
 - 一般報告主文不顯示 None、null、NaN、raw enum 或工程 metadata。
 - 本輪 Provider 與 AI 呼叫均為 0。
+## V8 Multi-hop Fund Tracing（開發驗收）
+
+- 已完成公開 Trace contracts、同資產 FIFO、雙向 1～5 層 traversal、
+  cooperative cancellation 與 checkpoint/resume。
+- 已完成回流、循環、集中、分散及重複受款／分潤候選規則。
+- 已完成可信 Local Label 下車點候選與停止條件。
+- 已完成 Provider Raw Record → Trace Edge 嚴格轉換；TRX 與 TRC10 不混用。
+- 已完成獨立四格式報告與 Graph JSON／GraphML／離線 HTML。
+- 已新增 `trace-address` CLI；安全上限或 Provider 不完整會標記 partial。
+- 合成資料 targeted tests：12 passed；完整 regression：1541 passed, 1 skipped。
+- TronGrid smoke test 因目前 Codex 程序未取得 API Key 而未形成有效請求；
+  真實 Provider 3～5 層驗收仍待外部環境可用。
