@@ -54,6 +54,10 @@ def format_display_text(value, timezone: str) -> str:
         "review status": "審閱狀態",
         "not_reviewed": "尚未審閱",
         "medium": "中",
+        "deterministic": "規則式",
+        "Candidate": "候選",
+        "Confirmed": "已確認",
+        "tron": "TRON",
     }
     for source, target in replacements.items():
         text = re.sub(
@@ -143,28 +147,23 @@ def _confirmed_fact_table(document) -> ReportTable:
     graph = "已截斷" if _graph_truncated(document) else "未標示截斷"
     provider = "已截斷" if _provider_truncated(document) else "未標示截斷"
     rows = (
-        ("FACT-SCOPE-001", "分析標的與鏈別", f"{document.metadata.target_address}／{document.metadata.chain}", "analysis.json", completeness, ""),
-        ("FACT-COUNT-001", "分析範圍內交易總數", f"{document.metadata.transaction_count:,}", "analysis.json", completeness, f"其中 {summary.get('unclassified_direction_count', '0')} 筆方向未分類"),
-        ("FACT-DIRECTION-001", "流入／流出／未分類筆數", f"{document.metadata.incoming_count:,}／{document.metadata.outgoing_count:,}／{document.metadata.unclassified_count:,}", "analysis.json", completeness, ""),
-        ("FACT-ASSET-TRX-001", "TRX 為主要分析資產", "TRX" if "TRX" in assets else "未列入", "analysis.json", completeness, "TRX material flow 另見 reconciliation"),
-        ("FACT-PROVIDER-001", "Provider 取得狀態", provider, "provider_status.json", completeness, "Provider 完整不代表 Graph 完整"),
+        ("FACT-SCOPE-001", "分析標的與鏈別", f"{document.metadata.target_address}／{document.metadata.chain}"),
+        ("FACT-COUNT-001", "分析範圍內交易總數", f"{document.metadata.transaction_count:,}"),
+        ("FACT-DIRECTION-IN-001", "全部資產流入筆數", f"{document.metadata.incoming_count:,}"),
+        ("FACT-DIRECTION-OUT-001", "全部資產流出筆數", f"{document.metadata.outgoing_count:,}"),
+        ("FACT-DIRECTION-UNKNOWN-001", "未分類方向筆數", f"{document.metadata.unclassified_count:,}"),
+        ("FACT-ASSET-TRX-001", "TRX 為主要分析資產", "TRX" if "TRX" in assets else "未列入"),
+        ("FACT-PROVIDER-001", "Provider 取得狀態", provider),
         (
             "FACT-GRAPH-001",
             "Graph 安全上限狀態",
             graph,
-            "flow_graph.json",
-            "部分" if _graph_truncated(document) else completeness,
-            (
-                "Graph 截斷不影響 Provider 原始取得完整度"
-                if _graph_truncated(document)
-                else "Graph 未截斷；狀態以 flow_graph.json 為準"
-            ),
         ),
     )
     return ReportTable(
         "confirmed_data_facts",
         "已確認資料事實",
-        ("事實編號", "事實內容", "數值", "來源", "完整度", "限制"),
+        ("事實編號", "事實內容", "數值"),
         rows,
     )
 
@@ -177,7 +176,7 @@ def _additional_observation_table(document) -> ReportTable:
         ("OBS-BATCH-IN-001", f"目前分析範圍內辨識到 {patterns.get('批次流入視窗數', patterns.get('batch_incoming_count', '0'))} 個批次流入視窗。", "規則式計算", "中", "批次視窗不代表共同控制人"),
         ("OBS-BATCH-OUT-001", f"目前分析範圍內辨識到 {patterns.get('批次流出視窗數', patterns.get('batch_outgoing_count', '0'))} 個批次流出視窗。", "規則式計算", "中", "批次視窗不代表同一資金路徑"),
         ("OBS-DORMANCY-001", "目前分析範圍內未偵測到符合規則門檻的休眠區間。", "規則式計算", "中", "門檻及資料範圍可能影響結果"),
-        ("OBS-STAGE-001", "目前資料可分為初始活動期與交易量擴張期。", "規則式計算", "中", "階段由 deterministic 規則產生"),
+        ("OBS-STAGE-001", "目前資料可分為初始活動期與後續活動期。", "規則式計算", "中", "階段由規則式分析產生"),
     )
     return ReportTable(
         "rule_observation_summary",
@@ -189,6 +188,10 @@ def _additional_observation_table(document) -> ReportTable:
 
 def _completeness_section(document) -> ReportSection:
     metadata = document.metadata
+    native_incoming_count = max(
+        metadata.incoming_count - metadata.other_asset_transaction_count,
+        0,
+    )
     graph_status = (
         "完整（未截斷）"
         if metadata.graph_completeness == "complete"
@@ -213,7 +216,7 @@ def _completeness_section(document) -> ReportSection:
                     (
                         "完整取得交易",
                         f"{metadata.transaction_count:,}",
-                        f"retrieval completeness：{metadata.retrieval_completeness}",
+                        f"資料取得完整度：{format_display_text(metadata.retrieval_completeness, 'Asia/Taipei')}",
                     ),
                     (
                         "原生 TRX",
@@ -221,9 +224,21 @@ def _completeness_section(document) -> ReportSection:
                         "TransferContract 且 symbol=TRX",
                     ),
                     (
+                        "原生 TRX 流入／流出",
+                        f"{native_incoming_count:,}／{metadata.outgoing_count:,}",
+                        f"原生 TRX 流入 {native_incoming_count:,} 筆；"
+                        f"流出 {metadata.outgoing_count:,} 筆",
+                    ),
+                    (
                         "TRC10／其他資產",
                         f"{metadata.other_asset_transaction_count:,}",
-                        f"asset classification completeness：{metadata.asset_classification_completeness}",
+                        f"資產分類完整度：{format_display_text(metadata.asset_classification_completeness, 'Asia/Taipei')}",
+                    ),
+                    (
+                        "TRC10／其他資產流入",
+                        f"{metadata.other_asset_transaction_count:,}",
+                        f"{metadata.other_asset_transaction_count:,} 筆均為轉入；"
+                        "未與原生 TRX 方向統計混用",
                     ),
                     (
                         "微額 TRX 技術性排除",
@@ -233,10 +248,10 @@ def _completeness_section(document) -> ReportSection:
                     (
                         "主要資金流與行為分析",
                         f"{metadata.analysis_record_count:,}",
-                        f"material analysis scope：{metadata.material_analysis_scope}",
+                        f"主要分析範圍：{metadata.material_analysis_scope}",
                     ),
                     (
-                        "Graph completeness",
+                        "Graph 完整度",
                         graph_status,
                         f"{metadata.graph_node_count} 節點／{metadata.graph_edge_count} 聚合邊",
                     ),
@@ -884,7 +899,7 @@ def _asset_first_sections(document, registry, material_assets):
                 ReportTable(
                     "fund_flow_path_context",
                     "候選摘要方法與限制",
-                    ("摘要 ID", "關聯方法", "狀態", "Candidate ID", "限制"),
+                    ("摘要 ID", "關聯方法", "狀態", "候選 ID", "限制"),
                     tuple((row[0], *row[7:]) for row in path_rows),
                 ),
             ),
@@ -1363,7 +1378,7 @@ def _operation_stage_tables(table, registry, timezone) -> tuple[ReportTable, ...
                 and assets == previous["assets"]
                 and current_count > previous_count
             ):
-                display_stage = "交易量擴張期"
+                display_stage = "後續活動期"
         tables.append(
             ReportTable(
                 f"operation_stage_{order:02d}",
@@ -1547,9 +1562,11 @@ def prepare_report_for_display(document):
                 f"報告編號：{document.metadata.report_id}",
                 "案件名稱：未提供",
                 f"分析標的：{target_address or 'unavailable'}",
-                f"鏈別：{document.metadata.chain or 'unavailable'}",
+                f"鏈別：{format_display_text(document.metadata.chain or 'unavailable', timezone)}",
                 f"分析範圍：{document.metadata.scope_type}",
-                f"報告類型：{document.metadata.report_type}",
+                "報告類型：確定性分析報告"
+                if document.metadata.report_type == "deterministic"
+                else f"報告類型：{format_display_text(document.metadata.report_type, timezone)}",
                 f"版本：{document.metadata.report_version}",
                 f"產製時間：{format_datetime(document.metadata.generated_at, timezone)}",
                 f"資料完整度：{document.metadata.analysis_completeness}",
@@ -1566,19 +1583,19 @@ def prepare_report_for_display(document):
             content_blocks = (
                 f"本次分析範圍共納入 {document.metadata.transaction_count:,} 筆交易；"
                 f"主要資產為 {'、'.join(material_assets) or 'unavailable'}。"
-                "已確認資料事實、規則式觀察與 AI 候選解釋均分層呈現；"
+                "已確認資料事實、規則式觀察與候選解釋均分層呈現；"
                 "地址身分、控制權、交易目的及法律性質仍須外部資料與人工查證。",
             )
         elif section.section_id == "confirmed_facts":
             source_tables = (_confirmed_fact_table(document),)
             content_blocks = (
-                "本節僅列由鏈上資料、Provider 與 deterministic artifact 直接支持的事實；"
+                "本節僅列由鏈上資料、Provider 與規則式 artifact 直接支持的事實；"
                 "規則結果另列於「規則式觀察」。",
             )
         elif section.section_id == "investigation_observations":
             source_tables = (*source_tables, _additional_observation_table(document))
             content_blocks = (
-                "本節為 deterministic 規則式判讀，不等同鏈上直接事實或已確認身分。",
+                "本節為規則式判讀，不等同鏈上直接事實或已確認身分。",
             )
         elif section.section_id == "transfer_patterns":
             content_blocks = (
@@ -1616,7 +1633,7 @@ def prepare_report_for_display(document):
                 ):
                     rewritten.append(
                         "既有 AI 的 TRX 停留時間敘述使用隔離前資料，已標記 stale "
-                        "並安全省略；USDT deterministic 結果仍以主文表格為準。"
+                        "並安全省略；USDT 規則式結果仍以主文表格為準。"
                     )
                 else:
                     rewritten.append(block)
@@ -1721,7 +1738,7 @@ def prepare_report_for_display(document):
             text=(
                 f"本次分析範圍共納入 {document.metadata.transaction_count:,} 筆交易；"
                 f"主要資產為 {'、'.join(material_assets) or 'unavailable'}。"
-                "已確認資料事實、規則式觀察與 AI 候選解釋均分層呈現；"
+                "已確認資料事實、規則式觀察與候選解釋均分層呈現；"
                 "地址身分、控制權、交易目的及法律性質仍須外部資料與人工查證。"
             ),
         ),

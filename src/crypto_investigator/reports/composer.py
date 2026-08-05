@@ -605,7 +605,7 @@ class ReportComposer:
             sections.append(
                 ReportSection(
                     "non_material_assets",
-                    "低重要性及 Spam Candidate 項目",
+                    "低重要性及 Spam 資產候選項目",
                     29,
                     (
                         "本節僅列 deterministic materiality 候選；未修改或刪除原始 Evidence。"
@@ -797,7 +797,7 @@ class ReportComposer:
                     "候選解釋",
                     19,
                     (
-                        "所有未由可信 Local Label 支持的角色均為 Candidate，不是 Confirmed。",
+                        "所有未由可信 Local Label 支持的角色均為候選，並非已確認身分。",
                     ),
                 ),
                 ReportSection(
@@ -813,7 +813,7 @@ class ReportComposer:
                     "後續調查建議",
                     51,
                     (
-                        "建議優先核對高頻交易對手、Provider 缺漏、Local Label 來源及 Evidence 完整性。",
+                        "建議優先核對高頻交易對手、Local Label 來源、未標記地址身分及 Evidence 完整性。",
                     ),
                 ),
                 ReportSection(
@@ -1539,7 +1539,7 @@ class ReportComposer:
             }
             return ReportTable(
                 "non_material_asset_candidates",
-                "低重要性及 Spam Candidate 項目",
+                "低重要性及 Spam 資產候選項目",
                 (
                     "資產", "流入金額", "流出金額", "交易次數",
                     "排除類別", "排除原因", "Evidence", "信心",

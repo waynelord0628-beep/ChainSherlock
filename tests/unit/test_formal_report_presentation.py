@@ -901,7 +901,8 @@ def test_59_graph_fact_uses_graph_section_as_single_source_of_truth():
     facts = _section(display, "confirmed_facts").tables[0]
     graph = next(row for row in facts.rows if row[0] == "FACT-GRAPH-001")
     assert graph[2] == "未標示截斷"
-    assert graph[4] == "部分"
+    assert facts.columns == ("事實編號", "事實內容", "數值")
+    assert len(graph) == 3
 
 
 def test_60_direction_fact_and_layered_counts_use_report_metadata():
@@ -925,11 +926,19 @@ def test_60_direction_fact_and_layered_counts_use_report_metadata():
     )
     display = prepare_report_for_display(replace(document, metadata=metadata))
     facts = _section(display, "confirmed_facts").tables[0]
-    direction = next(row for row in facts.rows if row[0] == "FACT-DIRECTION-001")
-    assert direction[2] == "2,410／689／0"
+    directions = {
+        row[0]: row[2]
+        for row in facts.rows
+        if row[0].startswith("FACT-DIRECTION-")
+    }
+    assert directions == {
+        "FACT-DIRECTION-IN-001": "2,410",
+        "FACT-DIRECTION-OUT-001": "689",
+        "FACT-DIRECTION-UNKNOWN-001": "0",
+    }
     layers = _section(display, "completeness_layers").tables[0]
-    assert [row[1] for row in layers.rows[:5]] == [
-        "3,099", "3,034", "65", "2,316", "718"
+    assert [row[1] for row in layers.rows[:7]] == [
+        "3,099", "3,034", "2,345／689", "65", "65", "2,316", "718"
     ]
 
 
@@ -1049,7 +1058,38 @@ def test_65_operation_stage_uses_neutral_names_and_missing_data_wording():
     )
     rendered = str(stages.tables)
     assert "初始活動期" in rendered
-    assert "交易量擴張期" in rendered
+    assert "後續活動期" in rendered
     assert "來源多元化" not in rendered
     assert "無法判定交易頻率變化" in rendered
     assert "無法判定金額變化" in rendered
+
+
+def test_66_cover_and_body_do_not_expose_report_enums():
+    display = prepare_report_for_display(_document())
+    rendered = str(
+        tuple(
+            (section.title, section.content_blocks, section.tables)
+            for section in display.sections
+        )
+    )
+    cover = _section(display, "cover")
+    assert "報告類型：確定性分析報告" in cover.content_blocks
+    assert "鏈別：TRON" in cover.content_blocks
+    assert "deterministic" not in rendered
+    assert "Candidate" not in rendered
+    assert "Confirmed" not in rendered
+
+
+def test_67_deterministic_conclusion_does_not_claim_ai_content():
+    display = prepare_report_for_display(_document())
+    conclusion = _section(display, "conclusion")
+    assert "AI 候選解釋" not in " ".join(conclusion.content_blocks)
+    assert "規則式觀察與候選解釋" in " ".join(conclusion.content_blocks)
+
+
+def test_68_provider_complete_follow_up_does_not_claim_provider_gap():
+    display = prepare_report_for_display(_document())
+    follow_up = _section(display, "recommended_follow_up")
+    rendered = " ".join(follow_up.content_blocks)
+    assert "Provider 缺漏" not in rendered
+    assert "未標記地址身分" in rendered

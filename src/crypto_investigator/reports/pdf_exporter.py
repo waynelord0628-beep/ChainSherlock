@@ -98,6 +98,10 @@ class PdfReportExporter:
                 weight = 1.6
             elif column in {"Address ID", "地址編號"}:
                 weight = 1.05
+            elif column in {"事實編號", "Observation ID"}:
+                weight = 1.45
+            elif column == "數值":
+                weight = 1.35
             elif column == "完整地址":
                 weight = 3.2
             elif column in {"排名", "信心", "方向", "資產", "完整度", "截斷"}:
@@ -106,6 +110,8 @@ class PdfReportExporter:
                 weight = 1.65
             elif any(item in column for item in ("金額", "流入", "流出")):
                 weight = 1.4
+            elif column == "來源":
+                weight = 1.35
             elif any(item in key for item in ("地址", "來源", "去向", "sha-256")):
                 weight = 1.8
             elif any(item in key for item in ("限制", "原因", "警告", "備註", "觀察", "事實")):
@@ -337,6 +343,9 @@ class PdfReportExporter:
                     table_cell_style.leading = (
                         9.5 if section.section_id == "appendix" else 10
                     )
+                    if len(table.columns) <= 6:
+                        table_cell_style.wordWrap = "CJK"
+                        table_cell_style.splitLongWords = True
                     data = [
                         list(table.columns),
                         *[
