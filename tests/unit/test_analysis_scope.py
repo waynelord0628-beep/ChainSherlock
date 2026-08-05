@@ -279,6 +279,27 @@ async def test_max_pages_is_partial_and_preserves_next_cursor():
 
 
 @pytest.mark.asyncio
+async def test_resume_starts_from_saved_cursor_without_refetching_first_page():
+    seen = []
+
+    async def fetch(cursor, size):
+        seen.append(cursor)
+        return ProviderPage((record(2),), None)
+
+    result = await paginate(
+        provider="fixture",
+        chain=Chain.TRON,
+        capability=ProviderCapability.ADDRESS_TRANSACTIONS,
+        fetch_page=fetch,
+        limits=PaginationLimits(max_pages=1, max_records=10, page_size=1),
+        start_cursor="saved-fingerprint",
+    )
+    assert seen == ["saved-fingerprint"]
+    assert result.pagination.pagination_complete is True
+    assert result.pagination.next_cursor is None
+
+
+@pytest.mark.asyncio
 async def test_max_records_is_partial():
     async def fetch(cursor, size):
         return ProviderPage((record(1), record(2)), "next")

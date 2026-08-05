@@ -394,6 +394,14 @@ V3 contains no Provider, blockchain API, graph rendering, report, Word/PDF, AI, 
 - 新增規則式調查洞察、non_material_assets.csv 與 technical_exclusions.json。
 - 一般報告主文不顯示 None、null、NaN、raw enum 或工程 metadata。
 - 本輪 Provider 與 AI 呼叫均為 0。
+## V8 Multi-hop Provider Resume Validation
+
+- Added capability-level cursor checkpoint state for bounded multi-hop collection.
+- Resume starts from the saved provider cursor and preserves accepted edges.
+- Completed capabilities can be skipped without fetching their first page again.
+- Cursor passthrough covers TronGrid, Etherscan, Blockscout and Blockstream.
+- Offline targeted validation: 32 passed using synthetic identifiers only.
+
 ## V8 Multi-hop Fund Tracing（開發驗收）
 
 - 已完成公開 Trace contracts、同資產 FIFO、雙向 1～5 層 traversal、

@@ -1,6 +1,13 @@
 # Changelog
 
-## Unreleased — First-Hop final report tuning
+## Unreleased - Multi-hop provider checkpoint
+
+- Preserve per-address, per-capability provider cursors in multi-hop checkpoints.
+- Resume incomplete pagination without refetching the first provider page.
+- Preserve previously collected trace edges across a resumed collection.
+- Add synthetic regression coverage for cursor passthrough and resume behavior.
+
+## Unreleased – First-Hop final report tuning
 
 - Use a single Address Registry snapshot across report sections and exports.
 - Remove duplicate visible core-address tables and clarify primary/secondary roles.

@@ -25,6 +25,7 @@ from crypto_investigator.providers.multihop import collect_multihop_edges
 from crypto_investigator.providers.collector import CollectionResult
 from crypto_investigator.providers.models import (
     Completeness,
+    PaginationMetadata,
     ProviderCapability,
     ProviderResult,
 )
@@ -321,7 +322,9 @@ def test_provider_collection_is_budgeted_and_marks_partial():
 
     query_calls = []
 
-    async def fetch(address):
+    async def fetch(address, start_cursors, completed_capabilities):
+        assert start_cursors == {}
+        assert completed_capabilities == frozenset()
         query_calls.append(address)
         records = records_by_address.get(address, ())
         return CollectionResult(
@@ -368,6 +371,121 @@ def test_provider_collection_is_budgeted_and_marks_partial():
         "SYNTHETIC-TX-1",
         "SYNTHETIC-TX-2",
     }
+
+
+def test_provider_collection_checkpoint_resumes_cursor_without_refetching():
+    calls = []
+
+    async def first_fetch(address, start_cursors, completed_capabilities):
+        calls.append((address, dict(start_cursors), completed_capabilities))
+        item = ProviderRawRecord(
+            chain=Chain.TRON,
+            source_provider="synthetic-provider",
+            source_type="token_transfers",
+            tx_hash="SYNTHETIC-CURSOR-TX-1",
+            timestamp=NOW,
+            from_address="SEED",
+            to_address="HOP-1",
+            asset_symbol="USDT",
+            amount_raw="1000000",
+            decimals=6,
+            success=True,
+        )
+        return CollectionResult(
+            (item,),
+            (
+                ProviderResult(
+                    "synthetic-provider",
+                    Chain.TRON,
+                    ProviderCapability.TOKEN_TRANSFERS,
+                    (item,),
+                    Completeness.PARTIAL,
+                    pages_fetched=1,
+                    truncated=True,
+                    available_more=True,
+                    pagination=PaginationMetadata(
+                        "synthetic-provider",
+                        Chain.TRON,
+                        ProviderCapability.TOKEN_TRANSFERS,
+                        next_cursor="SYNTHETIC-CURSOR-2",
+                        has_more=True,
+                        pagination_complete=False,
+                        completeness=Completeness.PARTIAL,
+                    ),
+                ),
+            ),
+            (),
+        )
+
+    scope = TraceScope(
+        "full_history",
+        1,
+        10,
+        10,
+        Decimal("0.1"),
+        ("USDT",),
+        direction=TraceDirection.FORWARD,
+    )
+    seed = TraceSeed(
+        SeedType.ADDRESS,
+        "SEED",
+        "tron",
+        "USDT",
+        ("SYNTHETIC-EVIDENCE",),
+    )
+    first = asyncio.run(
+        collect_multihop_edges(
+            seed=seed,
+            scope=scope,
+            fetch_address=first_fetch,
+            max_address_queries=1,
+        )
+    )
+    assert first.checkpoint is not None
+
+    async def resumed_fetch(address, start_cursors, completed_capabilities):
+        calls.append((address, dict(start_cursors), completed_capabilities))
+        assert start_cursors == {
+            ProviderCapability.TOKEN_TRANSFERS.value: "SYNTHETIC-CURSOR-2"
+        }
+        return CollectionResult(
+            (),
+            (
+                ProviderResult(
+                    "synthetic-provider",
+                    Chain.TRON,
+                    ProviderCapability.TOKEN_TRANSFERS,
+                    (),
+                    Completeness.COMPLETE,
+                    pages_fetched=1,
+                    pagination=PaginationMetadata(
+                        "synthetic-provider",
+                        Chain.TRON,
+                        ProviderCapability.TOKEN_TRANSFERS,
+                        pagination_complete=True,
+                        completeness=Completeness.COMPLETE,
+                    ),
+                ),
+            ),
+            (),
+        )
+
+    resumed = asyncio.run(
+        collect_multihop_edges(
+            seed=seed,
+            scope=scope,
+            fetch_address=resumed_fetch,
+            max_address_queries=1,
+            checkpoint=first.checkpoint,
+            previous_edges=first.edges,
+        )
+    )
+    assert len(calls) == 2
+    assert resumed.status is TraceRunStatus.COMPLETED
+    assert resumed.checkpoint is None
+    assert [edge.transaction_hash for edge in resumed.edges] == [
+        "SYNTHETIC-CURSOR-TX-1"
+    ]
 
 
 def test_trace_graph_preserves_assets_hops_and_off_ramp_category():

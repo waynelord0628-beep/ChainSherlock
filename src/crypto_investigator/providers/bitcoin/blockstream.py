@@ -101,6 +101,7 @@ class BlockstreamProvider(BaseProvider):
             ordering=ProviderOrdering.NEWEST_FIRST,
             pagination_strategy=PaginationStrategy.BEFORE_TXID,
             stop_before=kwargs.get("date_from"),
+            start_cursor=kwargs.get("start_cursor"),
         )
 
     async def get_transaction(self, tx_hash: str, **kwargs) -> ProviderResult:

@@ -121,6 +121,7 @@ class TronGridProvider(BaseProvider):
         unbounded: bool = False,
         date_from: datetime | None = None,
         date_to: datetime | None = None,
+        start_cursor: str | None = None,
     ) -> ProviderResult:
         limits = PaginationLimits(
             max_pages=None if unbounded else max_pages or self.limits.max_pages,
@@ -160,6 +161,7 @@ class TronGridProvider(BaseProvider):
             ordering=ProviderOrdering.NEWEST_FIRST,
             pagination_strategy=PaginationStrategy.FINGERPRINT,
             stop_before=date_from,
+            start_cursor=start_cursor,
         )
 
     def _parse_trx(self, item: dict[str, Any]) -> ProviderRawRecord:

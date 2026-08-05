@@ -70,9 +70,20 @@ class ProviderCollector:
         requested: str | None,
         provider_options: dict[str, object],
     ) -> CollectionResult:
+        start_cursors = dict(provider_options.get("start_cursors", {}))
+        completed_capabilities = set(
+            provider_options.get("completed_capabilities", ())
+        )
+        shared_options = {
+            key: value
+            for key, value in provider_options.items()
+            if key not in {"start_cursors", "completed_capabilities"}
+        }
         results: list[ProviderResult] = []
         errors: list[ProviderError] = []
         for capability in capabilities:
+            if capability.value in completed_capabilities:
+                continue
             try:
                 candidates = self.policy.candidates(chain, capability, requested)
             except ProviderError as error:
@@ -87,9 +98,10 @@ class ProviderCollector:
                         ProviderCapability.INTERNAL_TRANSACTIONS: "get_internal_transactions",
                         ProviderCapability.UTXO: "get_utxos",
                     }[capability]
-                    result = await getattr(candidate, method_name)(
-                        identifier, **provider_options
-                    )
+                    options = dict(shared_options)
+                    if cursor := start_cursors.get(capability.value):
+                        options["start_cursor"] = cursor
+                    result = await getattr(candidate, method_name)(identifier, **options)
                     results.append(result)
                     errors.extend(
                         error

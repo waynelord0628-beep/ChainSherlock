@@ -34,9 +34,10 @@ async def paginate(
     pagination_strategy: PaginationStrategy = PaginationStrategy.PROVIDER_DEFINED,
     stop_before: datetime | None = None,
     stop_after: datetime | None = None,
+    start_cursor: str | None = None,
 ) -> ProviderResult:
     records: list[ProviderRawRecord] = []
-    cursor: str | None = None
+    cursor: str | None = start_cursor
     seen_cursors: set[str] = set()
     warnings: list[str] = []
     errors: list[Exception] = []

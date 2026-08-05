@@ -1,6 +1,7 @@
 from pathlib import Path
 import asyncio
 import os
+from collections.abc import Mapping
 from dataclasses import replace
 from datetime import datetime
 from decimal import Decimal
@@ -1398,7 +1399,11 @@ def trace_address(
     registry = ProviderFactory.create_registry(settings)
     collector = ProviderCollector(ProviderSelectionPolicy(registry, settings))
 
-    async def fetch(identifier: str):
+    async def fetch(
+        identifier: str,
+        start_cursors: Mapping[str, str],
+        completed_capabilities: frozenset[str],
+    ):
         return await collector.collect_address(
             selected_chain,
             identifier,
@@ -1406,6 +1411,8 @@ def trace_address(
             provider_options={
                 "max_pages": max_pages_per_address,
                 "max_records": max_records_per_address,
+                "start_cursors": dict(start_cursors),
+                "completed_capabilities": tuple(completed_capabilities),
             },
         )
 
