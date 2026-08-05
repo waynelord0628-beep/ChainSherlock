@@ -2,7 +2,11 @@ from pathlib import Path
 
 from docx import Document
 from docx.enum.section import WD_SECTION
-from docx.enum.table import WD_CELL_VERTICAL_ALIGNMENT, WD_TABLE_ALIGNMENT
+from docx.enum.table import (
+    WD_CELL_VERTICAL_ALIGNMENT,
+    WD_ROW_HEIGHT_RULE,
+    WD_TABLE_ALIGNMENT,
+)
 from docx.enum.text import WD_ALIGN_PARAGRAPH
 from docx.oxml.ns import qn
 from docx.oxml import OxmlElement
@@ -356,6 +360,9 @@ class DocxReportExporter:
                     for row in rows:
                         cells = table.add_row().cells
                         self._prevent_row_split(table.rows[-1])
+                        if table_data.table_id == "key_address_summary":
+                            table.rows[-1].height = Mm(18)
+                            table.rows[-1].height_rule = WD_ROW_HEIGHT_RULE.EXACTLY
                         for index, value in enumerate(row):
                             self._replace_mixed_text(
                                 cells[index].paragraphs[0], value, table=True

@@ -257,8 +257,8 @@ class PdfReportExporter:
             for name in ("Title", "Heading1", "Heading2", "BodyText"):
                 styles[name].fontName = font_name
                 styles[name].wordWrap = "CJK"
-            styles["BodyText"].fontSize = 8
-            styles["BodyText"].leading = 10
+            styles["BodyText"].fontSize = 9.5
+            styles["BodyText"].leading = 13
             styles["BodyText"].splitLongWords = False
             styles["Heading1"].keepWithNext = True
             styles["Heading2"].keepWithNext = True
@@ -569,6 +569,9 @@ class PdfReportExporter:
                     if table.table_id == "executive_summary_metrics":
                         table_cell_style.fontSize = 10
                         table_cell_style.leading = 12
+                    if table.table_id.startswith("deterministic_insight_"):
+                        table_cell_style.fontSize = 9
+                        table_cell_style.leading = 11
                     # Dense engineering tables must retain ReportLab's normal
                     # wrapping. CJK wrapping in very narrow 8–10 column cells can
                     # turn compact metadata into a single page-tall row.
@@ -622,10 +625,16 @@ class PdfReportExporter:
                         for row in data
                     ]
                     if data and data[0]:
+                        row_heights = (
+                            [11 * mm, *([18 * mm] * len(table.rows))]
+                            if table.table_id == "key_address_summary"
+                            else None
+                        )
                         rendered = Table(
                             data,
                             repeatRows=1,
                             colWidths=widths,
+                            rowHeights=row_heights,
                             splitByRow=1,
                             splitInRow=0,
                         )

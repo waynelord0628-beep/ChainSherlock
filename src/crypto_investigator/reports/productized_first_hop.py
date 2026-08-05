@@ -335,6 +335,14 @@ def _chart_sections(
         )
         for item in monthly
     )
+    peak_month = max(
+        monthly,
+        key=lambda item: max(
+            _decimal(item.get("incoming", 0)),
+            _decimal(item.get("outgoing", 0)),
+        ),
+        default={},
+    )
 
     destination_max = max(
         (_decimal(item.get("amount", 0)) for item in destinations),
@@ -350,6 +358,12 @@ def _chart_sections(
         )
         for index, item in enumerate(destinations, 1)
     )
+    top_source = sources[0] if sources else {}
+    top_destination = destinations[0] if destinations else {}
+    top_destination_share = sum(
+        (_decimal(item.get("share", 0)) for item in destinations),
+        Decimal("0"),
+    )
 
     return (
         ReportSection(
@@ -358,7 +372,14 @@ def _chart_sections(
             52,
             (
                 "本圖分別呈現前五大來源與前五大去向；左右兩側為獨立規則式排名，"
-                "不代表同一筆資金已完成路徑級追蹤。",
+                "不代表同一筆資金已完成路徑級追蹤。"
+                + (
+                    f"最大來源占流入 {_percent(top_source.get('share', 0))}；"
+                    f"最大去向占流出 {_percent(top_destination.get('share', 0))}，"
+                    "可優先作為第二層查詢起點。"
+                    if top_source and top_destination
+                    else ""
+                ),
             ),
             tables=(
                 ReportTable(
@@ -375,7 +396,14 @@ def _chart_sections(
             53,
             (
                 "橫條依全期間單月最大值等比例繪製；金額以 USDT 表示，"
-                "原始 Decimal 精度仍保留於 report_data.json。",
+                "原始 Decimal 精度仍保留於 report_data.json。"
+                + (
+                    f"圖中最高活動月份為 {peak_month.get('period')}："
+                    f"流入 {_amount(peak_month.get('incoming', 0), asset)}，"
+                    f"流出 {_amount(peak_month.get('outgoing', 0), asset)}。"
+                    if peak_month
+                    else ""
+                ),
             ),
             tables=(
                 ReportTable(
@@ -390,6 +418,13 @@ def _chart_sections(
             "deterministic_destination_chart",
             "USDT 前五大去向金額圖",
             54,
+            (
+                (
+                    f"前五大第一層去向合計占主要資產流出 "
+                    f"{_percent(top_destination_share)}；長條越長代表收受金額越高。"
+                    "本圖用於安排後續追蹤順序，不代表地址身分或下車點已確認。"
+                ),
+            ),
             tables=(
                 ReportTable(
                     "deterministic_destination_chart",
@@ -485,6 +520,19 @@ def _insights(document: ReportDocument, registry) -> ReportSection:
             "不等同逐筆快速轉出或 FIFO 路徑證明",
         )
     )
+    observation_tables = tuple(
+        ReportTable(
+            f"deterministic_insight_{index}",
+            f"觀察 {index} - {row[0]}",
+            ("項目", "內容"),
+            (
+                ("觀察內容", row[1]),
+                ("調查意義", row[2]),
+                ("限制", row[3]),
+            ),
+        )
+        for index, row in enumerate(rows, 1)
+    )
     return ReportSection(
         "deterministic_insights",
         "規則式調查洞察",
@@ -493,14 +541,7 @@ def _insights(document: ReportDocument, registry) -> ReportSection:
             "以下內容由相同 structured data 依固定規則產生，不使用 AI，"
             "不新增地址、金額、Label 或身分判斷。",
         ),
-        tables=(
-            ReportTable(
-                "deterministic_insights",
-                "主要調查發現",
-                ("Observation ID", "觀察", "調查意義", "限制"),
-                tuple(rows),
-            ),
-        ),
+        tables=observation_tables,
     )
 
 
