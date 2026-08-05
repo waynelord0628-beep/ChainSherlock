@@ -237,6 +237,33 @@ def test_result_asset_cards_separated(window) -> None:
     assert "不與其他資產加總" in html
 
 
+def test_result_displays_multihop_trace_summary(window) -> None:
+    case = window.case_service.create_case("Synthetic trace")
+    result = window.case_service.result(case.case_id).model_copy(
+        update={
+            "address_results": [
+                {
+                    "address": "0x" + "1" * 40,
+                    "trace_summary": {
+                        "status": "partial",
+                        "max_depth": 3,
+                        "node_count": 12,
+                        "edge_count": 18,
+                        "allocation_count": 7,
+                        "off_ramp_candidate_count": 2,
+                        "assets": ["USDT"],
+                    },
+                }
+            ]
+        }
+    )
+    html = window._render_result(result)
+    assert "多層資金追蹤" in html
+    assert "交易邊 18" in html
+    assert "FIFO 配對 7" in html
+    assert "下車點候選：2" in html
+
+
 def test_candidate_and_confirmed_visual_distinction() -> None:
     assert "#302A52" in LIGHT_THEME
     assert "#123C3B" in LIGHT_THEME

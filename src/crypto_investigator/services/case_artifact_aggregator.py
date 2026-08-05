@@ -95,6 +95,7 @@ class CaseArtifactAggregator:
                     ArtifactType.PROVIDER_STATUS,
                     ArtifactType.PROVIDER_ERRORS,
                     ArtifactType.REJECTED_RECORDS,
+                    ArtifactType.TRACE_RESULT,
                 }:
                     try:
                         value = json.loads(
@@ -196,6 +197,101 @@ class CaseArtifactAggregator:
                                 "The observed behavior may have another operational explanation."
                             ],
                             limitations=["Candidate interpretation is not a confirmed identity."],
+                        )
+                    )
+
+            if artifact.artifact_type is ArtifactType.TRACE_RESULT:
+                seed = payload.get("seed", {})
+                scope = payload.get("scope", {})
+                trace_edges = payload.get("edges", [])
+                trace_nodes = payload.get("nodes", [])
+                target = seed.get("value")
+                chain = seed.get("chain")
+                if chain:
+                    chains.add(str(chain))
+                if target:
+                    addresses.add(str(target))
+                addresses.update(
+                    str(item["address"])
+                    for item in trace_nodes
+                    if item.get("address")
+                )
+                transactions.update(
+                    str(item["transaction_hash"])
+                    for item in trace_edges
+                    if item.get("transaction_hash")
+                )
+                trace_assets = sorted(
+                    {
+                        str(item["asset"])
+                        for item in trace_edges
+                        if item.get("asset")
+                    }
+                )
+                assets.update(trace_assets)
+                address_results.append(
+                    {
+                        "address": target,
+                        "chain": chain,
+                        "trace_summary": {
+                            "status": payload.get("status", "unknown"),
+                            "max_depth": scope.get("max_depth"),
+                            "node_count": len(trace_nodes),
+                            "edge_count": len(trace_edges),
+                            "allocation_count": len(payload.get("allocations", [])),
+                            "pattern_count": len(payload.get("patterns", [])),
+                            "off_ramp_candidate_count": len(
+                                payload.get("off_ramp_candidates", [])
+                            ),
+                            "assets": trace_assets,
+                        },
+                        "artifact_refs": [artifact.artifact_id],
+                        "warnings": payload.get("limitations", []),
+                    }
+                )
+                for index, raw in enumerate(payload.get("patterns", []), 1):
+                    observations.append(
+                        CaseObservation(
+                            observation_id=str(
+                                raw.get(
+                                    "finding_id",
+                                    f"trace_observation_{artifact.artifact_id}_{index}",
+                                )
+                            ),
+                            source_address=target,
+                            category=str(raw.get("pattern_type", "trace_pattern")),
+                            factual_statement=(
+                                "Deterministic multi-hop pattern candidate: "
+                                f"{raw.get('pattern_type', 'unknown')}."
+                            ),
+                            metrics=dict(raw.get("metrics", {})),
+                            confidence=str(raw.get("confidence", "low")),
+                            evidence_refs=list(raw.get("evidence_refs", [])),
+                            limitations=list(raw.get("limitations", [])),
+                            source_artifact=artifact.artifact_id,
+                        )
+                    )
+                for index, raw in enumerate(
+                    payload.get("off_ramp_candidates", []), 1
+                ):
+                    candidates.append(
+                        CaseInterpretation(
+                            interpretation_id=(
+                                f"trace_off_ramp_{artifact.artifact_id}_{index}"
+                            ),
+                            title="下車點候選",
+                            statement=(
+                                f"{raw.get('address', 'Unknown address')} "
+                                "符合本地標籤或規則式下車點候選條件。"
+                            ),
+                            candidate_type=CandidateType.SERVICE,
+                            evidence_refs=list(raw.get("evidence_refs", [])),
+                            confidence=str(raw.get("confidence", "low")),
+                            alternative_explanations=[
+                                "此節點可能是一般營運或代收付地址。"
+                            ],
+                            limitations=list(raw.get("limitations", []))
+                            or ["候選結果不代表已確認實體身分。"],
                         )
                     )
 

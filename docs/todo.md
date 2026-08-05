@@ -196,6 +196,21 @@ Future work must be approved and delivered one milestone at a time.
 - 不開始 V9 或 Windows 打包，等待下一個 Prompt。
 ## Multi-hop tracing remaining
 
+Completed in the current V8 integration:
+
+- Capability cursor checkpoint and first-page-free resume.
+- Explicit confirmed `TRACE_FUNDS` Planner step.
+- Offline and Provider Case Execution handlers.
+- Trace result, graph and optional checkpoint artifact persistence.
+- Result and Graph desktop presentation.
+
+Next validation targets:
+
+- Run a larger synthetic depth-5 scenario with aggregation, dispersion, return flow and
+  a locally labelled VASP candidate.
+- Add analyst controls for materiality, depth and manual stop before production defaults.
+- Perform a bounded real-provider resume exercise without committing its address or data.
+
 - 完成 Full History 多層驗收前，先實作每 capability 的 cursor checkpoint。
 - 為每個 Provider capability 完成可續跑 cursor checkpoint，不重抓已完成頁面。
 - 將 `TRACE_FUNDS` Planner Goal 接到 Case Execution 與 Desktop UI 狀態頁。

@@ -411,6 +411,9 @@ V3 contains no Provider, blockchain API, graph rendering, report, Word/PDF, AI, 
 - Desktop provider execution supports cooperative cancellation and serializable
   provider cursor checkpoints for resume.
 - Targeted validation: Planner 77 passed; Execution/Provider integration 101 passed.
+- Desktop/Case Result targeted validation: 371 passed.
+- Full regression: 1,552 passed, 1 skipped; `pip check` reports no broken requirements.
+- No Provider or AI calls were made during this integration milestone.
 
 ## V8 Multi-hop Fund Tracing（開發驗收）
 

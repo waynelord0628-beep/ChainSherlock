@@ -489,6 +489,25 @@ Observations。真實模型驗收位於明確的人工 CLI boundary，預設測�
 ## Cross-chain Analysis Scope and report enrichment
 
 ```text
+## V8 Multi-hop Case Integration
+
+```text
+Trace Funds Goal
+    -> confirmed TRACE_FUNDS PlanStep (per address and chain)
+    -> CaseExecutionService
+       -> Offline Evidence Handler OR Public Provider Handler
+       -> cooperative cancellation
+       -> per-capability cursor checkpoint
+    -> trace_result.json + trace graph + optional checkpoint
+    -> CaseArtifactAggregator
+    -> Result / Investigation / Graph desktop views
+```
+
+The trace result remains candidate-oriented: FIFO is an analytical allocation,
+off-ramp labels are not identity confirmation, and every edge retains a real transaction
+hash plus evidence references. Provider resume state contains only cursors and public
+progress metadata; credentials and request headers are never serialized.
+
 Case/Wizard -> AnalysisScope -> Plan/Step -> Execution
              -> Provider pagination -> scope filter
              -> Pipeline -> Analysis -> Graph -> Investigation -> Report

@@ -16,6 +16,7 @@ HUMAN_LABELS = {
     "compare_known_addresses": "比較已知地址",
     "match_victim_transactions": "核對指定交易",
     "build_graph": "建立資金流向圖",
+    "trace_funds": "多層資金追蹤",
     "run_investigation_features": "整理調查觀察",
     "apply_local_labels": "套用本機標籤",
     "generate_narrative": "整理案件敘事",

@@ -943,7 +943,7 @@ class MainWindow(QMainWindow):
                 (
                     item
                     for item in result.evidence_index
-                    if item.evidence_type == "graph_html"
+                    if item.evidence_type in {"graph_html", "trace_graph"}
                     and item.relative_path.endswith("flow.html")
                 ),
                 None,
@@ -1121,6 +1121,23 @@ class MainWindow(QMainWindow):
                 "結果總覽",
                 "<div class='empty'>尚無分析結果。完成 Execution 後會在此顯示重點。</div>",
             )
+        trace_summaries = [
+            item["trace_summary"]
+            for item in result.address_results
+            if item.get("trace_summary")
+        ]
+        trace_cards = "".join(
+            "<div class='card observation'>"
+            f"<b>多層追蹤：{_safe(item.get('status', 'unknown'))}</b>"
+            f"<p>節點 {int(item.get('node_count', 0)):,}｜"
+            f"交易邊 {int(item.get('edge_count', 0)):,}｜"
+            f"FIFO 配對 {int(item.get('allocation_count', 0)):,}</p>"
+            f"<p class='muted'>深度上限：{_safe(item.get('max_depth'))}｜"
+            f"下車點候選：{int(item.get('off_ramp_candidate_count', 0)):,}｜"
+            f"資產：{_safe(', '.join(item.get('assets', [])) or '未分類')}</p>"
+            "</div>"
+            for item in trace_summaries
+        )
         asset_cards = "".join(
             f"<div class='card'><b>{_safe(asset)}</b><br>"
             "ASSET-SEGREGATED · 不與其他資產加總</div>"
@@ -1142,7 +1159,9 @@ class MainWindow(QMainWindow):
             f"<div class='card'><b>Evidence</b><br>{len(result.evidence_index)}</div>"
             f"<div class='card limitation'><b>Partial Coverage</b><br>{len(result.unresolved_questions)}</div>"
             "</div><h3>資產摘要</h3><div class='grid'>"
-            f"{asset_cards}</div><h3>重要觀察</h3>{observations}"
+            f"{asset_cards}</div>"
+            + ("<h3>多層資金追蹤</h3>" + trace_cards if trace_cards else "")
+            + f"<h3>重要觀察</h3>{observations}"
         )
         return self._html("結果總覽", body)
 
@@ -1206,7 +1225,8 @@ class MainWindow(QMainWindow):
             [
                 item
                 for item in result.evidence_index
-                if item.evidence_type in {"graph_html", "graph_json", "graphml"}
+                if item.evidence_type
+                in {"graph_html", "graph_json", "graphml", "trace_graph"}
             ]
             if result
             else []
