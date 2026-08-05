@@ -10,7 +10,7 @@ from docx.enum.table import (
 from docx.enum.text import WD_ALIGN_PARAGRAPH
 from docx.oxml.ns import qn
 from docx.oxml import OxmlElement
-from docx.shared import Mm, Pt, RGBColor
+from docx.shared import Mm, Pt
 
 from crypto_investigator.reports.errors import DocxExportError
 from crypto_investigator.reports.models import ReportDocument
@@ -147,6 +147,7 @@ class DocxReportExporter:
                     qn("w:hAnsi"), "Times New Roman"
                 )
             output.styles["Normal"].font.size = Pt(10.5)
+            output.styles["Normal"].paragraph_format.line_spacing = 1.5
             for style_name in ("Title", "Heading 1", "Heading 2"):
                 output.styles[style_name].paragraph_format.keep_with_next = True
             output.styles["Normal"].paragraph_format.widow_control = True
@@ -155,11 +156,7 @@ class DocxReportExporter:
                 f"ChainSherlock | {document.metadata.report_id} | UTC+8",
             )
             footer = section.footer.paragraphs[0]
-            report_run = footer.add_run(f"{document.metadata.report_id} | ")
-            self._set_run_font(report_run, role=ScriptRole.LATIN)
             self._add_page_number(footer)
-            timezone_run = footer.add_run(" | UTC+8")
-            self._set_run_font(timezone_run, role=ScriptRole.LATIN)
             for report_section in document.sections:
                 if report_section.section_id == "cover":
                     output.add_paragraph()
@@ -179,16 +176,13 @@ class DocxReportExporter:
                     )
                     for run in subtitle.runs:
                         run.font.size = Pt(15)
-                    watermark = output.add_paragraph()
-                    watermark.alignment = WD_ALIGN_PARAGRAPH.CENTER
-                    run = watermark.add_run("₿")
-                    run.font.name = "Segoe UI Symbol"
-                    run.font.size = Pt(72)
-                    run.font.color.rgb = RGBColor(231, 235, 240)
+                    output.add_paragraph()
                     for block in report_section.content_blocks:
                         paragraph = output.add_paragraph()
                         self._replace_mixed_text(paragraph, block)
                         paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER
+                        paragraph.paragraph_format.line_spacing = 1.5
+                        paragraph.paragraph_format.space_after = Pt(6)
                     output.add_page_break()
                     continue
                 if report_section.section_id == "table_of_contents":

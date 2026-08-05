@@ -21,7 +21,7 @@ from reportlab.platypus import (
 )
 from reportlab.platypus.tableofcontents import TableOfContents
 from reportlab.lib import colors
-from reportlab.graphics.shapes import Circle, Drawing, Line, Rect, String
+from reportlab.graphics.shapes import Drawing, Rect, String
 
 from crypto_investigator.reports.errors import PdfExportError
 from crypto_investigator.reports.formatting import abbreviate_identifier
@@ -178,27 +178,12 @@ class PdfReportExporter:
             current_page,
         )
         canvas.saveState()
-        canvas.setFont(self._latin_font_name, 9)
-        canvas.drawString(18 * mm, 12 * mm, self._report_id)
-        footer_style = getSampleStyleSheet()["BodyText"]
-        footer_style.fontName = self._cjk_font_name
-        footer_style.fontSize = 9
-        footer_style.leading = 10
-        footer_style.alignment = 1
-        footer = Paragraph(
-            self._styled_text(
-                f"\u7b2c {current_page} \u9801\uff0c"
-                f"\u5171 {self._total_pages} \u9801",
-                self._latin_font_name,
-            ),
-            footer_style,
-        )
-        footer.wrapOn(canvas, 70 * mm, 10 * mm)
-        footer.drawOn(canvas, canvas._pagesize[0] / 2 - 35 * mm, 9 * mm)
-        canvas.drawRightString(
-            canvas._pagesize[0] - 18 * mm,
+        canvas.setFont(self._cjk_font_name, 9)
+        canvas.drawCentredString(
+            canvas._pagesize[0] / 2,
             12 * mm,
-            "UTC+8",
+            f"\u7b2c {current_page} \u9801\uff0c"
+            f"\u5171 {self._total_pages} \u9801",
         )
         canvas.restoreState()
 
@@ -258,7 +243,7 @@ class PdfReportExporter:
                 styles[name].fontName = font_name
                 styles[name].wordWrap = "CJK"
             styles["BodyText"].fontSize = 9.5
-            styles["BodyText"].leading = 13
+            styles["BodyText"].leading = 14.25
             styles["BodyText"].splitLongWords = False
             styles["Heading1"].keepWithNext = True
             styles["Heading2"].keepWithNext = True
@@ -267,7 +252,7 @@ class PdfReportExporter:
             story = []
             for section in document.sections:
                 if section.section_id == "cover":
-                    story.append(Spacer(1, 24 * mm))
+                    story.append(Spacer(1, 9 * mm))
                     cover_header = Drawing(430, 34)
                     navy = colors.HexColor("#16213E")
                     teal = colors.HexColor("#138A84")
@@ -303,41 +288,20 @@ class PdfReportExporter:
                             styles["Heading2"],
                         )
                     )
-                    cover_mark = Drawing(170, 118)
-                    pale = colors.HexColor("#E7EBF0")
-                    cover_mark.add(
-                        Circle(
-                            85,
-                            59,
-                            43,
-                            strokeColor=pale,
-                            strokeWidth=2.5,
-                            fillColor=colors.HexColor("#FAFBFC"),
-                        )
-                    )
-                    cover_mark.add(
-                        String(
-                            67,
-                            30,
-                            "B",
-                            fontName=self._latin_font_name,
-                            fontSize=70,
-                            fillColor=pale,
-                        )
-                    )
-                    cover_mark.add(Line(69, 21, 69, 97, strokeColor=pale, strokeWidth=3))
-                    cover_mark.add(Line(79, 19, 79, 99, strokeColor=pale, strokeWidth=3))
-                    story.append(cover_mark)
-                    story.append(Spacer(1, 8 * mm))
+                    story.append(Spacer(1, 18 * mm))
                     cover_metadata = []
+                    cover_metadata_style = styles["BodyText"].clone(
+                        "CoverMetadata"
+                    )
+                    cover_metadata_style.leading = 15.5
                     for block in section.content_blocks:
                         cover_metadata.append(
                             Paragraph(
                                 self._styled_text(block, self._latin_font_name),
-                                styles["BodyText"],
+                                cover_metadata_style,
                             )
                         )
-                        cover_metadata.append(Spacer(1, 2 * mm))
+                        cover_metadata.append(Spacer(1, 3 * mm))
                     metadata_card = Table(
                         [[cover_metadata]],
                         colWidths=[136 * mm],
@@ -351,8 +315,8 @@ class PdfReportExporter:
                                 ("LINEBEFORE", (0, 0), (0, -1), 3, teal),
                                 ("LEFTPADDING", (0, 0), (-1, -1), 14),
                                 ("RIGHTPADDING", (0, 0), (-1, -1), 14),
-                                ("TOPPADDING", (0, 0), (-1, -1), 12),
-                                ("BOTTOMPADDING", (0, 0), (-1, -1), 10),
+                                ("TOPPADDING", (0, 0), (-1, -1), 16),
+                                ("BOTTOMPADDING", (0, 0), (-1, -1), 14),
                             ]
                         )
                     )

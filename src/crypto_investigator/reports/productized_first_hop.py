@@ -60,7 +60,7 @@ def _executive_summary(document: ReportDocument, registry) -> ReportSection:
     target = str(document.metadata.target_address or "未提供")
     content = [
         (
-            f"本報告針對 {target} 執行地址剖繪與第一層資金流分析。"
+            f"1. 本報告針對 {target} 執行地址剖繪與第一層資金流分析。"
             "下列指標先呈現主要價值資產規模與第一層集中情形，詳細來源、"
             "去向及證據於後續章節說明。"
         ),
@@ -85,7 +85,7 @@ def _executive_summary(document: ReportDocument, registry) -> ReportSection:
             )
         )
     content.append(
-        "本報告僅反映目前完整取得的鏈上資料。來源與去向分別排名，並列不代表"
+        "2. 本報告僅反映目前完整取得的鏈上資料。來源與去向分別排名，並列不代表"
         "同一筆資金已完成逐筆路徑追蹤；目前亦未完成第二層追蹤、下車點確認或"
         "地址身分認定。"
     )
@@ -371,7 +371,7 @@ def _chart_sections(
             "USDT 第一層資金流向圖",
             52,
             (
-                "本圖分別呈現前五大來源與前五大去向；左右兩側為獨立規則式排名，"
+                "• 本圖分別呈現前五大來源與前五大去向；左右兩側為獨立規則式排名，"
                 "不代表同一筆資金已完成路徑級追蹤。"
                 + (
                     f"最大來源占流入 {_percent(top_source.get('share', 0))}；"
@@ -395,7 +395,7 @@ def _chart_sections(
             "USDT 月度流入／流出圖",
             53,
             (
-                "橫條依全期間單月最大值等比例繪製；金額以 USDT 表示，"
+                "• 橫條依全期間單月最大值等比例繪製；金額以 USDT 表示，"
                 "原始 Decimal 精度仍保留於 report_data.json。"
                 + (
                     f"圖中最高活動月份為 {peak_month.get('period')}："
@@ -420,7 +420,7 @@ def _chart_sections(
             54,
             (
                 (
-                    f"前五大第一層去向合計占主要資產流出 "
+                    f"• 前五大第一層去向合計占主要資產流出 "
                     f"{_percent(top_destination_share)}；長條越長代表收受金額越高。"
                     "本圖用於安排後續追蹤順序，不代表地址身分或下車點已確認。"
                 ),
