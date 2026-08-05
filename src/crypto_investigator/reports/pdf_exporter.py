@@ -24,10 +24,15 @@ from reportlab.graphics.shapes import Circle, Drawing, Line, Rect, String
 from crypto_investigator.reports.errors import PdfExportError
 from crypto_investigator.reports.formatting import abbreviate_identifier
 from crypto_investigator.reports.models import ReportDocument
+from crypto_investigator.reports.typography import (
+    CJK_FONT,
+    ScriptRole,
+    mixed_script_runs,
+)
 
 
 _WINDOWS_CJK_FONTS = (
-    ("kaiu.ttf", "標楷體"),
+    ("kaiu.ttf", CJK_FONT),
     ("msjh.ttc", "Microsoft JhengHei"),
 )
 
@@ -67,6 +72,39 @@ def pdf_font_status() -> dict[str, str | bool | None]:
         "available": bool(path and path.is_file()),
         "font_name": name,
         "source": source,
+    }
+
+
+def pdf_typography_status() -> dict[str, dict[str, str | bool | None]]:
+    cjk_path, cjk_source, cjk_name = resolve_cjk_font()
+    windows = Path(os.environ["WINDIR"]) / "Fonts" if os.getenv("WINDIR") else None
+
+    def windows_font(filename: str, requested: str, fallback: str):
+        available = bool(windows and (windows / filename).is_file())
+        return {
+            "requested_family": requested,
+            "effective_family": requested if available else fallback,
+            "available": available,
+            "source": "system" if available else "fallback",
+            "fallback_reason": None if available else "requested_font_unavailable",
+        }
+
+    return {
+        "cjk": {
+            "requested_family": CJK_FONT,
+            "effective_family": cjk_name,
+            "available": bool(cjk_path and cjk_path.is_file()),
+            "source": cjk_source,
+            "fallback_reason": (
+                None
+                if cjk_path and cjk_path.is_file()
+                else "cjk_font_unavailable_pdf_export_partial"
+            ),
+        },
+        "latin_numeric": windows_font(
+            "times.ttf", "Times New Roman", "Times-Roman"
+        ),
+        "table_latin": windows_font("consola.ttf", "Consolas", "Courier"),
     }
 
 
@@ -138,13 +176,23 @@ class PdfReportExporter:
             current_page,
         )
         canvas.saveState()
-        canvas.setFont(self._footer_font_name, 9)
+        canvas.setFont(self._latin_font_name, 9)
         canvas.drawString(18 * mm, 12 * mm, self._report_id)
-        canvas.drawCentredString(
-            canvas._pagesize[0] / 2,
-            12 * mm,
-            f"第 {current_page} 頁，共 {self._total_pages} 頁",
+        footer_style = getSampleStyleSheet()["BodyText"]
+        footer_style.fontName = self._cjk_font_name
+        footer_style.fontSize = 9
+        footer_style.leading = 10
+        footer_style.alignment = 1
+        footer = Paragraph(
+            self._styled_text(
+                f"\u7b2c {current_page} \u9801\uff0c"
+                f"\u5171 {self._total_pages} \u9801",
+                self._latin_font_name,
+            ),
+            footer_style,
         )
+        footer.wrapOn(canvas, 70 * mm, 10 * mm)
+        footer.drawOn(canvas, canvas._pagesize[0] / 2 - 35 * mm, 9 * mm)
         canvas.drawRightString(
             canvas._pagesize[0] - 18 * mm,
             12 * mm,
@@ -164,17 +212,23 @@ class PdfReportExporter:
                 pass
         return fallback
 
-    @staticmethod
-    def _styled_text(value: str, latin_font: str) -> str:
+    def _styled_text(self, value: str, latin_font: str) -> str:
         value = str(value).replace("\r\n", "\n").replace("\r", "\n")
         parts = []
-        for segment in re.findall(r"[\x00-\x7f]+|[^\x00-\x7f]+", value):
-            escaped = escape(segment)
-            if segment.isascii():
-                parts.append(f'<font name="{latin_font}">{escaped}</font>')
-            else:
-                parts.append(escaped)
-        return "".join(parts).replace("\n", "<br/>")
+        table = latin_font == self._table_font_name
+        for run in mixed_script_runs(value, table=table):
+            if run.role is ScriptRole.NEWLINE:
+                parts.append("<br/>")
+                continue
+            font = (
+                self._cjk_font_name
+                if run.role is ScriptRole.CJK
+                else self._latin_font_name
+                if run.role is ScriptRole.NUMERIC or not table
+                else self._table_font_name
+            )
+            parts.append(f'<font name="{font}">{escape(run.text)}</font>')
+        return "".join(parts)
 
     def write(
         self, document: ReportDocument, path: Path, font_path: Path | None = None
@@ -187,6 +241,7 @@ class PdfReportExporter:
         try:
             font_name = "ChainSherlockCJK"
             pdfmetrics.registerFont(TTFont(font_name, str(configured)))
+            self._cjk_font_name = font_name
             self._footer_font_name = font_name
             self._latin_font_name = self._register_optional_windows_font(
                 "times.ttf", "ChainSherlockTimes", "Times-Roman"

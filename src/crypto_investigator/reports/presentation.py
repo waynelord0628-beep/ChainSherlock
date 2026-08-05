@@ -1129,11 +1129,12 @@ def _asset_first_sections(document, registry, material_assets):
                         "資產",
                         "流入／流出金額",
                         "交易次數",
-                        "標籤狀態",
                         "追蹤優先級",
-                        "優先理由",
                     ),
-                    important_rows,
+                    tuple(
+                        (row[0], row[1], row[2], row[3], row[4], row[6])
+                        for row in important_rows
+                    ),
                 ),
             ),
         ),
@@ -1489,8 +1490,25 @@ def _full_asset_benchmark_sections(document, registry):
         *(
             (
                 ReportSection(
+                    "address_pollution_safety",
+                    "地址污染與操作安全候選",
+                    90,
+                    (
+                        f"目前規則標記 {int(product['address_pollution']['excluded_record_count']):,} "
+                        "筆微額干擾交易候選；此結果尚未經人工確認，不代表釣魚、"
+                        "惡意地址或攻擊者身分。",
+                        str(product["address_pollution"]["limitation"]),
+                    ),
+                ),
+            )
+            if product.get("address_pollution")
+            else ()
+        ),
+        *(
+            (
+                ReportSection(
                     "benchmark_other_assets",
-                    "其他資產與資料污染",
+                    "其他資產與技術性排除",
                     91,
                     (
                         f"另有 {int(benchmark.get('other_asset_record_count', 0)):,} 筆"
@@ -1584,18 +1602,68 @@ def _reorder_booklet(document, sections, registry, material_assets):
             for section in base
         ]
         if registry_tables:
-            base.append(
+            identity = next(
+                (
+                    table
+                    for table in registry_tables
+                    if table.table_id == "address_registry_identity"
+                ),
+                None,
+            )
+            context = next(
+                (
+                    table
+                    for table in registry_tables
+                    if table.table_id == "address_registry_context"
+                ),
+                None,
+            )
+            context_by_id = {
+                str(row[0]): row for row in (context.rows if context else ())
+            }
+            index_rows = tuple(
+                (
+                    str(row[0]),
+                    str(row[1]),
+                    str(row[2]),
+                    str(row[3]),
+                    str(context_by_id.get(str(row[0]), ("", "角色未確認"))[1]),
+                    "請見主文",
+                    str(
+                        context_by_id.get(
+                            str(row[0]), ("", "", "", "主文相關章節")
+                        )[3]
+                    ),
+                )
+                for row in (identity.rows if identity else ())
+            )
+            generated = (
+                *generated,
                 ReportSection(
                     "address_registry",
-                    "地址對照表",
-                    220,
+                    "本報告地址索引",
+                    22,
                     (
-                        "下列地址均為主文引用地址；若無人工或 Local Label，角色保持未確認。"
-                        "完整證據 mapping 請參閱 report_data.json；其餘地址請參閱 "
-                        "address_registry.csv。",
+                        "本節位於資產分析之前，列出正文引用的地址編號與完整地址；"
+                        "完整技術 mapping 另存於 address_registry.csv。",
                     ),
-                    tables=registry_tables,
-                )
+                    tables=(
+                        ReportTable(
+                            "address_registry_identity",
+                            "正文地址完整對照",
+                            (
+                                "地址編號",
+                                "鏈別",
+                                "完整地址",
+                                "Label",
+                                "主要角色",
+                                "資產",
+                                "主要出現章節",
+                            ),
+                            index_rows,
+                        ),
+                    ),
+                ),
             )
     order_map = {
         "cover": 1,
@@ -1604,6 +1672,7 @@ def _reorder_booklet(document, sections, registry, material_assets):
         "analysis_summary": 11,
         "target": 20,
         "key_addresses": 21,
+        "address_registry": 22,
         "completeness": 30,
         "completeness_layers": 31,
         "asset_flows": 40,
@@ -1611,6 +1680,7 @@ def _reorder_booklet(document, sections, registry, material_assets):
         "first_hop_candidates": 55,
         "benchmark_timeline": 60,
         "benchmark_labels": 90,
+        "address_pollution_safety": 90,
         "benchmark_other_assets": 91,
         "product_executive_summary": 10,
         "address_rankings": 100,
@@ -1634,7 +1704,6 @@ def _reorder_booklet(document, sections, registry, material_assets):
         "evidence_index": 200,
         "non_material_assets": 209,
         "appendix": 210,
-        "address_registry": 220,
     }
     ai_sections = [section for section in base if section.section_id.startswith("ai_")]
     base = [section for section in base if not section.section_id.startswith("ai_")]
@@ -1646,6 +1715,24 @@ def _reorder_booklet(document, sections, registry, material_assets):
             order = 150 + ai_sections.index(section)
         else:
             order = order_map.get(section.section_id, section.order + 300)
+        if (
+            section.section_id == "address_pollution_safety"
+            and product.get("address_pollution")
+        ):
+            pollution = product["address_pollution"]
+            section = replace(
+                section,
+                title=str(pollution["title"]),
+                content_blocks=(
+                    f"\u76ee\u524d\u898f\u5247\u6a19\u8a18 "
+                    f"{int(pollution['excluded_record_count']):,} "
+                    "\u7b46\u4f4e\u65bc\u91cd\u8981\u6027\u9580\u6abb\u7684\u5fae\u984d"
+                    "\u5019\u9078\uff1b\u539f\u59cb Evidence \u4fdd\u7559\uff0c\u4e14"
+                    "\u5019\u9078\u4e0d\u7b49\u540c\u5df2\u78ba\u8a8d\u91e3\u9b5a\u3001"
+                    "\u60e1\u610f\u5730\u5740\u6216\u653b\u64ca\u8005\u3002",
+                    str(pollution["limitation"]),
+                ),
+            )
         ordered.append(replace(section, order=order))
     ordered = sorted(ordered, key=lambda item: (item.order, item.section_id))
     visible = tuple(

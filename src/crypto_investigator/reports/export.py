@@ -14,6 +14,7 @@ from crypto_investigator.reports.models import ReportDocument, ReportExportResul
 from crypto_investigator.reports.pdf_exporter import (
     PdfReportExporter,
     pdf_font_status,
+    pdf_typography_status,
 )
 from crypto_investigator.reports.presentation import (
     address_registry_rows,
@@ -98,6 +99,7 @@ class ReportExportCoordinator:
         }
         if "pdf" in selected:
             status_payload["pdf_font"] = pdf_font_status()
+            status_payload["pdf_typography"] = pdf_typography_status()
         status_path.write_text(
             json.dumps(
                 status_payload,

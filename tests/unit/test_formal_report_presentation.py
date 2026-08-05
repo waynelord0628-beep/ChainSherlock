@@ -2,10 +2,13 @@ from dataclasses import replace
 from copy import deepcopy
 from datetime import UTC, datetime
 from decimal import Decimal
+from html import unescape
+import re
 from types import SimpleNamespace
 import zipfile
 
 import pytest
+from docx import Document
 
 from crypto_investigator.cli import _provider_scope
 from crypto_investigator.domain.scope import PaginationPolicy, ScopeType
@@ -205,7 +208,7 @@ def test_04_main_ranking_uses_registry_id_without_duplicate_address():
     assert OTHER not in row
 
 
-def test_05_full_address_is_preserved_in_appendix():
+def test_05_full_address_is_preserved_in_front_address_index():
     display = prepare_report_for_display(_document())
     table = next(
         table
@@ -761,9 +764,10 @@ def test_44_ai_sections_follow_deterministic_facts():
     assert not ai or ids.index("investigation_facts") < min(ai)
 
 
-def test_45_address_registry_is_after_evidence():
+def test_45_address_registry_is_before_asset_analysis():
     ids = [item.section_id for item in prepare_report_for_display(_document()).sections]
-    assert ids.index("evidence_index") < ids.index("address_registry")
+    assert ids.index("key_addresses") < ids.index("address_registry")
+    assert ids.index("address_registry") < ids.index("asset_flows")
 
 
 def test_46_address_registry_csv_contains_complete_values(tmp_path):
@@ -802,8 +806,11 @@ def test_49_four_format_address_display_mapping_is_consistent(tmp_path):
 
     html_path = HtmlReportExporter().write(display, tmp_path / "report.html")
     html = html_path.read_text(encoding="utf-8")
-    assert full in html
-    assert compact in html
+    html_text = unescape(
+        re.sub(r"<[^>]+>", "", re.sub(r"<br\s*/?>", "\n", html))
+    )
+    assert full in html_text
+    assert compact in html_text
 
     markdown_path = ReportExportCoordinator().export(
         _two_asset_document(), tmp_path / "markdown", requested_format="markdown"
@@ -815,10 +822,20 @@ def test_49_four_format_address_display_mapping_is_consistent(tmp_path):
     assert compact.replace("\n", "<br>") in markdown
 
     docx_path = DocxReportExporter().write(display, tmp_path / "report.docx")
-    with zipfile.ZipFile(docx_path) as archive:
-        xml = archive.read("word/document.xml").decode("utf-8")
-    assert ADDRESS in xml and "地址-001" in xml
-    assert abbreviate_identifier(ADDRESS) in xml
+    docx = Document(docx_path)
+    docx_text = "\n".join(
+        [
+            *(paragraph.text for paragraph in docx.paragraphs),
+            *(
+                cell.text
+                for table in docx.tables
+                for row in table.rows
+                for cell in row.cells
+            ),
+        ]
+    )
+    assert ADDRESS in docx_text and "地址-001" in docx_text
+    assert abbreviate_identifier(ADDRESS) in docx_text
 
     assert PdfReportExporter._pdf_cell(compact, "地址參照") == compact
 
@@ -838,6 +855,28 @@ def test_50_engineering_tables_are_not_in_the_booklet_body():
     assert "data_pipeline" not in ids
     assert "provider_status" not in ids
     assert "rejected_records" not in ids
+
+
+def test_general_report_omits_address_pollution_section():
+    display = prepare_report_for_display(_two_asset_document())
+    assert "address_pollution_safety" not in {
+        section.section_id for section in display.sections
+    }
+
+
+def test_empty_address_pollution_result_does_not_emit_empty_section():
+    document = _two_asset_document()
+    document = replace(
+        document,
+        metadata=replace(
+            document.metadata,
+            first_hop_product={"address_pollution": None},
+        ),
+    )
+    display = prepare_report_for_display(document)
+    assert "address_pollution_safety" not in {
+        section.section_id for section in display.sections
+    }
 
 
 def test_51_asset_chapter_begins_with_narrative():
@@ -1165,12 +1204,10 @@ def test_70_key_address_table_is_complete_and_trace_prioritized():
         "資產",
         "流入／流出金額",
         "交易次數",
-        "標籤狀態",
         "追蹤優先級",
-        "優先理由",
     )
     assert any("調查標的" in row[0] and ADDRESS in row[1] for row in table.rows)
-    assert any("主要價值資產" in row[7] for row in table.rows)
+    assert any("主要價值" in row[0] for row in table.rows)
     assert all("…" not in row[1] for row in table.rows)
 
 
@@ -1207,7 +1244,7 @@ def test_72_principal_value_addresses_precede_operational_addresses():
         index for index, row in enumerate(table.rows) if row[2] == "TRX"
     )
     assert usdt_index < trx_index
-    assert table.rows[trx_index][6] == "營運型"
+    assert table.rows[trx_index][5] == "營運型"
 
 
 def test_73_core_address_table_is_bounded_and_not_address_id_sorted():
@@ -1220,7 +1257,7 @@ def test_73_core_address_table_is_bounded_and_not_address_id_sorted():
         if table.table_id == "key_address_summary"
     )
     assert 1 <= len(table.rows) <= 15
-    priorities = [row[6] for row in table.rows]
+    priorities = [row[5] for row in table.rows]
     assert priorities.index("中") < priorities.index("營運型")
 
 

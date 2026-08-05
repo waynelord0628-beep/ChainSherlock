@@ -199,6 +199,47 @@ def test_dust_threshold_excludes_from_material_analysis_but_not_record_count():
     assert result["excluded_count"] == 1
 
 
+def test_general_report_does_not_generate_address_pollution_section():
+    result = product(
+        [tx("dust", "VALUE", "0.001", "dust-source", TARGET)],
+        goal=FirstHopGoal(
+            required_capabilities=("transactions",),
+            materiality_thresholds={"VALUE": Decimal("0.01")},
+        ),
+    )
+    assert result["address_pollution"] is None
+
+
+def test_specialized_goal_can_create_only_unconfirmed_pollution_candidate():
+    result = product(
+        [tx("dust", "VALUE", "0.001", "dust-source", TARGET)],
+        goal=FirstHopGoal(
+            goal_types=(
+                "address_profile",
+                "address_poisoning_analysis",
+            ),
+            required_capabilities=("transactions",),
+            materiality_thresholds={"VALUE": Decimal("0.01")},
+        ),
+    )
+    candidate = result["address_pollution"]
+    assert candidate is not None
+    assert candidate["confirmed"] is False
+    assert candidate["confidence"] == "low"
+
+
+def test_specialized_goal_with_no_excluded_records_emits_no_empty_section():
+    result = product(
+        [tx("material", "VALUE", "10", "source", TARGET)],
+        goal=FirstHopGoal(
+            goal_types=("similar_address_detection",),
+            required_capabilities=("transactions",),
+            materiality_thresholds={"VALUE": Decimal("0.01")},
+        ),
+    )
+    assert result["address_pollution"] is None
+
+
 def test_partial_provider_is_not_upgraded_to_complete():
     status = (
         {

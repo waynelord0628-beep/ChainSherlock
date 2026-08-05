@@ -257,3 +257,8 @@
 - Added dynamic grounding enums and deterministic citation reconstruction.
 - Fixed long decimal tails being misclassified as Bitcoin addresses.
 - Added explicit partial migration for legacy artifacts with saved periods.
+# Unreleased
+
+- 修正正式報告地址索引位置、全域中英數混排字體、PDF／DOCX 頁碼及 HTML 字體語意 class。
+- 新增安全字型 fallback metadata，不保存本機字型路徑或字型檔。
+- 地址污染、dusting 與相似地址分析改為專用 Goal 明確啟用，普通 First-Hop 報告不再產生空白或誤導章節。

@@ -355,3 +355,10 @@ V3 contains no Provider, blockchain API, graph rendering, report, Word/PDF, AI, 
 - Local Label 增加 verification status 與 imported_at，衝突依可信層級處理。
 - 以十類 recorded fixtures 覆蓋不同資產、完整度、Label、dust、期間與小資料集。
 - 本階段不執行第二層追蹤、不呼叫 AI，亦不開始 Windows 打包。
+# V8 正式報告全域版型與字體封版
+
+- 將核心地址對照表與完整地址索引移至資產分析之前，後段不再重複完整 Registry。
+- PDF、DOCX、HTML 共用 mixed-script formatter：中文使用標楷體，正文英文與數字使用 Times New Roman，表格英文與技術識別值使用 Consolas。
+- PDF 頁尾使用「第 X 頁，共 Y 頁」；DOCX 使用 PAGE／NUMPAGES 欄位。
+- 一般地址剖繪報告預設不執行或輸出地址污染、fake phishing、dusting 或相似地址章節；只有明確專用 Goal 且存在候選資料時才輸出未確認候選。
+- Provider 與 AI 呼叫均為 0。

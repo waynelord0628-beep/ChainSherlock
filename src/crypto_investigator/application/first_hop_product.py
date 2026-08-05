@@ -576,6 +576,44 @@ def build_first_hop_product(
         for item in required
     )
     stages = _stages(principal) if principal else []
+    pollution_enabled = bool(
+        {
+            "address_poisoning_analysis",
+            "dust_spam_investigation",
+            "similar_address_detection",
+        }
+        & set(goal.goal_types)
+    )
+    excluded_records = [
+        item
+        for analysis in analyses
+        for item in (
+            {
+                "asset": analysis["asset"],
+                "excluded_count": analysis["excluded_count"],
+            },
+        )
+        if item["excluded_count"]
+    ]
+    pollution = (
+        {
+            "title": "\u5730\u5740\u6c61\u67d3\u8207\u64cd\u4f5c\u5b89\u5168\u5019\u9078",
+            "candidate_type": "\u5fae\u984d\u5e72\u64fe\u4ea4\u6613\u5019\u9078",
+            "excluded_record_count": sum(
+                int(item["excluded_count"]) for item in excluded_records
+            ),
+            "affected_assets": tuple(item["asset"] for item in excluded_records),
+            "confidence": "low",
+            "confirmed": False,
+            "limitation": (
+                "\u5019\u9078\u50c5\u8868\u793a\u5fae\u984d\u7d00\u9304\u8d85\u904e"
+                "\u6848\u4ef6\u8a2d\u5b9a\u9580\u6abb\uff1b\u4e0d\u78ba\u8a8d"
+                "\u91e3\u9b5a\u3001\u60e1\u610f\u5730\u5740\u6216\u653b\u64ca\u8005\u3002"
+            ),
+        }
+        if pollution_enabled and excluded_records
+        else None
+    )
     return {
         "product_version": "1",
         "target_address": target_address,
@@ -605,6 +643,7 @@ def build_first_hop_product(
         ),
         "stages": stages,
         "follow_up_tasks": _follow_up_tasks(candidates, completeness),
+        "address_pollution": pollution,
         "labels": {
             "supplied_count": len(labels),
             "applied_count": sum(

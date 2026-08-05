@@ -10,6 +10,11 @@ from docx.shared import Mm, Pt, RGBColor
 
 from crypto_investigator.reports.errors import DocxExportError
 from crypto_investigator.reports.models import ReportDocument
+from crypto_investigator.reports.typography import (
+    ScriptRole,
+    font_family,
+    mixed_script_runs,
+)
 
 
 class DocxReportExporter:
@@ -56,29 +61,66 @@ class DocxReportExporter:
                 values.append(1.0)
         return values
     @staticmethod
-    def _set_run_font(run, *, address: bool = False) -> None:
-        run.font.name = "Consolas" if address else "Times New Roman"
+    def _set_run_font(
+        run, *, address: bool = False, role: ScriptRole | None = None, table=False
+    ) -> None:
+        family = (
+            font_family(role, table=table)
+            if role is not None
+            else "Consolas"
+            if address
+            else "Times New Roman"
+        )
+        run.font.name = family
         run._element.get_or_add_rPr().rFonts.set(
             qn("w:eastAsia"), "標楷體"
         )
         run._element.get_or_add_rPr().rFonts.set(
-            qn("w:ascii"), "Consolas" if address else "Times New Roman"
+            qn("w:ascii"), family
         )
         run._element.get_or_add_rPr().rFonts.set(
-            qn("w:hAnsi"), "Consolas" if address else "Times New Roman"
+            qn("w:hAnsi"), family
         )
+        run._element.get_or_add_rPr().rFonts.set(qn("w:cs"), family)
+
+    @classmethod
+    def _replace_mixed_text(cls, paragraph, value, *, table=False) -> None:
+        paragraph.text = ""
+        for item in mixed_script_runs(value, table=table):
+            if item.role is ScriptRole.NEWLINE:
+                paragraph.add_run().add_break()
+                continue
+            run = paragraph.add_run(item.text)
+            cls._set_run_font(run, role=item.role, table=table)
 
     @staticmethod
     def _add_page_number(paragraph) -> None:
         run = paragraph.add_run("第 ")
+        DocxReportExporter._set_run_font(run, role=ScriptRole.CJK)
         field = OxmlElement("w:fldSimple")
         field.set(qn("w:instr"), "PAGE")
+        field_properties = OxmlElement("w:rPr")
+        fonts = OxmlElement("w:rFonts")
+        fonts.set(qn("w:ascii"), "Times New Roman")
+        fonts.set(qn("w:hAnsi"), "Times New Roman")
+        fonts.set(qn("w:cs"), "Times New Roman")
+        field_properties.append(fonts)
+        field.append(field_properties)
         run._r.addnext(field)
-        paragraph.add_run(" 頁，共 ")
+        text_run = paragraph.add_run(" 頁，共 ")
+        DocxReportExporter._set_run_font(text_run, role=ScriptRole.CJK)
         total = OxmlElement("w:fldSimple")
         total.set(qn("w:instr"), "NUMPAGES")
+        total_properties = OxmlElement("w:rPr")
+        total_fonts = OxmlElement("w:rFonts")
+        total_fonts.set(qn("w:ascii"), "Times New Roman")
+        total_fonts.set(qn("w:hAnsi"), "Times New Roman")
+        total_fonts.set(qn("w:cs"), "Times New Roman")
+        total_properties.append(total_fonts)
+        total.append(total_properties)
         paragraph._p.append(total)
-        paragraph.add_run(" 頁")
+        final_run = paragraph.add_run(" 頁")
+        DocxReportExporter._set_run_font(final_run, role=ScriptRole.CJK)
 
     def write(self, document: ReportDocument, path: Path) -> Path:
         try:
@@ -104,32 +146,35 @@ class DocxReportExporter:
             for style_name in ("Title", "Heading 1", "Heading 2"):
                 output.styles[style_name].paragraph_format.keep_with_next = True
             output.styles["Normal"].paragraph_format.widow_control = True
-            section.header.paragraphs[0].text = (
-                f"ChainSherlock | {document.metadata.report_id} | UTC+8"
+            self._replace_mixed_text(
+                section.header.paragraphs[0],
+                f"ChainSherlock | {document.metadata.report_id} | UTC+8",
             )
             footer = section.footer.paragraphs[0]
-            footer.add_run(f"{document.metadata.report_id} | ")
+            report_run = footer.add_run(f"{document.metadata.report_id} | ")
+            self._set_run_font(report_run, role=ScriptRole.LATIN)
             self._add_page_number(footer)
-            footer.add_run(" | UTC+8")
+            timezone_run = footer.add_run(" | UTC+8")
+            self._set_run_font(timezone_run, role=ScriptRole.LATIN)
             for report_section in document.sections:
                 if report_section.section_id == "cover":
                     output.add_paragraph()
                     output.add_paragraph()
                     title = output.add_paragraph()
                     title.alignment = WD_ALIGN_PARAGRAPH.CENTER
-                    run = title.add_run(
-                        f"ChainSherlock {document.title}"
+                    self._replace_mixed_text(
+                        title, f"ChainSherlock {document.title}"
                     )
-                    run.bold = True
-                    run.font.size = Pt(26)
-                    self._set_run_font(run)
+                    for run in title.runs:
+                        run.bold = True
+                        run.font.size = Pt(26)
                     subtitle = output.add_paragraph()
                     subtitle.alignment = WD_ALIGN_PARAGRAPH.CENTER
-                    run = subtitle.add_run(
-                        self._report_subtitle(document)
+                    self._replace_mixed_text(
+                        subtitle, self._report_subtitle(document)
                     )
-                    run.font.size = Pt(15)
-                    self._set_run_font(run)
+                    for run in subtitle.runs:
+                        run.font.size = Pt(15)
                     watermark = output.add_paragraph()
                     watermark.alignment = WD_ALIGN_PARAGRAPH.CENTER
                     run = watermark.add_run("₿")
@@ -137,22 +182,23 @@ class DocxReportExporter:
                     run.font.size = Pt(72)
                     run.font.color.rgb = RGBColor(231, 235, 240)
                     for block in report_section.content_blocks:
-                        paragraph = output.add_paragraph(block)
+                        paragraph = output.add_paragraph()
+                        self._replace_mixed_text(paragraph, block)
                         paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER
                     output.add_page_break()
                     continue
                 if report_section.section_id == "table_of_contents":
                     title = output.add_paragraph()
                     title.alignment = WD_ALIGN_PARAGRAPH.CENTER
-                    run = title.add_run("目錄")
-                    run.bold = True
-                    run.font.size = Pt(24)
-                    self._set_run_font(run)
+                    self._replace_mixed_text(title, "目錄")
+                    for run in title.runs:
+                        run.bold = True
+                        run.font.size = Pt(24)
                     subtitle = output.add_paragraph()
                     subtitle.alignment = WD_ALIGN_PARAGRAPH.CENTER
-                    run = subtitle.add_run("CONTENTS")
-                    run.font.size = Pt(11)
-                    self._set_run_font(run)
+                    self._replace_mixed_text(subtitle, "CONTENTS")
+                    for run in subtitle.runs:
+                        run.font.size = Pt(11)
                     midpoint = (len(report_section.content_blocks) + 1) // 2
                     left = report_section.content_blocks[:midpoint]
                     right = report_section.content_blocks[midpoint:]
@@ -164,7 +210,11 @@ class DocxReportExporter:
                         for column, values in enumerate((left, right)):
                             row.cells[column].width = Mm(80)
                             if index < len(values):
-                                row.cells[column].text = values[index]
+                                self._replace_mixed_text(
+                                    row.cells[column].paragraphs[0],
+                                    values[index],
+                                    table=True,
+                                )
                     output.add_page_break()
                     continue
                 if report_section.section_id.startswith("asset_analysis_"):
@@ -173,10 +223,12 @@ class DocxReportExporter:
                     output.add_page_break()
                 if report_section.section_id == "first_hop_candidates":
                     output.add_page_break()
-                heading = output.add_heading(report_section.title, level=1)
+                heading = output.add_heading("", level=1)
+                self._replace_mixed_text(heading, report_section.title)
                 heading.paragraph_format.keep_with_next = True
                 for block in report_section.content_blocks:
-                    paragraph = output.add_paragraph(block)
+                    paragraph = output.add_paragraph()
+                    self._replace_mixed_text(paragraph, block)
                     paragraph.paragraph_format.widow_control = True
                     if report_section.section_id.startswith("ai_"):
                         paragraph.paragraph_format.keep_together = True
@@ -185,9 +237,8 @@ class DocxReportExporter:
                         report_section.section_id == "key_addresses"
                         and len(table_data.columns) == 8
                     ):
-                        table_heading = output.add_heading(
-                            table_data.title, level=2
-                        )
+                        table_heading = output.add_heading("", level=2)
+                        self._replace_mixed_text(table_heading, table_data.title)
                         table_heading.paragraph_format.keep_with_next = True
                         for row in table_data.rows:
                             card = output.add_table(rows=5, cols=4)
@@ -203,15 +254,13 @@ class DocxReportExporter:
                             for row_index, values_row in enumerate(values):
                                 self._prevent_row_split(card.rows[row_index])
                                 for column_index, value in enumerate(values_row):
-                                    card.cell(row_index, column_index).text = value
-                                    for run in card.cell(
-                                        row_index, column_index
-                                    ).paragraphs[0].runs:
-                                        self._set_run_font(
-                                            run,
-                                            address=row_index == 1
-                                            and column_index == 1,
-                                        )
+                                    self._replace_mixed_text(
+                                        card.cell(
+                                            row_index, column_index
+                                        ).paragraphs[0],
+                                        value,
+                                        table=True,
+                                    )
                             card.cell(1, 1).merge(card.cell(1, 3))
                             card.cell(4, 1).merge(card.cell(4, 3))
                             output.add_paragraph()
@@ -220,9 +269,8 @@ class DocxReportExporter:
                         report_section.section_id == "first_hop_candidates"
                         and len(table_data.columns) == 8
                     ):
-                        table_heading = output.add_heading(
-                            table_data.title, level=2
-                        )
+                        table_heading = output.add_heading("", level=2)
+                        self._replace_mixed_text(table_heading, table_data.title)
                         table_heading.paragraph_format.keep_with_next = True
                         for row in table_data.rows:
                             card = output.add_table(rows=5, cols=4)
@@ -239,16 +287,12 @@ class DocxReportExporter:
                                 self._prevent_row_split(card.rows[row_index])
                                 for column_index, value in enumerate(values_row):
                                     cell = card.cell(row_index, column_index)
-                                    cell.text = value
+                                    self._replace_mixed_text(
+                                        cell.paragraphs[0], value, table=True
+                                    )
                                     for paragraph in cell.paragraphs:
                                         paragraph.paragraph_format.keep_with_next = (
                                             row_index < len(values) - 1
-                                        )
-                                    for run in cell.paragraphs[0].runs:
-                                        self._set_run_font(
-                                            run,
-                                            address=row_index == 1
-                                            and column_index == 1,
                                         )
                             card.cell(1, 1).merge(card.cell(1, 3))
                             card.cell(4, 1).merge(card.cell(4, 3))
@@ -261,7 +305,8 @@ class DocxReportExporter:
                         current.page_height = Mm(210)
                         current.top_margin = current.bottom_margin = Mm(20)
                         current.left_margin = current.right_margin = Mm(22)
-                    table_heading = output.add_heading(table_data.title, level=2)
+                    table_heading = output.add_heading("", level=2)
+                    self._replace_mixed_text(table_heading, table_data.title)
                     table_heading.paragraph_format.keep_with_next = True
                     columns = table_data.columns
                     rows = table_data.rows
@@ -282,19 +327,23 @@ class DocxReportExporter:
                     for index, column in enumerate(columns):
                         width = Mm(usable_mm * weights[index] / total_weight)
                         table.columns[index].width = width
-                        table.rows[0].cells[index].text = column
+                        self._replace_mixed_text(
+                            table.rows[0].cells[index].paragraphs[0],
+                            column,
+                            table=True,
+                        )
                         table.rows[0].cells[index].width = width
                         table.rows[0].cells[index].vertical_alignment = (
                             WD_CELL_VERTICAL_ALIGNMENT.CENTER
                         )
-                        for run in table.rows[0].cells[index].paragraphs[0].runs:
-                            self._set_run_font(run, address=True)
                     self._repeat_table_header(table.rows[0])
                     for row in rows:
                         cells = table.add_row().cells
                         self._prevent_row_split(table.rows[-1])
                         for index, value in enumerate(row):
-                            cells[index].text = value
+                            self._replace_mixed_text(
+                                cells[index].paragraphs[0], value, table=True
+                            )
                             cells[index].width = Mm(
                                 usable_mm * weights[index] / total_weight
                             )
@@ -311,8 +360,6 @@ class DocxReportExporter:
                                 cells[index].paragraphs[0].alignment = (
                                     WD_ALIGN_PARAGRAPH.RIGHT
                                 )
-                            for run in cells[index].paragraphs[0].runs:
-                                self._set_run_font(run, address=True)
                     if wide:
                         current = output.add_section(WD_SECTION.NEW_PAGE)
                         current.page_width = Mm(210)
