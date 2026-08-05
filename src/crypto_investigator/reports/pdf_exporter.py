@@ -254,6 +254,7 @@ class PdfReportExporter:
             styles = getSampleStyleSheet()
             for name in ("Title", "Heading1", "Heading2", "BodyText"):
                 styles[name].fontName = font_name
+                styles[name].wordWrap = "CJK"
             styles["BodyText"].fontSize = 8
             styles["BodyText"].leading = 10
             styles["BodyText"].splitLongWords = False
@@ -542,6 +543,10 @@ class PdfReportExporter:
                     table_cell_style.leading = (
                         9.5 if section.section_id == "appendix" else 10
                     )
+                    # Dense engineering tables must retain ReportLab's normal
+                    # wrapping. CJK wrapping in very narrow 8–10 column cells can
+                    # turn compact metadata into a single page-tall row.
+                    table_cell_style.wordWrap = "LTR"
                     if len(table.columns) <= 6:
                         table_cell_style.wordWrap = "CJK"
                         table_cell_style.splitLongWords = True

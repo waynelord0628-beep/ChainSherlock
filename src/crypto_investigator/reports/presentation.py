@@ -12,6 +12,10 @@ from crypto_investigator.reports.formatting import (
     format_percent,
 )
 from crypto_investigator.reports.models import ReportSection, ReportTable
+from crypto_investigator.reports.productized_first_hop import (
+    build_productized_sections,
+    normalize_address_registry,
+)
 
 
 ISO_DATETIME = re.compile(
@@ -29,7 +33,11 @@ def display_timezone(timezone: str) -> str:
 
 
 def format_display_text(value, timezone: str) -> str:
+    if value is None:
+        return "\u8cc7\u6599\u672a\u4fdd\u5b58"
     text = str(value)
+    if text.strip().casefold() in {"none", "null", "nan"}:
+        return "\u8cc7\u6599\u672a\u4fdd\u5b58"
     text = ISO_DATETIME.sub(
         lambda match: format_datetime(match.group(0), timezone),
         text,
@@ -1200,7 +1208,8 @@ def _full_asset_benchmark_sections(document, registry):
                     "within_24_hours": timing.get("within_24_hours_count", 0),
                     "median_transaction_interval_seconds": timing.get(
                         "median_transaction_interval_seconds"
-                    ),
+                    )
+                    or "\u8cc7\u6599\u672a\u4fdd\u5b58",
                     "limitation": timing.get("limitation", ""),
                 },
             },
@@ -1547,7 +1556,21 @@ def _reorder_booklet(document, sections, registry, material_assets):
         generated = tuple(
             section
             for section in generated
-            if section.section_id not in {"address_rankings", "fund_flow_paths"}
+            if section.section_id
+            not in {
+                "address_rankings",
+                "fund_flow_paths",
+                "product_executive_summary",
+                "completeness_layers",
+                "benchmark_usdt_structure",
+                "first_hop_candidates",
+                "benchmark_other_assets",
+                "product_follow_up",
+            }
+        )
+        generated = (
+            *generated,
+            *build_productized_sections(document, registry),
         )
     booklet_assets = tuple(
         asset for asset in ("USDT", "TRX") if asset in material_assets
@@ -1571,12 +1594,21 @@ def _reorder_booklet(document, sections, registry, material_assets):
         excluded.update(
             {
                 "executive_summary",
+                "analysis_summary",
                 "recommended_follow_up",
                 "address_rankings",
                 "fund_flow_paths",
                 "operation_stages",
                 "dormancy",
                 "transfer_patterns",
+                "completeness",
+                "completeness_layers",
+                "asset_flows",
+                "confirmed_facts",
+                "investigation_observations",
+                "trc10_other_assets",
+                "dust_exclusion_summary",
+                "non_material_assets",
             }
         )
     base = [section for section in sections if section.section_id not in excluded]
@@ -1675,11 +1707,14 @@ def _reorder_booklet(document, sections, registry, material_assets):
         "address_registry": 22,
         "completeness": 30,
         "completeness_layers": 31,
+        "product_completeness": 31,
         "asset_flows": 40,
+        "product_asset_facts": 41,
         "benchmark_usdt_structure": 49,
         "first_hop_candidates": 55,
         "benchmark_timeline": 60,
         "benchmark_labels": 90,
+        "deterministic_insights": 90,
         "address_pollution_safety": 90,
         "benchmark_other_assets": 91,
         "product_executive_summary": 10,
@@ -1703,6 +1738,7 @@ def _reorder_booklet(document, sections, registry, material_assets):
         "conclusion": 190,
         "evidence_index": 200,
         "non_material_assets": 209,
+        "technical_exclusions": 209,
         "appendix": 210,
     }
     ai_sections = [section for section in base if section.section_id.startswith("ai_")]
@@ -1715,6 +1751,11 @@ def _reorder_booklet(document, sections, registry, material_assets):
             order = 150 + ai_sections.index(section)
         else:
             order = order_map.get(section.section_id, section.order + 300)
+        if (
+            section.section_id == "address_registry"
+            and document.metadata.first_hop_product
+        ):
+            section = normalize_address_registry(section, document)
         if (
             section.section_id == "address_pollution_safety"
             and product.get("address_pollution")
@@ -2244,6 +2285,13 @@ def prepare_report_for_display(document):
     )
     evidence = _artifact_evidence(document.evidence)
     material_assets = _material_assets(document)
+    display_material_assets = material_assets
+    if document.metadata.first_hop_product:
+        display_material_assets = tuple(
+            str(item.get("asset"))
+            for item in document.metadata.first_hop_product.get("asset_roles", ())
+            if item.get("asset") in {"USDT", "TRX"}
+        )
     material_sources = tuple(
         dict.fromkeys(
             str(row[2])
@@ -2341,7 +2389,7 @@ def prepare_report_for_display(document):
         elif section.section_id == "conclusion":
             content_blocks = (
                 f"本次分析範圍共納入 {document.metadata.transaction_count:,} 筆交易；"
-                f"主要資產為 {'、'.join(material_assets) or 'unavailable'}。"
+                f"主要資產為 {'、'.join(display_material_assets) or 'unavailable'}。"
                 "已確認資料事實、規則式觀察與候選解釋均分層呈現；"
                 "地址身分、控制權、交易目的及法律性質仍須外部資料與人工查證。"
                 "本報告尚未完成多層追蹤，不據此確認最終下車點或資金最終受益人。",
@@ -2485,6 +2533,13 @@ def prepare_report_for_display(document):
         address_registry,
         material_assets,
     )
+    conclusion_assets = material_assets
+    if document.metadata.first_hop_product:
+        conclusion_assets = tuple(
+            str(item.get("asset"))
+            for item in document.metadata.first_hop_product.get("asset_roles", ())
+            if item.get("asset") in {"USDT", "TRX"}
+        )
     return replace(
         document,
         title=report_title,
@@ -2498,7 +2553,7 @@ def prepare_report_for_display(document):
             document.conclusion,
             text=(
                 f"本次分析範圍共納入 {document.metadata.transaction_count:,} 筆交易；"
-                f"主要資產為 {'、'.join(material_assets) or 'unavailable'}。"
+                f"主要資產為 {'、'.join(conclusion_assets) or 'unavailable'}。"
                 "已確認資料事實、規則式觀察與候選解釋均分層呈現；"
                 "地址身分、控制權、交易目的及法律性質仍須外部資料與人工查證。"
                 "本報告尚未完成多層追蹤，不據此確認最終下車點或資金最終受益人。"

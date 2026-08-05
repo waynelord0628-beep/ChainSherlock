@@ -195,9 +195,61 @@ def write_forensic_artifacts(document: ReportDocument, root: Path) -> dict[str, 
         json.dumps(claim_mapping(document), ensure_ascii=False, indent=2),
         encoding="utf-8",
     )
+    product = document.metadata.first_hop_product or {}
+    excluded_assets = tuple(
+        {
+            "asset": str(item.get("asset") or "unknown"),
+            "role": str(item.get("role") or "unknown"),
+            "transaction_count": int(item.get("transaction_count", 0)),
+            "excluded_count": int(item.get("excluded_count", 0)),
+            "reason": "not_included_in_principal_fund_flow",
+            "reversible": True,
+        }
+        for item in product.get("assets", ())
+        if item.get("role")
+        in {
+            "spam_or_low_materiality_asset",
+            "unknown_or_non_value_event",
+        }
+        or int(item.get("excluded_count", 0))
+    )
+    non_material_path = root / "non_material_assets.csv"
+    with non_material_path.open("w", encoding="utf-8-sig", newline="") as stream:
+        columns = (
+            "asset",
+            "role",
+            "transaction_count",
+            "excluded_count",
+            "reason",
+            "reversible",
+        )
+        writer = csv.DictWriter(stream, fieldnames=columns)
+        writer.writeheader()
+        writer.writerows(excluded_assets)
+    exclusions_path = root / "technical_exclusions.json"
+    exclusions_path.write_text(
+        json.dumps(
+            {
+                "schema_version": 1,
+                "excluded_item_count": len(excluded_assets),
+                "excluded_record_count": sum(
+                    item["excluded_count"] for item in excluded_assets
+                ),
+                "items": excluded_assets,
+                "raw_evidence_modified": False,
+                "included_in_principal_fund_flow": False,
+                "reversible": True,
+            },
+            ensure_ascii=False,
+            indent=2,
+        ),
+        encoding="utf-8",
+    )
     return {
         "fixed_amounts": fixed_path.name,
         "suspicious_trx_transfers": suspicious_path.name,
         "trx_reconciliation": reconciliation_path.name,
         "claim_mapping": mapping_path.name,
+        "non_material_assets": non_material_path.name,
+        "technical_exclusions": exclusions_path.name,
     }

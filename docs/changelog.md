@@ -262,3 +262,11 @@
 - 修正正式報告地址索引位置、全域中英數混排字體、PDF／DOCX 頁碼及 HTML 字體語意 class。
 - 新增安全字型 fallback metadata，不保存本機字型路徑或字型檔。
 - 地址污染、dusting 與相似地址分析改為專用 Goal 明確啟用，普通 First-Hop 報告不再產生空白或誤導章節。
+
+## First-Hop report productization
+
+- Reworked the deterministic first-hop presentation into a reader-focused case report.
+- Limited principal asset facts to USDT and operational TRX for the current product scope.
+- Moved unknown, TRC10, spam and low-materiality records into reversible technical artifacts.
+- Added top-three first-hop investigation cards and evidence-bound deterministic insights.
+- Removed raw missing values, engineering enums and internal metadata from the main report.

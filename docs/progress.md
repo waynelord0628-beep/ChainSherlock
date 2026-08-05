@@ -362,3 +362,13 @@ V3 contains no Provider, blockchain API, graph rendering, report, Word/PDF, AI, 
 - PDF 頁尾使用「第 X 頁，共 Y 頁」；DOCX 使用 PAGE／NUMPAGES 欄位。
 - 一般地址剖繪報告預設不執行或輸出地址污染、fake phishing、dusting 或相似地址章節；只有明確專用 Goal 且存在候選資料時才輸出未確認候選。
 - Provider 與 AI 呼叫均為 0。
+
+## V8 第一層幣流報告最終產品化
+
+- 建立獨立的 First-Hop 產品化呈現模型，不修改原始 Analysis、Provider 或交易資料。
+- 主文聚焦 USDT 主要價值資產與 TRX 營運資產；TRC10、Spam、dust 與未知資產下沉至可逆技術 artifact。
+- 地址索引精簡為六欄；主要金額統一顯示至小數點後兩位。
+- 第一層主要去向改為前三名調查候選卡，清楚區分目前可確認事項、尚待查證事項與限制。
+- 新增規則式調查洞察、non_material_assets.csv 與 technical_exclusions.json。
+- 一般報告主文不顯示 None、null、NaN、raw enum 或工程 metadata。
+- 本輪 Provider 與 AI 呼叫均為 0。

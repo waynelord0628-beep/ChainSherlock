@@ -59,3 +59,8 @@ def test_pdf_typography_status_contains_no_local_font_paths():
     serialized = str(status)
     assert "C:\\" not in serialized
     assert ".ttf" not in serialized
+
+
+def test_pdf_exporter_enables_cjk_word_wrap():
+    source = __import__("inspect").getsource(PdfReportExporter.write)
+    assert 'wordWrap = "CJK"' in source
