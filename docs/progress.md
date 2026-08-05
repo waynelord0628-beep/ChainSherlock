@@ -404,5 +404,8 @@ V3 contains no Provider, blockchain API, graph rendering, report, Word/PDF, AI, 
 - 已完成獨立四格式報告與 Graph JSON／GraphML／離線 HTML。
 - 已新增 `trace-address` CLI；安全上限或 Provider 不完整會標記 partial。
 - 合成資料 targeted tests：12 passed；完整 regression：1541 passed, 1 skipped。
-- TronGrid smoke test 因目前 Codex 程序未取得 API Key 而未形成有效請求；
-  真實 Provider 3～5 層驗收仍待外部環境可用。
+- TronGrid bounded smoke test 已成功：原生與 TRC20 端點均可取得資料。
+- 三層受限驗收使用 5 個地址／10 個 Provider page，收集 122 條 USDT／TRX
+  候選 Edge；引擎保留 12 條與 Seed 可連通的 Edge、12 個節點並辨識 1 個
+  分散候選。因每 capability 僅取 1 頁且查詢預算到頂，結果正確標記 partial。
+- 本次真實驗收未產生或提交案件 artifact，API Key 未寫入檔案或 Git。

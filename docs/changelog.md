@@ -293,3 +293,5 @@
 - 新增可信 Label 下車點停止條件、Graph adapter 與獨立四格式報告。
 - 新增 `trace-address` CLI 與 Provider 查詢預算控制。
 - 修正 PDF 真實總頁數與多層報告寬表拆分。
+- 完成 TronGrid 5 地址／三層 bounded Provider-to-engine 驗收；結果依分頁與
+  查詢上限正確標記 partial。
