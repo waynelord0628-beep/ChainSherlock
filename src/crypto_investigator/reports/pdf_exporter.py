@@ -566,6 +566,9 @@ class PdfReportExporter:
                     table_cell_style.leading = (
                         9.5 if section.section_id == "appendix" else 10
                     )
+                    if table.table_id == "executive_summary_metrics":
+                        table_cell_style.fontSize = 10
+                        table_cell_style.leading = 12
                     # Dense engineering tables must retain ReportLab's normal
                     # wrapping. CJK wrapping in very narrow 8–10 column cells can
                     # turn compact metadata into a single page-tall row.
@@ -594,6 +597,10 @@ class PdfReportExporter:
                             14 * mm,
                         )
                         if table.table_id == "first_hop_candidates_flow"
+                        else (28 * mm, 67 * mm, 42 * mm, 28 * mm)
+                        if table.table_id == "executive_summary_counterparties"
+                        else (35 * mm, 130 * mm)
+                        if table.table_id == "investigation_scope_summary"
                         else (
                             38 * mm,
                             57 * mm,
@@ -636,6 +643,49 @@ class PdfReportExporter:
                                     ("TOPPADDING", (0, 0), (-1, -1), 4),
                                     ("BOTTOMPADDING", (0, 0), (-1, -1), 4),
                         ]
+                        if table.table_id == "executive_summary_metrics":
+                            commands.extend(
+                                [
+                                    (
+                                        "BACKGROUND",
+                                        (0, 0),
+                                        (-1, 0),
+                                        colors.HexColor("#C8D9E3"),
+                                    ),
+                                    ("TEXTCOLOR", (0, 0), (-1, 0), colors.black),
+                                    (
+                                        "BACKGROUND",
+                                        (0, 1),
+                                        (-1, 1),
+                                        colors.HexColor("#EDF3F7"),
+                                    ),
+                                    ("ALIGN", (0, 0), (-1, -1), "CENTER"),
+                                    ("TOPPADDING", (0, 0), (-1, -1), 7),
+                                    ("BOTTOMPADDING", (0, 0), (-1, -1), 7),
+                                ]
+                            )
+                        elif table.table_id in {
+                            "executive_summary_counterparties",
+                            "investigation_scope_summary",
+                        }:
+                            commands.extend(
+                                [
+                                    (
+                                        "BACKGROUND",
+                                        (0, 0),
+                                        (-1, 0),
+                                        colors.HexColor("#DCE7ED"),
+                                    ),
+                                    (
+                                        "BACKGROUND",
+                                        (0, 1),
+                                        (0, -1),
+                                        colors.HexColor("#F3F6F8"),
+                                    ),
+                                    ("TOPPADDING", (0, 0), (-1, -1), 6),
+                                    ("BOTTOMPADDING", (0, 0), (-1, -1), 6),
+                                ]
+                            )
                         for index, column in enumerate(table.columns):
                             if any(
                                 marker in column

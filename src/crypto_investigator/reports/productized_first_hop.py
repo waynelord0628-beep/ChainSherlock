@@ -61,41 +61,66 @@ def _executive_summary(document: ReportDocument, registry) -> ReportSection:
     content = [
         (
             f"本報告針對 {target} 執行地址剖繪與第一層資金流分析。"
-            "分析結果僅反映目前完整取得的鏈上資料，不代表已完成第二層追蹤、"
-            "下車點確認或地址身分認定。"
-        ),
-        (
-            f"主要價值資產為 {asset}；共取得 "
-            f"{int(principal.get('transaction_count', 0)):,} 筆 {asset} 紀錄，"
-            f"其中 {int(principal.get('material_transaction_count', 0)):,} 筆為"
-            f"非零資金移轉，另有 {int(principal.get('zero_value_count', 0)):,} 筆"
-            "零值合約互動。"
-            f"流入 {_amount(principal.get('incoming_total', 0), asset)}，"
-            f"流出 {_amount(principal.get('outgoing_total', 0), asset)}，"
-            f"淨流量 {_amount(principal.get('net_flow', 0), asset)}。"
+            "下列指標先呈現主要價值資產規模與第一層集中情形，詳細來源、"
+            "去向及證據於後續章節說明。"
         ),
     ]
+    counterparty_rows = []
     if source:
-        content.append(
-            f"最大資金來源為 {_address_ref(str(source['address']), registry)}，"
-            f"累計 {_amount(source.get('amount', 0), asset)}，"
-            f"占主要資產流入 {_percent(source.get('share', 0))}。"
+        counterparty_rows.append(
+            (
+                "最大來源",
+                _address_ref(str(source["address"]), registry),
+                _amount(source.get("amount", 0), asset),
+                _percent(source.get("share", 0)),
+            )
         )
     if destination:
-        content.append(
-            f"最大第一層去向為 {_address_ref(str(destination['address']), registry)}，"
-            f"累計 {_amount(destination.get('amount', 0), asset)}，"
-            f"占主要資產流出 {_percent(destination.get('share', 0))}。"
+        counterparty_rows.append(
+            (
+                "最大去向",
+                _address_ref(str(destination["address"]), registry),
+                _amount(destination.get("amount", 0), asset),
+                _percent(destination.get("share", 0)),
+            )
         )
     content.append(
-        "第一層來源與去向係分別依鏈上收付紀錄排名；兩者並列不代表同一筆資金"
-        "已完成逐筆路徑追蹤。"
+        "本報告僅反映目前完整取得的鏈上資料。來源與去向分別排名，並列不代表"
+        "同一筆資金已完成逐筆路徑追蹤；目前亦未完成第二層追蹤、下車點確認或"
+        "地址身分認定。"
     )
     return ReportSection(
         "product_executive_summary",
         "執行摘要",
         10,
         tuple(content),
+        tables=(
+            ReportTable(
+                "executive_summary_metrics",
+                f"{asset} 關鍵指標",
+                ("總紀錄", "非零資金移轉", "流入", "流出"),
+                (
+                    (
+                        f"{int(principal.get('transaction_count', 0)):,} 筆",
+                        f"{int(principal.get('material_transaction_count', 0)):,} 筆",
+                        _amount(principal.get("incoming_total", 0), asset),
+                        _amount(principal.get("outgoing_total", 0), asset),
+                    ),
+                ),
+            ),
+            *(
+                (
+                    ReportTable(
+                        "executive_summary_counterparties",
+                        "第一層集中摘要",
+                        ("關係", "地址參照", "金額", "占比"),
+                        tuple(counterparty_rows),
+                    ),
+                )
+                if counterparty_rows
+                else ()
+            ),
+        ),
     )
 
 

@@ -1841,6 +1841,43 @@ def _reorder_booklet(document, sections, registry, material_assets):
                 content_blocks=(_product_conclusion_text(document),),
             )
         if (
+            section.section_id == "target"
+            and document.metadata.first_hop_product
+        ):
+            scope_label = {
+                "full_history": "完整歷史",
+                "custom_date_range": "指定期間",
+                "quick_preview": "快速預覽",
+            }.get(
+                str(document.metadata.scope_type),
+                str(document.metadata.scope_type).replace("_", " "),
+            )
+            section = replace(
+                section,
+                content_blocks=(
+                    "本節界定本次報告的調查對象、資料範圍與產品邊界。",
+                ),
+                tables=(
+                    ReportTable(
+                        "investigation_scope_summary",
+                        "調查範圍摘要",
+                        ("項目", "內容"),
+                        (
+                            (
+                                "調查標的",
+                                str(document.metadata.target_address or "未提供"),
+                            ),
+                            ("鏈別", str(document.metadata.chain or "未提供").upper()),
+                            ("分析範圍", scope_label),
+                            (
+                                "分析層級",
+                                "地址剖繪與第一層資金流；尚未執行多層路徑追蹤",
+                            ),
+                        ),
+                    ),
+                ),
+            )
+        if (
             section.section_id == "address_pollution_safety"
             and product.get("address_pollution")
         ):
