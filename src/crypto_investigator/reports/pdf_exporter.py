@@ -594,6 +594,14 @@ class PdfReportExporter:
                             14 * mm,
                         )
                         if table.table_id == "first_hop_candidates_flow"
+                        else (
+                            38 * mm,
+                            57 * mm,
+                            20 * mm,
+                            35 * mm,
+                            15 * mm,
+                        )
+                        if table.table_id == "key_address_summary"
                         else self._column_widths(table.columns, available_width)
                     )
                     data = [

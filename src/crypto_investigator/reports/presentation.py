@@ -1124,9 +1124,16 @@ def _asset_first_sections(document, registry, material_assets):
     important_limit = 10 if document.metadata.first_hop_product else 15
 
     def readable_roles(values):
+        concise_labels = {
+            "USDT 主要價值來源": "USDT 主要來源",
+            "USDT 主要價值去向": "USDT 主要去向",
+            "TRX 營運型對手方候選": "TRX 營運對手候選",
+            "後續追蹤優先地址": "後續追蹤候選",
+        }
         unique = []
         for value in values:
             normalized = re.sub(r"\s+\d+$", "", value)
+            normalized = concise_labels.get(normalized, normalized)
             if normalized not in unique:
                 unique.append(normalized)
         if not unique:
@@ -1142,10 +1149,10 @@ def _asset_first_sections(document, registry, material_assets):
             if value not in unique:
                 unique.append(value)
         if not unique or unique == ["—"]:
-            return "主要：—"
-        rendered = f"主要：{unique[0]}"
+            return "主要：\n—"
+        rendered = f"主要：\n{unique[0]}"
         if len(unique) > 1:
-            rendered += f"\n次要：{unique[1]}"
+            rendered += f"\n次要：\n{unique[1]}"
         return rendered
 
     important_rows = tuple(

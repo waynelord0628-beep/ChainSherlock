@@ -133,7 +133,7 @@ def _completeness(document: ReportDocument) -> ReportSection:
                         "依重要性與可支配價值規則判定",
                     ),
                     (
-                        "主要分析母體",
+                        "USDT 非零資金移轉母體",
                         f"{int(principal.get('material_transaction_count', 0)):,} 筆",
                         "排除零值、微額與非主要價值資產紀錄",
                     ),
@@ -397,29 +397,9 @@ def _candidate_sections(document: ReportDocument, registry) -> tuple[ReportSecti
                     ("占目標地址流出", _percent(item.get("share_of_target_outflow", 0))),
                     ("交易次數", f"{int(item.get('transaction_count', 0)):,}"),
                     (
-                        "重要性",
-                        "依收受金額及流出占比列為下一層優先查證地址",
-                    ),
-                    (
-                        "目前可確認",
-                        "可確認目標地址曾向該地址執行第一層轉出",
-                    ),
-                    (
-                        "尚待查證",
-                        "後續去向、地址身分、Local Label 與是否進入 VASP",
-                    ),
-                    (
-                        "建議行動",
-                        "取得該地址同資產完整交易並進行第二層追蹤",
-                    ),
-                    (
                         "Evidence",
                         f"{item.get('candidate_id', f'FH-{index:03d}')}"
                         + (f"；來源交易 {len(evidence_refs):,} 筆" if evidence_refs else ""),
-                    ),
-                    (
-                        "限制",
-                        "候選不等同已確認下車點，亦不代表地址身分已獲確認",
                     ),
                 ),
             )
@@ -433,7 +413,9 @@ def _candidate_sections(document: ReportDocument, registry) -> tuple[ReportSecti
             55,
             (
                 "以下候選均由真實第一層轉出交易支持，依收受金額與占比排序；"
-                "本報告未將來源排行與去向排行拼接成確定資金路徑。",
+                "本報告未將來源排行與去向排行拼接成確定資金路徑。"
+                "各候選共同待查證事項為後續去向、地址身分、Local Label 與是否進入 "
+                "VASP；下一步為取得同資產完整交易並執行第二層追蹤。",
             ),
             tables=tuple(tables),
         ),
