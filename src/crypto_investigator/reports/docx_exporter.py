@@ -14,6 +14,14 @@ from crypto_investigator.reports.models import ReportDocument
 
 class DocxReportExporter:
     @staticmethod
+    def _report_subtitle(document: ReportDocument) -> str:
+        return (
+            "TRX Sub-Asset Analysis and Counterparty Overview"
+            if document.metadata.principal_asset_coverage == "missing"
+            else "Address Profile and First-Hop Fund Flow Analysis"
+        )
+
+    @staticmethod
     def _repeat_table_header(row) -> None:
         properties = row._tr.get_or_add_trPr()
         header = OxmlElement("w:tblHeader")
@@ -110,7 +118,7 @@ class DocxReportExporter:
                     title = output.add_paragraph()
                     title.alignment = WD_ALIGN_PARAGRAPH.CENTER
                     run = title.add_run(
-                        "ChainSherlock 地址剖繪與第一層資金流分析報告"
+                        f"ChainSherlock {document.title}"
                     )
                     run.bold = True
                     run.font.size = Pt(26)
@@ -118,7 +126,7 @@ class DocxReportExporter:
                     subtitle = output.add_paragraph()
                     subtitle.alignment = WD_ALIGN_PARAGRAPH.CENTER
                     run = subtitle.add_run(
-                        "Address Profile and First-Hop Fund Flow Analysis"
+                        self._report_subtitle(document)
                     )
                     run.font.size = Pt(15)
                     self._set_run_font(run)
@@ -161,6 +169,8 @@ class DocxReportExporter:
                     continue
                 if report_section.section_id.startswith("asset_analysis_"):
                     output.add_page_break()
+                if report_section.section_id == "key_addresses":
+                    output.add_page_break()
                 heading = output.add_heading(report_section.title, level=1)
                 heading.paragraph_format.keep_with_next = True
                 for block in report_section.content_blocks:
@@ -169,6 +179,41 @@ class DocxReportExporter:
                     if report_section.section_id.startswith("ai_"):
                         paragraph.paragraph_format.keep_together = True
                 for table_data in report_section.tables:
+                    if (
+                        report_section.section_id == "key_addresses"
+                        and len(table_data.columns) == 8
+                    ):
+                        table_heading = output.add_heading(
+                            table_data.title, level=2
+                        )
+                        table_heading.paragraph_format.keep_with_next = True
+                        for row in table_data.rows:
+                            card = output.add_table(rows=5, cols=4)
+                            card.style = "Table Grid"
+                            card.autofit = False
+                            values = (
+                                ("調查角色", row[0], "追蹤優先級", row[6]),
+                                ("完整地址（地址編號）", row[1], "", ""),
+                                ("資產", row[2], "流入／流出金額", row[3]),
+                                ("交易次數", row[4], "標籤狀態", row[5]),
+                                ("優先理由", row[7], "", ""),
+                            )
+                            for row_index, values_row in enumerate(values):
+                                self._prevent_row_split(card.rows[row_index])
+                                for column_index, value in enumerate(values_row):
+                                    card.cell(row_index, column_index).text = value
+                                    for run in card.cell(
+                                        row_index, column_index
+                                    ).paragraphs[0].runs:
+                                        self._set_run_font(
+                                            run,
+                                            address=row_index == 1
+                                            and column_index == 1,
+                                        )
+                            card.cell(1, 1).merge(card.cell(1, 3))
+                            card.cell(4, 1).merge(card.cell(4, 3))
+                            output.add_paragraph()
+                        continue
                     wide = len(table_data.columns) > 8
                     if wide:
                         current = output.add_section(WD_SECTION.NEW_PAGE)
@@ -229,6 +274,8 @@ class DocxReportExporter:
                         current.page_height = Mm(297)
                         current.top_margin = current.bottom_margin = Mm(20)
                         current.left_margin = current.right_margin = Mm(22)
+                if report_section.section_id == "key_addresses":
+                    output.add_page_break()
                 if report_section.section_id == "table_of_contents":
                     output.add_page_break()
             path.parent.mkdir(parents=True, exist_ok=True)

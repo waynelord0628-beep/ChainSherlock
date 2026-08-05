@@ -144,6 +144,28 @@ class ReportComposer:
             include_assets=include_assets,
             exclude_assets=exclude_assets | trc10_assets,
         )
+        scope_assets = tuple(
+            sorted(
+                presentation.asset
+                for presentation in asset_presentations
+                if presentation.transaction_count > 0
+            )
+        )
+        principal_assets = tuple(
+            str(asset)
+            for asset in metadata_source.get(
+                "principal_assets",
+                ("USDT",) if str(chain).casefold() == "tron" else (),
+            )
+        )
+        principal_asset_coverage = (
+            "complete"
+            if principal_assets
+            and all(asset in scope_assets for asset in principal_assets)
+            else "missing"
+            if principal_assets
+            else "not_configured"
+        )
         rejected_count = len(rejected_records) or int(
             metadata_source.get("rejected_record_count", 0)
         )
@@ -276,6 +298,12 @@ class ReportComposer:
             material_analysis_scope=(
                 f"{int(metadata_source.get('analysis_record_count', 0))} records"
             ),
+            scope_assets=scope_assets,
+            principal_assets=principal_assets,
+            principal_asset_coverage=principal_asset_coverage,
+            full_address_profile=principal_asset_coverage == "complete",
+            first_hop_fund_flow_complete=principal_asset_coverage == "complete",
+            off_ramp_analysis_available=False,
             rejected_count=rejected_count,
             deduplicated_count=int(
                 metadata_source.get("deduplicated_record_count", 0)

@@ -71,6 +71,14 @@ def pdf_font_status() -> dict[str, str | bool | None]:
 
 class PdfReportExporter:
     @staticmethod
+    def _report_subtitle(document: ReportDocument) -> str:
+        return (
+            "TRX Sub-Asset Analysis and Counterparty Overview"
+            if document.metadata.principal_asset_coverage == "missing"
+            else "Address Profile and First-Hop Fund Flow Analysis"
+        )
+
+    @staticmethod
     def _pdf_cell(value: str, column: str) -> str:
         key = column.casefold()
         if "完整地址" not in column and any(
@@ -221,7 +229,7 @@ class PdfReportExporter:
                     story.append(
                         Paragraph(
                             self._styled_text(
-                            "ChainSherlock 地址剖繪與第一層資金流分析報告",
+                            f"ChainSherlock {document.title}",
                                 self._latin_font_name,
                             ),
                             styles["Title"],
@@ -230,7 +238,7 @@ class PdfReportExporter:
                     story.append(
                         Paragraph(
                             self._styled_text(
-                                "Address Profile and First-Hop Fund Flow Analysis",
+                                self._report_subtitle(document),
                                 self._latin_font_name,
                             ),
                             styles["Heading2"],
@@ -320,6 +328,8 @@ class PdfReportExporter:
                     continue
                 if section.section_id.startswith("asset_analysis_"):
                     story.append(PageBreak())
+                if section.section_id == "key_addresses":
+                    story.append(PageBreak())
                 heading = Paragraph(
                     self._styled_text(section.title, self._latin_font_name),
                     styles["Heading1"],
@@ -349,6 +359,65 @@ class PdfReportExporter:
                             styles["Heading2"],
                         )
                     )
+                    if (
+                        section.section_id == "key_addresses"
+                        and len(table.columns) == 8
+                    ):
+                        label_style = styles["BodyText"].clone(
+                            f"CoreAddressLabel-{table.table_id}"
+                        )
+                        label_style.fontSize = 8.5
+                        label_style.leading = 10
+                        value_style = styles["BodyText"].clone(
+                            f"CoreAddressValue-{table.table_id}"
+                        )
+                        value_style.fontSize = 8.5
+                        value_style.leading = 10
+                        for row in table.rows:
+                            card_data = [
+                                ["調查角色", row[0], "追蹤優先級", row[6]],
+                                ["完整地址（地址編號）", row[1], "", ""],
+                                ["資產", row[2], "流入／流出金額", row[3]],
+                                ["交易次數", row[4], "標籤狀態", row[5]],
+                                ["優先理由", row[7], "", ""],
+                            ]
+                            rendered_card = Table(
+                                [
+                                    [
+                                        Paragraph(
+                                            self._styled_text(
+                                                str(value),
+                                                self._table_font_name,
+                                            ),
+                                            label_style
+                                            if index in (0, 2)
+                                            else value_style,
+                                        )
+                                        for index, value in enumerate(card_row)
+                                    ]
+                                    for card_row in card_data
+                                ],
+                                colWidths=[31 * mm, 58 * mm, 31 * mm, 45 * mm],
+                                splitByRow=1,
+                                splitInRow=0,
+                            )
+                            rendered_card.setStyle(
+                                TableStyle(
+                                    [
+                                        ("GRID", (0, 0), (-1, -1), 0.25, colors.grey),
+                                        ("BACKGROUND", (0, 0), (0, -1), colors.lightgrey),
+                                        ("BACKGROUND", (2, 0), (2, -1), colors.lightgrey),
+                                        ("SPAN", (1, 1), (3, 1)),
+                                        ("SPAN", (1, 4), (3, 4)),
+                                        ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+                                        ("TOPPADDING", (0, 0), (-1, -1), 4),
+                                        ("BOTTOMPADDING", (0, 0), (-1, -1), 4),
+                                    ]
+                                )
+                            )
+                            story.append(rendered_card)
+                            story.append(Spacer(1, 2 * mm))
+                        continue
                     table_cell_style = styles["BodyText"].clone(
                         f"TableCell-{section.section_id}-{table.table_id}"
                     )
@@ -421,6 +490,8 @@ class PdfReportExporter:
                         rendered.setStyle(TableStyle(commands))
                         story.append(rendered)
                 story.append(Spacer(1, 3 * mm))
+                if section.section_id == "key_addresses":
+                    story.append(PageBreak())
                 if section.section_id == "table_of_contents":
                     story.append(PageBreak())
             path.parent.mkdir(parents=True, exist_ok=True)

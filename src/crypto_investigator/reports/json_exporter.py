@@ -79,6 +79,8 @@ def read_report_data(path: Path) -> ReportDocument:
     metadata["generated_at"] = datetime.fromisoformat(metadata["generated_at"])
     metadata["source_files"] = tuple(metadata["source_files"])
     metadata["providers"] = tuple(metadata["providers"])
+    metadata["scope_assets"] = tuple(metadata.get("scope_assets", ()))
+    metadata["principal_assets"] = tuple(metadata.get("principal_assets", ()))
     return ReportDocument(
         title=value["title"],
         metadata=ReportMetadata(**metadata),

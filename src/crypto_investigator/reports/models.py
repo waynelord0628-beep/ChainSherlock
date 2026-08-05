@@ -1,6 +1,13 @@
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
+from enum import StrEnum
 from typing import Any, Mapping
+
+
+class AssetInvestigationPriority(StrEnum):
+    PRINCIPAL_VALUE_ASSET = "principal_value_asset"
+    OPERATIONAL_ASSET = "operational_asset"
+    SPAM_OR_LOW_MATERIALITY_ASSET = "spam_or_low_materiality_asset"
 
 
 @dataclass(frozen=True, slots=True)
@@ -119,6 +126,12 @@ class ReportMetadata:
     retrieval_completeness: str = "unavailable"
     asset_classification_completeness: str = "unavailable"
     material_analysis_scope: str = "unavailable"
+    scope_assets: tuple[str, ...] = ()
+    principal_assets: tuple[str, ...] = ()
+    principal_asset_coverage: str = "unavailable"
+    full_address_profile: bool = False
+    first_hop_fund_flow_complete: bool = False
+    off_ramp_analysis_available: bool = False
     rejected_count: int = 0
     deduplicated_count: int = 0
     failed_count: int = 0

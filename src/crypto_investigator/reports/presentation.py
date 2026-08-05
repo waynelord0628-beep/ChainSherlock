@@ -188,6 +188,12 @@ def _additional_observation_table(document) -> ReportTable:
 
 def _completeness_section(document) -> ReportSection:
     metadata = document.metadata
+    displayed_scope_assets = "、".join(metadata.scope_assets) or "未保存"
+    if (
+        metadata.principal_asset_coverage == "missing"
+        and "TRX" in metadata.scope_assets
+    ):
+        displayed_scope_assets = "原生 TRX；另含 TRC10／其他資產（獨立分類）"
     native_incoming_count = max(
         metadata.incoming_count - metadata.other_asset_transaction_count,
         0,
@@ -213,6 +219,45 @@ def _completeness_section(document) -> ReportSection:
                 "完整度分層",
                 ("層級", "筆數／狀態", "說明"),
                 (
+                    (
+                        "本次資產範圍",
+                        displayed_scope_assets,
+                        "scope_asset；不代表完整地址資產覆蓋",
+                    ),
+                    (
+                        "主要價值資產覆蓋",
+                        (
+                            "缺少"
+                            if metadata.principal_asset_coverage == "missing"
+                            else "完整"
+                            if metadata.principal_asset_coverage == "complete"
+                            else "未設定"
+                        ),
+                        "principal_asset_coverage",
+                    ),
+                    (
+                        "完整地址剖繪",
+                        "否" if not metadata.full_address_profile else "是",
+                        "full_address_profile",
+                    ),
+                    (
+                        "完整第一層資金流",
+                        (
+                            "否"
+                            if not metadata.first_hop_fund_flow_complete
+                            else "是"
+                        ),
+                        "first_hop_fund_flow_complete",
+                    ),
+                    (
+                        "下車點分析",
+                        (
+                            "不可用"
+                            if not metadata.off_ramp_analysis_available
+                            else "可用"
+                        ),
+                        "off_ramp_analysis_available",
+                    ),
                     (
                         "完整取得交易",
                         f"{metadata.transaction_count:,}",
@@ -569,6 +614,25 @@ def _asset_first_sections(document, registry, material_assets):
         asset for asset in material_assets
         if asset not in assets
     )
+    principal_assets = {
+        asset for asset in assets
+        if asset in set(document.metadata.principal_assets) | {"USDT", "USDC"}
+    }
+
+    def asset_role(asset):
+        if asset in principal_assets:
+            return "principal_value_asset"
+        if asset in {"TRX", "ETH", "BTC"}:
+            return "operational_asset"
+        return "spam_or_low_materiality_asset"
+
+    def role_priority(asset, rank=1):
+        role = asset_role(asset)
+        if role == "principal_value_asset":
+            return ("高" if rank == 1 else "中", 10 + rank)
+        if role == "operational_asset":
+            return ("營運型", 50 + rank)
+        return ("低", 80 + rank)
 
     def address_id(address):
         return registry.get(address, "—")
@@ -590,8 +654,10 @@ def _asset_first_sections(document, registry, material_assets):
         address,
         *,
         asset="—",
-        metric="—",
+        amount="—",
+        transaction_count="—",
         priority="中",
+        reason="待人工覆核",
         display_order=100,
     ):
         if not address:
@@ -600,26 +666,34 @@ def _asset_first_sections(document, registry, material_assets):
             address,
             {
                 "assets": [],
-                "metrics": [],
+                "amounts": [],
+                "transaction_counts": [],
                 "priorities": [],
+                "reasons": [],
                 "display_order": display_order,
             },
         )
         context["display_order"] = min(context["display_order"], display_order)
         if asset not in context["assets"]:
             context["assets"].append(asset)
-        if metric not in context["metrics"]:
-            context["metrics"].append(metric)
+        if amount not in context["amounts"]:
+            context["amounts"].append(amount)
+        if transaction_count not in context["transaction_counts"]:
+            context["transaction_counts"].append(transaction_count)
         if priority not in context["priorities"]:
             context["priorities"].append(priority)
+        if reason not in context["reasons"]:
+            context["reasons"].append(reason)
 
     target = document.metadata.target_address
     if target:
         add_important_role(target, "調查標的")
         add_important_context(
             target,
-            metric="本案分析標的",
+            amount="—",
+            transaction_count="—",
             priority="高",
+            reason="本案調查標的",
             display_order=0,
         )
     sections = []
@@ -680,7 +754,10 @@ def _asset_first_sections(document, registry, material_assets):
             row for row in (counterparties.rows if counterparties else ())
             if len(row) >= 10 and str(row[4]) == asset
         ]
-        outgoing = [row for row in asset_counterparties if str(row[2]) == "流出"]
+        outgoing = [
+            row for row in asset_counterparties
+            if str(row[2]) == "流出" or _number(row[6]) > 0
+        ]
         outgoing.sort(
             key=lambda row: (
                 -_number(row[6]),
@@ -717,13 +794,30 @@ def _asset_first_sections(document, registry, material_assets):
         frequent_rows = counterparty_rows(frequent, 6)
         if source_rows:
             address = str(source_rows[0][2])
-            add_important_role(address, f"{asset} 主要來源")
+            role = asset_role(asset)
+            add_important_role(
+                address,
+                (
+                    f"{asset} 主要價值來源"
+                    if role == "principal_value_asset"
+                    else f"{asset} 營運型來源候選"
+                    if role == "operational_asset"
+                    else f"{asset} 低重要性來源"
+                ),
+            )
+            priority, display_order = role_priority(asset)
             add_important_context(
                 address,
                 asset=asset,
-                metric=f"流入 {_display_amount_2(source_rows[0][3])}",
-                priority="高",
-                display_order=10 + asset_index,
+                amount=f"流入 {_display_amount_2(source_rows[0][3])}",
+                transaction_count="未保存",
+                priority=priority,
+                reason=(
+                    "主要價值資產來源"
+                    if role == "principal_value_asset"
+                    else "營運／費用型資產來源"
+                ),
+                display_order=display_order,
             )
         outgoing_materiality = max(
             Decimal("1"),
@@ -736,27 +830,65 @@ def _asset_first_sections(document, registry, material_assets):
         ]
         for rank, row in enumerate(material_outgoing[:3], 1):
             address = str(row[1])
-            add_important_role(address, f"{asset} 主要去向 {rank}")
-            add_important_role(address, "後續追蹤優先地址")
+            role = asset_role(asset)
+            add_important_role(
+                address,
+                (
+                    f"{asset} 主要價值去向 {rank}"
+                    if role == "principal_value_asset"
+                    else f"{asset} 營運型對手方候選"
+                    if role == "operational_asset"
+                    else f"{asset} 低重要性去向"
+                ),
+            )
+            if role == "principal_value_asset":
+                add_important_role(address, "後續追蹤優先地址")
+            priority, display_order = role_priority(asset, rank)
             add_important_context(
                 address,
                 asset=asset,
-                metric=(
-                    f"流出 {_display_amount_2(row[6])}／"
-                    f"互動 {row[3]} 次"
+                amount=f"流出 {_display_amount_2(row[6])}",
+                transaction_count=f"{row[3]} 次",
+                priority=priority,
+                reason=(
+                    "主要價值資產高額第一層去向"
+                    if role == "principal_value_asset"
+                    else "TRX 營運／費用型對手方；低於主要價值資產"
+                    if role == "operational_asset"
+                    else "低重要性資產互動"
                 ),
-                priority="高" if rank == 1 else "中",
-                display_order=20 + (asset_index * 10) + rank,
+                display_order=display_order,
             )
         if frequent:
             address = str(frequent[0][1])
-            add_important_role(address, f"{asset} 高頻交易對手")
+            role = asset_role(asset)
+            add_important_role(
+                address,
+                (
+                    f"{asset} 高頻價值對手方"
+                    if role == "principal_value_asset"
+                    else f"{asset} 高頻營運型對手方候選"
+                    if role == "operational_asset"
+                    else f"{asset} 高頻低重要性對手方"
+                ),
+            )
+            priority, display_order = role_priority(asset, 4)
             add_important_context(
                 address,
                 asset=asset,
-                metric=f"互動 {frequent[0][3]} 次",
-                priority="中",
-                display_order=60 + asset_index,
+                amount=(
+                    f"流出 {_display_amount_2(frequent[0][6])}"
+                    if _number(frequent[0][6]) > 0
+                    else "—"
+                ),
+                transaction_count=f"{frequent[0][3]} 次",
+                priority=priority,
+                reason=(
+                    "主要價值資產高頻對手方"
+                    if role == "principal_value_asset"
+                    else "高頻營運型對手方；不等同下車點"
+                ),
+                display_order=display_order,
             )
 
         for category, rows in (
@@ -867,9 +999,24 @@ def _asset_first_sections(document, registry, material_assets):
         sections.append(
             ReportSection(
                 f"asset_analysis_{asset.casefold()}",
-                f"{asset} 分析",
+                (
+                    f"{asset} 主要價值資產分析"
+                    if asset_role(asset) == "principal_value_asset"
+                    else f"{asset} 營運資產與費用型對手方分析"
+                    if asset_role(asset) == "operational_asset"
+                    else f"{asset} 其他／低重要性資產分析"
+                ),
                 50 + asset_index,
-                tuple(narrative) + (
+                tuple(narrative)
+                + (
+                    (
+                        f"{asset} 在本案屬主要價值資產，第一層高額去向優先於營運型資產對手方。"
+                        if asset_role(asset) == "principal_value_asset"
+                        else f"{asset} 在本報告中視為營運／費用型資產；高頻對手方可能與"
+                        "手續費、能量、頻寬或營運資金相關，不等同主要價值資產下車點。"
+                        if asset_role(asset) == "operational_asset"
+                        else f"{asset} 不得與主要價值資產使用同一追蹤排行。"
+                    ),
                     f"以下依序呈現 {asset} 的來源、去向及互動頻率排名；三種排名不得混為同一結論。",
                     "地址編號是全報告固定索引，不等於本表排名；排名以最左欄為準。重要地址已於前段對照，其餘完整地址保留於後段地址對照表及 address_registry.csv。",
                 ),
@@ -892,8 +1039,10 @@ def _asset_first_sections(document, registry, material_assets):
         add_important_role(address, f"人工標籤：{label}")
         add_important_context(
             address,
-            metric="人工／Local Label",
+            amount="—",
+            transaction_count="—",
             priority="高",
+            reason="已有人工／Local Label，優先核實標籤",
             display_order=50,
         )
     for source_section in document.sections:
@@ -911,17 +1060,27 @@ def _asset_first_sections(document, registry, material_assets):
             for match in IDENTIFIER.finditer(str(value)):
                 add_important_role(match.group(0), "AI／綜合研判引用")
 
-    priority_order = {"高": 0, "中": 1, "低": 2}
+    priority_order = {"高": 0, "中": 1, "營運型": 2, "低": 3}
     important_rows = tuple(
         (
             "／".join(roles),
             _full_address_reference(address, registry),
             "／".join(important_address_context.get(address, {}).get("assets", ["—"])),
-            "；".join(important_address_context.get(address, {}).get("metrics", ["—"])),
+            "；".join(important_address_context.get(address, {}).get("amounts", ["—"])),
+            "；".join(
+                important_address_context.get(address, {}).get(
+                    "transaction_counts", ["—"]
+                )
+            ),
             existing_labels.get(address, "未標記"),
             min(
                 important_address_context.get(address, {}).get("priorities", ["中"]),
                 key=lambda value: priority_order.get(value, 9),
+            ),
+            "；".join(
+                important_address_context.get(address, {}).get(
+                    "reasons", ["待人工覆核"]
+                )
             ),
         )
         for address, roles in sorted(
@@ -933,29 +1092,32 @@ def _asset_first_sections(document, registry, material_assets):
                 address_id(item[0]),
             ),
         )
-    )
+    )[:15]
 
     return (
         ReportSection(
             "key_addresses",
-            "關鍵地址對照表",
+            "核心地址對照表",
             30,
             (
                 "本節位於資產分析之前，列出調查標的、主要來源、前三大重要去向、"
                 "高頻交易對手、既有 Label 與後續追蹤優先地址。完整地址可直接複製；"
-                "追蹤優先級只決定後續查詢順序，不代表風險或身分已確認。",
+                "主要價值資產永遠優先於營運型資產；追蹤優先級只決定後續查詢順序，"
+                "不代表風險、下車點或身分已確認。",
             ),
             tables=(
                 ReportTable(
                     "key_address_summary",
-                    "關鍵地址一覽表",
+                    "核心地址一覽表",
                     (
                         "調查角色",
                         "完整地址（地址編號）",
                         "資產",
-                        "金額／次數",
+                        "流入／流出金額",
+                        "交易次數",
                         "標籤狀態",
                         "追蹤優先級",
+                        "優先理由",
                     ),
                     important_rows,
                 ),
@@ -1064,9 +1226,9 @@ def _reorder_booklet(document, sections, registry, material_assets):
         "executive_summary": 10,
         "analysis_summary": 11,
         "target": 20,
-        "completeness": 21,
-        "completeness_layers": 22,
-        "key_addresses": 30,
+        "key_addresses": 21,
+        "completeness": 30,
+        "completeness_layers": 31,
         "asset_flows": 40,
         "address_rankings": 100,
         "fund_flow_paths": 110,
@@ -1598,6 +1760,17 @@ def _split_wide_table(table):
 
 def prepare_report_for_display(document):
     timezone = document.metadata.timezone or "Asia/Taipei"
+    principal_missing = document.metadata.principal_asset_coverage == "missing"
+    report_title = (
+        "TRX 子資產分析與交易對手概覽"
+        if principal_missing
+        else "地址剖繪與第一層資金流分析報告"
+    )
+    report_title_en = (
+        "TRX Sub-Asset Analysis and Counterparty Overview"
+        if principal_missing
+        else "Address Profile and First-Hop Fund Flow Analysis"
+    )
     evidence = _artifact_evidence(document.evidence)
     material_assets = _material_assets(document)
     material_sources = tuple(
@@ -1662,8 +1835,8 @@ def prepare_report_for_display(document):
                 "報告類型：確定性分析報告"
                 if document.metadata.report_type == "deterministic"
                 else f"報告類型：{format_display_text(document.metadata.report_type, timezone)}",
-                "產品定位：地址剖繪與第一層資金流分析報告",
-                "英文名稱：Address Profile and First-Hop Fund Flow Analysis",
+                f"產品定位：{report_title}",
+                f"英文名稱：{report_title_en}",
                 f"版本：{document.metadata.report_version}",
                 f"產製時間：{format_datetime(document.metadata.generated_at, timezone)}",
                 f"資料完整度：{document.metadata.analysis_completeness}",
@@ -1673,6 +1846,15 @@ def prepare_report_for_display(document):
         elif section.section_id == "executive_summary":
             content_blocks = (
                 *content_blocks,
+                *(
+                    (
+                        "本報告僅涵蓋原生 TRX 與其他 TRON 資產，不包含本案主要價值"
+                        "資產之完整資金流，因此不得據此決定整體金流追蹤優先順序或"
+                        "確認下車點。",
+                    )
+                    if principal_missing
+                    else ()
+                ),
                 "本報告已分析目標地址本身及第一層主要來源與去向；尚未對所有主要去向"
                 "展開下一層。尚未完成 transaction-level path tracing。",
                 "本報告屬目標地址剖繪及第一層資金流分析，尚未對主要去向執行完整"
@@ -1834,7 +2016,7 @@ def prepare_report_for_display(document):
     )
     return replace(
         document,
-        title="地址剖繪與第一層資金流分析報告",
+        title=report_title,
         metadata=replace(
             document.metadata,
             generated_at=document.metadata.generated_at.astimezone(ZoneInfo(timezone)),

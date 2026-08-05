@@ -248,6 +248,41 @@ def _two_asset_document():
     assert any(OTHER in row for row in table.rows)
 
 
+def _trx_only_document():
+    analysis = deepcopy(_analysis())
+    analysis["statistics"] = {
+        "incoming_amount": {"TRX": Decimal("5243.21")},
+        "outgoing_amount": {"TRX": Decimal("4621.52")},
+        "asset_breakdown": {"TRX": {"transaction_count": 3034}},
+    }
+    analysis["counterparties"] = [{
+        "address": THIRD,
+        "incoming_count": 0,
+        "outgoing_count": 684,
+        "interaction_count": 684,
+        "incoming_amount_by_asset": {"TRX": Decimal("0")},
+        "outgoing_amount_by_asset": {"TRX": Decimal("4112")},
+        "first_seen": "2025-06-02T09:21:48+00:00",
+        "last_seen": "2026-08-04T10:24:57+00:00",
+    }]
+    investigation = deepcopy(_investigation())
+    investigation["structured_metadata"]["assets"] = ["TRX"]
+    investigation["funding"]["sources"] = [{
+        "address": OTHER,
+        "amounts_by_asset": {"TRX": "4860.72"},
+        "share_by_asset": {"TRX": "0.927"},
+        "first_funding": "2025-06-02T09:21:48+00:00",
+        "last_funding": "2026-08-04T10:24:57+00:00",
+    }]
+    investigation["funding"]["top_sources_by_asset"] = {"TRX": [OTHER]}
+    return ReportComposer().compose(
+        analysis,
+        investigation=investigation,
+        target_address=ADDRESS,
+        chain="tron",
+    )
+
+
 def test_06_python_dict_repr_is_absent_from_main_tables():
     rendered = str([table.rows for section in _document().sections for table in section.tables])
     assert "{'" not in rendered
@@ -493,8 +528,14 @@ def test_35_asset_analysis_precedes_address_rankings():
 
 def test_36_usdt_and_trx_are_separate_chapters():
     display = prepare_report_for_display(_two_asset_document())
-    assert _section(display, "asset_analysis_usdt").title == "USDT 分析"
-    assert _section(display, "asset_analysis_trx").title == "TRX 分析"
+    assert (
+        _section(display, "asset_analysis_usdt").title
+        == "USDT 主要價值資產分析"
+    )
+    assert (
+        _section(display, "asset_analysis_trx").title
+        == "TRX 營運資產與費用型對手方分析"
+    )
 
 
 @pytest.mark.parametrize("asset", ("usdt", "trx"))
@@ -937,7 +978,16 @@ def test_60_direction_fact_and_layered_counts_use_report_metadata():
         "FACT-DIRECTION-UNKNOWN-001": "0",
     }
     layers = _section(display, "completeness_layers").tables[0]
-    assert [row[1] for row in layers.rows[:7]] == [
+    values = {row[0]: row[1] for row in layers.rows}
+    assert [
+        values["完整取得交易"],
+        values["原生 TRX"],
+        values["原生 TRX 流入／流出"],
+        values["TRC10／其他資產"],
+        values["TRC10／其他資產流入"],
+        values["微額 TRX 技術性排除"],
+        values["主要資金流與行為分析"],
+    ] == [
         "3,099", "3,034", "2,345／689", "65", "65", "2,316", "718"
     ]
 
@@ -1113,12 +1163,14 @@ def test_70_key_address_table_is_complete_and_trace_prioritized():
         "調查角色",
         "完整地址（地址編號）",
         "資產",
-        "金額／次數",
+        "流入／流出金額",
+        "交易次數",
         "標籤狀態",
         "追蹤優先級",
+        "優先理由",
     )
     assert any("調查標的" in row[0] and ADDRESS in row[1] for row in table.rows)
-    assert any("後續追蹤優先地址" in row[0] for row in table.rows)
+    assert any("主要價值資產" in row[7] for row in table.rows)
     assert all("…" not in row[1] for row in table.rows)
 
 
@@ -1137,3 +1189,69 @@ def test_71_report_is_explicitly_first_hop_not_off_ramp_confirmation():
     assert "來源與去向並列僅為排名關聯摘要" in rendered
     assert "已確認最終下車點" not in rendered
     assert "已完成多層追蹤" not in rendered
+
+
+def test_72_principal_value_addresses_precede_operational_addresses():
+    table = next(
+        table
+        for table in _section(
+            prepare_report_for_display(_two_asset_document()),
+            "key_addresses",
+        ).tables
+        if table.table_id == "key_address_summary"
+    )
+    usdt_index = next(
+        index for index, row in enumerate(table.rows) if row[2] == "USDT"
+    )
+    trx_index = next(
+        index for index, row in enumerate(table.rows) if row[2] == "TRX"
+    )
+    assert usdt_index < trx_index
+    assert table.rows[trx_index][6] == "營運型"
+
+
+def test_73_core_address_table_is_bounded_and_not_address_id_sorted():
+    table = next(
+        table
+        for table in _section(
+            prepare_report_for_display(_two_asset_document()),
+            "key_addresses",
+        ).tables
+        if table.table_id == "key_address_summary"
+    )
+    assert 1 <= len(table.rows) <= 15
+    priorities = [row[6] for row in table.rows]
+    assert priorities.index("中") < priorities.index("營運型")
+
+
+def test_74_trx_only_report_is_downgraded_and_operational():
+    document = _trx_only_document()
+    assert document.metadata.scope_assets == ("TRX",)
+    assert document.metadata.principal_assets == ("USDT",)
+    assert document.metadata.principal_asset_coverage == "missing"
+    assert document.metadata.full_address_profile is False
+    assert document.metadata.first_hop_fund_flow_complete is False
+    assert document.metadata.off_ramp_analysis_available is False
+
+    display = prepare_report_for_display(document)
+    assert display.title == "TRX 子資產分析與交易對手概覽"
+    assert (
+        _section(display, "asset_analysis_trx").title
+        == "TRX 營運資產與費用型對手方分析"
+    )
+    rendered = str(display.sections)
+    assert "不包含本案主要價值資產之完整資金流" in rendered
+    assert "不等同主要價值資產下車點" in rendered
+    assert "已識別下車點" not in rendered
+
+
+def test_75_core_address_section_is_before_completeness_and_assets():
+    display = prepare_report_for_display(_trx_only_document())
+    ids = [
+        section.section_id
+        for section in display.sections
+    ]
+    assert ids.index("target") < ids.index("key_addresses")
+    assert ids.index("key_addresses") < ids.index("completeness")
+    assert ids.index("key_addresses") < ids.index("asset_flows")
+    assert _section(display, "key_addresses").title == "核心地址對照表"
