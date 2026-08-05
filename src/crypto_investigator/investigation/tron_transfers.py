@@ -63,15 +63,6 @@ class TronTransferAssessment:
     reversible: bool = True
 
 
-_PROMOTIONAL_AMOUNTS = {
-    Decimal("8888.88"),
-    Decimal("4444.44"),
-    Decimal("4444.444444"),
-    Decimal("888.88"),
-    Decimal("888.8"),
-    Decimal("888"),
-    Decimal("999.999999"),
-}
 _PROMOTIONAL_TERMS = re.compile(
     r"(https?://|www\.|telegram|t\.me|claim|reward|airdrop|bonus|"
     r"wallet\s*validation|connect\s*wallet|approval)",
@@ -118,17 +109,16 @@ def classify_tron_transfer(
         reasons.append("system_or_reward_contract")
         included = False
         confidence = "high"
-    elif transaction.transaction_type not in {
-        TransactionType.NATIVE_TRANSFER,
-        TransactionType.UNKNOWN,
-    } and contract_type != "TransferContract":
+    elif (
+        contract_type != "TransferContract"
+        or transaction.asset_symbol != "TRX"
+        or transaction.transaction_type is not TransactionType.NATIVE_TRANSFER
+    ):
         classification = TronTransferClassification.CONTRACT_RELATED
-        reasons.append("not_plain_value_transfer")
+        reasons.append("not_native_trx_transfer")
         included = False
-        confidence = "medium"
+        confidence = "high"
     else:
-        if amount in _PROMOTIONAL_AMOUNTS:
-            reasons.append("salient_fixed_amount")
         if (signals.same_amount_source_count or 0) >= 2:
             reasons.append("same_amount_multiple_sources")
         if (signals.same_amount_recipient_count or 0) >= 20:
@@ -153,13 +143,9 @@ def classify_tron_transfer(
             classification = TronTransferClassification.PHISHING_CANDIDATE
             included = False
             confidence = "medium"
-        elif "salient_fixed_amount" in reasons and any(
+        elif any(
             code in reasons
-            for code in (
-                "same_amount_multiple_sources",
-                "same_amount_high_fanout",
-                "sender_high_fanout",
-            )
+            for code in ("same_amount_high_fanout", "sender_high_fanout")
         ):
             classification = TronTransferClassification.PROMOTIONAL_CANDIDATE
             included = False

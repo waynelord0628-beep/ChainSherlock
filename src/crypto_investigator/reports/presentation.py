@@ -11,10 +11,6 @@ from crypto_investigator.reports.formatting import (
     format_duration,
     format_percent,
 )
-from crypto_investigator.reports.forensic_artifacts import (
-    suspicious_trx_candidates,
-    trx_reconciliation,
-)
 from crypto_investigator.reports.models import ReportSection, ReportTable
 
 
@@ -505,9 +501,6 @@ def _asset_first_sections(document, registry, material_assets):
     sections = []
     all_ranking_rows = []
     path_rows = []
-    trx_candidates = suspicious_trx_candidates(document)
-    quarantined_trx_senders = {item["sender"] for item in trx_candidates}
-    trx_totals = trx_reconciliation(document)
     for asset_index, asset in enumerate(assets):
         asset_row = next(
             (
@@ -530,11 +523,7 @@ def _asset_first_sections(document, registry, material_assets):
             row for row in (funding.rows if funding else ())
             if len(row) >= 7 and str(row[1]) == asset
         ]
-        source_rows = [
-            row
-            for row in all_source_rows
-            if asset != "TRX" or str(row[2]) not in quarantined_trx_senders
-        ]
+        source_rows = all_source_rows
         source_rows.sort(
             key=lambda row: (
                 -_number(row[3]),
@@ -707,56 +696,6 @@ def _asset_first_sections(document, registry, material_assets):
                 ),
             ),
         ]
-        if asset == "TRX":
-            tables.insert(
-                1,
-                ReportTable(
-                    "trx_flow_reconciliation",
-                    "TRX 鏈上、重要與隔離流入",
-                    ("分類", "金額", "狀態", "限制"),
-                    (
-                        ("鏈上總流入", _display_amount_2(trx_totals["gross_on_chain_inflow"]), "完整歷史彙總", ""),
-                        ("重要資金流入", _display_amount_2(trx_totals["final_material_inflow"]), "候選隔離後", "尚待人工覆核"),
-                        ("宣傳型轉入候選", _display_amount_2(trx_totals["promotional_candidate"]), "候選", "未確認為釣魚或詐騙"),
-                        ("尚待人工覆核", _display_amount_2(trx_totals["promotional_candidate"]), "未審閱", "可逆並可重新納入"),
-                    ),
-                ),
-            )
-            candidate_rows = tuple(
-                (
-                    _address_reference(str(item["sender"]), registry),
-                    _display_amount_2(item["normalized_amount"]),
-                    str(item["timestamp"]),
-                    str(item["same_amount_source_count"]),
-                    f"CAND-TRX-{candidate_index:03d}",
-                )
-                for candidate_index, item in enumerate(trx_candidates, 1)
-            )
-            tables.append(
-                ReportTable(
-                    "suspicious_trx_transfers",
-                    "TRX 可疑轉入候選（金額與時間）",
-                    ("地址參照", "金額", "交易時間", "同額來源數", "候選編號"),
-                    candidate_rows,
-                )
-            )
-            tables.append(
-                ReportTable(
-                    "suspicious_trx_review",
-                    "TRX 可疑轉入候選（分類與覆核）",
-                    ("候選編號", "候選類型", "原因", "信心", "人工審閱"),
-                    tuple(
-                        (
-                            f"CAND-TRX-{candidate_index:03d}",
-                            "宣傳型轉入候選",
-                            "醒目固定金額且由多個來源地址出現同額轉入",
-                            "中",
-                            "尚未審閱",
-                        )
-                        for candidate_index, _item in enumerate(trx_candidates, 1)
-                    ),
-                )
-            )
         sections.append(
             ReportSection(
                 f"asset_analysis_{asset.casefold()}",

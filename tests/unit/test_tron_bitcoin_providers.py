@@ -45,6 +45,39 @@ async def test_trongrid_trx_parsing_and_base58_preservation():
 
 @pytest.mark.asyncio
 @respx.mock
+async def test_trongrid_transfer_asset_contract_is_not_labeled_trx():
+    item = {
+        "txID": "asset-tx",
+        "block_timestamp": 1767225600000,
+        "ret": [{"contractRet": "SUCCESS"}],
+        "raw_data": {
+            "contract": [
+                {
+                    "type": "TransferAssetContract",
+                    "parameter": {
+                        "value": {
+                            "owner_address": TRON_FROM,
+                            "to_address": TRON_TO,
+                            "amount": 8888880000,
+                            "asset_name": "48583238636f6d",
+                        }
+                    },
+                }
+            ]
+        },
+    }
+    respx.get(
+        f"https://api.trongrid.io/v1/accounts/{TRON_FROM}/transactions"
+    ).mock(return_value=httpx.Response(200, json={"data": [item], "meta": {}}))
+    provider = TronGridProvider(client=client("trongrid", Chain.TRON))
+    result = await provider.get_address_transactions(TRON_FROM)
+    assert result.records[0].asset_symbol == "HX28com"
+    assert result.records[0].transaction_type == "token_transfer"
+    assert result.records[0].metadata["contract_type"] == "TransferAssetContract"
+
+
+@pytest.mark.asyncio
+@respx.mock
 async def test_trongrid_trc20_parsing():
     item = {
         "transaction_id": "abc",

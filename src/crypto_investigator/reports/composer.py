@@ -132,13 +132,17 @@ class ReportComposer:
             if investigation_data
             else {}
         )
+        trc10_assets = frozenset(
+            str(item)
+            for item in metadata_source.get("trc10_asset_symbols", ())
+        )
         asset_presentations = classify_assets(
             data.get("statistics", {}).get("incoming_amount", {}),
             data.get("statistics", {}).get("outgoing_amount", {}),
             data.get("statistics", {}).get("asset_breakdown", {}),
             materiality_thresholds=materiality_thresholds,
             include_assets=include_assets,
-            exclude_assets=exclude_assets,
+            exclude_assets=exclude_assets | trc10_assets,
         )
         rejected_count = len(rejected_records) or int(
             metadata_source.get("rejected_record_count", 0)
@@ -396,7 +400,31 @@ class ReportComposer:
             first_label, last_label = "目前資料最早時間", "目前資料最晚時間"
         pipeline = self._pipeline_counts(data, graph, investigation, time_scope)
         material_assets = tuple(item for item in asset_presentations if item.material)
-        appendix_assets = tuple(item for item in asset_presentations if not item.material)
+        trc10_assets = frozenset(
+            str(item)
+            for item in data.get("metadata", {}).get("trc10_asset_symbols", ())
+        )
+        appendix_assets = tuple(
+            item
+            for item in asset_presentations
+            if not item.material and item.asset not in trc10_assets
+        )
+        micro_excluded_count = int(
+            data.get("metadata", {}).get("micro_trx_excluded_count", 0)
+        )
+        micro_excluded_amount = str(
+            data.get("metadata", {}).get("micro_trx_excluded_amount", "0")
+        )
+        micro_threshold = str(
+            data.get("metadata", {}).get("trx_dust_threshold", "0.0001")
+        )
+        micro_summary = (
+            "另有低於重要性門檻之微額轉入，已保留於原始 Evidence，"
+            "惟未納入主要資金流與行為模式分析。"
+        )
+        trc10_summary = tuple(
+            data.get("metadata", {}).get("trc10_other_asset_summary", ())
+        )
         sections = [
             ReportSection(
                 "cover",
@@ -415,8 +443,11 @@ class ReportComposer:
                 2,
                 (
                     scope_description,
-                    f"Analysis 使用 {summary.get('transaction_count', 0)} 筆正規化交易。",
+                    f"完整交易統計共 {summary.get('transaction_count', 0)} 筆。",
+                    f"主要資金流與行為分析使用 "
+                    f"{data.get('metadata', {}).get('analysis_record_count', summary.get('transaction_count', 0))} 筆。",
                     f"資料完整度：{completeness}。",
+                    *((micro_summary,) if micro_excluded_count else ()),
                 ),
             ),
             ReportSection(
@@ -556,6 +587,85 @@ class ReportComposer:
                             appendix_assets, appendix=True
                         ),
                     ),
+                )
+            )
+        if trc10_summary:
+            class_labels = {
+                "advertisement_token_candidate": "Advertisement Token Candidate",
+                "spam_token_candidate": "Spam Token Candidate",
+                "unknown_trc10_asset": "Unknown TRC10 Asset",
+            }
+            sections.append(
+                ReportSection(
+                    "trc10_other_assets",
+                    "TRC10／其他資產轉入摘要",
+                    89,
+                    (
+                        "下列項目均為 TransferAssetContract，未納入原生 TRX "
+                        "統計、排行或行為模式；候選分類不代表已確認為詐騙或釣魚。",
+                    ),
+                    tables=(
+                        ReportTable(
+                            "trc10_other_asset_summary",
+                            "TRC10／Other Asset Transfers",
+                            (
+                                "資產／Symbol",
+                                "交易筆數",
+                                "流入數量",
+                                "來源地址數",
+                                "候選類型",
+                                "信心",
+                                "人工審閱",
+                            ),
+                            tuple(
+                                (
+                                    str(item.get("symbol", "unknown_tron_asset")),
+                                    str(item.get("transaction_count", 0)),
+                                    format_amount(item.get("incoming_amount", 0)),
+                                    str(item.get("source_address_count", 0)),
+                                    class_labels.get(
+                                        str(
+                                            item.get(
+                                                "candidate_classification",
+                                                "unknown_trc10_asset",
+                                            )
+                                        ),
+                                        "Unknown TRC10 Asset",
+                                    ),
+                                    str(item.get("confidence", "low")),
+                                    "尚未審閱",
+                                )
+                                for item in trc10_summary[:10]
+                            ),
+                        ),
+                    ),
+                    section_type="technical_appendix",
+                )
+            )
+        if micro_excluded_count:
+            sections.append(
+                ReportSection(
+                    "dust_exclusion_summary",
+                    "技術附錄：微額 TRX 排除摘要",
+                    91,
+                    (),
+                    tables=(
+                        self._mapping_table(
+                            "dust_exclusion_summary",
+                            "微額 TRX 排除摘要",
+                            {
+                                "排除筆數": micro_excluded_count,
+                                "排除合計金額": micro_excluded_amount,
+                                "materiality threshold": micro_threshold,
+                                "exclusion rule": (
+                                    "native_trx_below_materiality_threshold"
+                                ),
+                                "reversible": True,
+                                "review status": "not_reviewed",
+                            },
+                        ),
+                    ),
+                    section_type="technical_appendix",
                 )
             )
         if counterparties:

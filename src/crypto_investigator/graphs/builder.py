@@ -91,7 +91,12 @@ class GraphBuilder:
         metadata = GraphMetadata(
             target_address=target,
             chain=chain,
-            source_transaction_count=analysis.summary.transaction_count,
+            source_transaction_count=int(
+                analysis.metadata.get(
+                    "analysis_record_count",
+                    analysis.summary.transaction_count,
+                )
+            ),
             included_node_count=len(nodes),
             included_edge_count=len(edges),
             warnings=tuple(warnings),

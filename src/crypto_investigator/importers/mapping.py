@@ -22,14 +22,22 @@ ALIASES: dict[str, tuple[str, ...]] = {
     ),
     "amount": ("amount", "value", "quantity", "金額"),
     "asset_symbol": ("asset", "asset_symbol", "symbol", "currency", "token"),
-    "timestamp": ("timestamp", "time", "datetime", "日期"),
+    "timestamp": (
+        "timestamp",
+        "time",
+        "datetime",
+        "日期",
+        "blockTime(UTC)",
+    ),
     "tx_hash": ("hash", "tx_hash", "txid", "transaction_hash"),
     "chain": ("chain", "network", "blockchain"),
-    "block_number": ("block_number", "block", "block_height"),
+    "block_number": ("block_number", "block", "block_height", "blockHeight"),
     "asset_contract": ("asset_contract", "token_contract", "contract_address"),
     "decimals": ("decimals", "token_decimals"),
     "direction": ("direction",),
     "transaction_type": ("transaction_type", "type"),
+    "contract_type": ("contract_type", "contractType"),
+    "success": ("success", "status"),
 }
 
 

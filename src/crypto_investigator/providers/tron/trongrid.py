@@ -169,6 +169,15 @@ class TronGridProvider(BaseProvider):
         value = ((contract.get("parameter") or {}).get("value") or {})
         owner = self._address(value.get("owner_address"))
         recipient = self._address(value.get("to_address"))
+        if contract_type == "TransferContract":
+            asset_symbol = "TRX"
+            transaction_type = "native_transfer"
+        elif contract_type == "TransferAssetContract":
+            asset_symbol = self._asset_identifier(value.get("asset_name"))
+            transaction_type = "token_transfer"
+        else:
+            asset_symbol = "unknown_tron_asset"
+            transaction_type = "unknown"
         success = all(
             result.get("contractRet") == "SUCCESS"
             for result in item.get("ret", [])
@@ -181,14 +190,36 @@ class TronGridProvider(BaseProvider):
             timestamp=self._millis(item.get("block_timestamp") or (item.get("raw_data") or {}).get("timestamp")),
             from_address=owner,
             to_address=recipient,
-            asset_symbol="TRX",
+            asset_symbol=asset_symbol,
             amount_raw=str(value.get("amount", "0")),
             decimals=6,
             success=success,
-            transaction_type="native_transfer",
+            transaction_type=transaction_type,
             metadata={"contract_type": contract_type},
             raw_reference=f"trx:{item['txID']}",
         )
+
+    @staticmethod
+    def _asset_identifier(value: Any) -> str:
+        if value is None:
+            return "unknown_tron_asset"
+        if isinstance(value, bytes):
+            try:
+                decoded = value.decode("utf-8").strip()
+            except UnicodeDecodeError:
+                decoded = ""
+            return decoded or "unknown_tron_asset"
+        text = str(value).strip()
+        if not text:
+            return "unknown_tron_asset"
+        try:
+            if len(text) % 2 == 0:
+                decoded = bytes.fromhex(text).decode("utf-8").strip()
+                if decoded:
+                    return decoded
+        except (ValueError, UnicodeDecodeError):
+            pass
+        return text
 
     def _parse_trc20(self, item: dict[str, Any]) -> ProviderRawRecord:
         token = item.get("token_info") or {}

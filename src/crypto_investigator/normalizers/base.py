@@ -26,6 +26,11 @@ class BaseNormalizer(ABC):
     chain: Chain
 
     def normalize(self, record: Mapping[str, Any]) -> Transaction:
+        source_metadata = record.get("source_metadata")
+        metadata = dict(source_metadata) if isinstance(source_metadata, Mapping) else {}
+        if record.get("contract_type") is not None:
+            metadata["contract_type"] = str(record["contract_type"]).strip()
+        metadata["source_record"] = dict(record)
         return Transaction(
             chain=self.chain,
             tx_hash=str(record["tx_hash"]).strip(),
@@ -45,8 +50,8 @@ class BaseNormalizer(ABC):
                 record.get("transaction_type"),
                 TransactionType.UNKNOWN,
             ),
-            success=record.get("success"),
-            metadata=Metadata({"source_record": dict(record)}),
+            success=self._success(record.get("success")),
+            metadata=Metadata(metadata),
         )
 
     @abstractmethod
@@ -64,6 +69,17 @@ class BaseNormalizer(ABC):
         if value is None or not str(value).strip():
             return None
         return int(value)
+
+    @staticmethod
+    def _success(value: Any) -> bool | None:
+        if value is None or not str(value).strip():
+            return None
+        normalized = str(value).strip().casefold()
+        if normalized in {"true", "1", "success", "succeeded", "ok"}:
+            return True
+        if normalized in {"false", "0", "failed", "failure", "reverted"}:
+            return False
+        return None
 
     @staticmethod
     def _timestamp(value: Any) -> datetime | None:

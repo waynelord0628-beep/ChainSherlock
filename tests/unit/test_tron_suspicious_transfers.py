@@ -33,20 +33,19 @@ def transaction(amount="8888.88", *, metadata=None, success=True):
     )
 
 
-def test_8888_amount_alone_is_not_confirmed_phishing():
+def test_8888_native_amount_alone_is_normal_value_transfer():
     result = classify_tron_transfer(transaction())
-    assert result.classification is TronTransferClassification.PROMOTIONAL_CANDIDATE
-    assert result.confidence == "low"
+    assert result.classification is TronTransferClassification.NORMAL_VALUE_TRANSFER
     assert result.included_in_fund_flow is True
 
 
-def test_same_amount_multiple_sources_quarantines_candidate():
+def test_same_amount_multiple_sources_alone_does_not_quarantine():
     result = classify_tron_transfer(
         transaction(),
         TronTransferSignals(same_amount_source_count=2),
     )
     assert result.classification is TronTransferClassification.PROMOTIONAL_CANDIDATE
-    assert result.included_in_fund_flow is False
+    assert result.included_in_fund_flow is True
     assert "same_amount_multiple_sources" in result.reason_codes
 
 
@@ -66,7 +65,10 @@ def test_high_fanout_increases_suspicious_signals():
 def test_url_memo_adds_promotional_or_phishing_signal():
     result = classify_tron_transfer(
         transaction(),
-        TronTransferSignals(memo_or_data="https://example.invalid claim reward"),
+        TronTransferSignals(
+            memo_or_data="https://example.invalid claim reward",
+            prior_interaction=False,
+        ),
     )
     assert "promotional_or_phishing_text" in result.reason_codes
     assert result.classification is TronTransferClassification.PHISHING_CANDIDATE
@@ -78,6 +80,17 @@ def test_resource_contract_is_excluded_from_material_flow():
     )
     assert result.classification is TronTransferClassification.RESOURCE_RELATED
     assert result.included_in_fund_flow is False
+
+
+def test_transfer_asset_contract_is_not_native_trx():
+    result = classify_tron_transfer(
+        transaction(
+            metadata={"contract_type": "TransferAssetContract"}
+        )
+    )
+    assert result.classification is TronTransferClassification.CONTRACT_RELATED
+    assert result.included_in_fund_flow is False
+    assert "not_native_trx_transfer" in result.reason_codes
 
 
 def test_failed_transaction_is_not_material_flow():

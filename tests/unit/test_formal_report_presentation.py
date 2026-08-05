@@ -832,31 +832,23 @@ def test_53_candidate_flow_is_not_presented_as_traced_path():
     assert "來源與去向排名組合" in rendered
 
 
-def test_54_repeated_promotional_trx_is_quarantined_but_reversible():
+def test_54_aggregate_amounts_are_not_used_to_infer_trx_candidates():
     document = _repeated_promotional_document()
     candidates = suspicious_trx_candidates(document)
-    assert len(candidates) == 2
-    assert all(item["included_in_fund_flow"] is False for item in candidates)
-    assert all(item["reversible"] is True for item in candidates)
+    assert candidates == ()
     reconciliation = trx_reconciliation(document)
     assert Decimal(reconciliation["gross_on_chain_inflow"]) == Decimal("5000")
-    assert Decimal(reconciliation["promotional_candidate"]) == Decimal("17777.76")
+    assert Decimal(reconciliation["promotional_candidate"]) == Decimal("0")
+    assert Decimal(reconciliation["final_material_inflow"]) == Decimal("5000")
 
 
-def test_55_suspicious_trx_table_is_split_for_readability():
+def test_55_report_does_not_create_suspicious_trx_table_from_amounts():
     display = prepare_report_for_display(_repeated_promotional_document())
     trx = _section(display, "asset_analysis_trx")
-    primary = next(
-        table for table in trx.tables
-        if table.table_id == "suspicious_trx_transfers"
+    assert all(
+        not table.table_id.startswith("suspicious_trx")
+        for table in trx.tables
     )
-    review = next(
-        table for table in trx.tables
-        if table.table_id == "suspicious_trx_review"
-    )
-    assert len(primary.columns) == 5
-    assert len(review.columns) == 5
-    assert all(len(row) == 5 for row in (*primary.rows, *review.rows))
 
 
 def test_56_operation_stage_uses_chinese_confidence_and_bounded_assets():

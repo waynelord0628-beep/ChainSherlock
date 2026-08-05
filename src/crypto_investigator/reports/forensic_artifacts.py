@@ -7,16 +7,6 @@ from pathlib import Path
 from crypto_investigator.reports.models import ReportDocument
 
 
-_PROMOTIONAL_AMOUNTS = {
-    Decimal("8888.88"),
-    Decimal("4444.44"),
-    Decimal("888.88"),
-    Decimal("888.80"),
-    Decimal("888.00"),
-    Decimal("1000.00"),
-}
-
-
 def _table(document: ReportDocument, table_id: str):
     return next(
         (
@@ -30,59 +20,8 @@ def _table(document: ReportDocument, table_id: str):
 
 
 def suspicious_trx_candidates(document: ReportDocument) -> tuple[dict, ...]:
-    """Create reversible aggregate candidates when tx-level artifacts are absent."""
-    funding = _table(document, "funding_sources")
-    rows = [
-        row
-        for row in (funding.rows if funding else ())
-        if len(row) >= 7 and str(row[1]).upper() == "TRX"
-    ]
-    grouped = {}
-    for row in rows:
-        try:
-            normalized = Decimal(str(row[3])).quantize(Decimal("0.01"))
-        except InvalidOperation:
-            continue
-        grouped.setdefault(normalized, []).append(row)
-    candidates = []
-    for amount, same_amount_rows in sorted(grouped.items(), reverse=True):
-        if amount not in _PROMOTIONAL_AMOUNTS or len(same_amount_rows) < 2:
-            continue
-        for row in same_amount_rows:
-            candidates.append(
-                {
-                    "txid": "unavailable_in_aggregate_artifact",
-                    "block": None,
-                    "timestamp": str(row[5]),
-                    "sender": str(row[2]),
-                    "receiver": document.metadata.target_address,
-                    "contract_type": "unavailable_in_aggregate_artifact",
-                    "raw_amount": str(row[3]),
-                    "normalized_amount": str(amount),
-                    "result_status": "unavailable_in_aggregate_artifact",
-                    "memo_or_data": None,
-                    "sender_outbound_recipient_count": None,
-                    "same_amount_recipient_count": None,
-                    "same_amount_source_count": len(same_amount_rows),
-                    "same_amount_frequency": len(same_amount_rows),
-                    "external_label_status": "not_available",
-                    "classification": "promotional_candidate",
-                    "reason_codes": [
-                        "salient_fixed_amount",
-                        "same_amount_multiple_sources",
-                    ],
-                    "confidence": "medium",
-                    "source_evidence": ["funding_sources"],
-                    "human_review_status": "not_reviewed",
-                    "included_in_fund_flow": False,
-                    "reversible": True,
-                    "limitation": (
-                        "正式 artifact 僅保存彙總列；txid、fan-out、memo 與 contract "
-                        "metadata 無法離線還原，候選仍待人工覆核。"
-                    ),
-                }
-            )
-    return tuple(candidates)
+    """Deprecated aggregate inference: asset identity requires contract evidence."""
+    return ()
 
 
 def trx_reconciliation(document: ReportDocument) -> dict:
@@ -104,14 +43,11 @@ def trx_reconciliation(document: ReportDocument) -> dict:
     gross_inflow = amount(trx[1]) if trx else Decimal(0)
     gross_outflow = amount(trx[2]) if trx else Decimal(0)
     candidates = suspicious_trx_candidates(document)
-    quarantined = sum(
-        (Decimal(item["normalized_amount"]) for item in candidates),
-        Decimal(0),
-    )
-    material = gross_inflow - quarantined
+    quarantined = Decimal(0)
+    material = gross_inflow
     return {
         "schema_version": 1,
-        "basis": "aggregate_funding_rows",
+        "basis": "strict_native_trx_only",
         "gross_on_chain_inflow": str(gross_inflow),
         "gross_on_chain_outflow": str(gross_outflow),
         "normal_value_transfer": "unavailable_without_tx_level_artifact",
@@ -130,8 +66,8 @@ def trx_reconciliation(document: ReportDocument) -> dict:
         },
         "limitations": [
             "外部 baseline 僅供比較，未用於覆寫計算。",
-            "正式 6,935 筆 artifact 未保存逐筆 TRON contract、memo、fan-out 與 txid。",
-            "Material inflow 為可逆候選隔離結果，尚未經人工確認。",
+            "原生 TRX 僅接受 symbol=TRX 且 contractType=TransferContract。",
+            "TRC10／TRC20／未知 TRON 資產不得納入此 reconciliation。",
         ],
     }
 
