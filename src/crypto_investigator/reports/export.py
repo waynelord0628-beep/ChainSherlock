@@ -3,6 +3,7 @@ import json
 from pathlib import Path
 
 from crypto_investigator.reports.docx_exporter import DocxReportExporter
+from crypto_investigator.reports.chart_assets import attach_deterministic_chart_assets
 from crypto_investigator.reports.evidence import EvidenceManifest
 from crypto_investigator.reports.errors import ReportExportError
 from crypto_investigator.reports.formatting import safe_output_path, validate_output_directory
@@ -67,7 +68,10 @@ class ReportExportCoordinator:
             writer.writerows(address_registry_rows(document))
         files["address_registry"] = registry_path.name
         files.update(write_forensic_artifacts(document, root))
-        display_document = prepare_report_for_display(document)
+        display_document = attach_deterministic_chart_assets(
+            prepare_report_for_display(document),
+            root,
+        )
 
         for name in selected:
             filename, exporter_type = self.exporters[name]

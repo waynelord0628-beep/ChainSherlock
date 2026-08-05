@@ -2,6 +2,7 @@ from dataclasses import replace
 from datetime import UTC, datetime
 
 from crypto_investigator.reports.forensic_artifacts import write_forensic_artifacts
+from crypto_investigator.reports.chart_assets import attach_deterministic_chart_assets
 from crypto_investigator.reports.models import (
     ReportConclusion,
     ReportDocument,
@@ -13,7 +14,11 @@ from crypto_investigator.reports.productized_first_hop import (
     build_productized_sections,
     normalize_address_registry,
 )
-from crypto_investigator.reports.presentation import format_display_text
+from crypto_investigator.reports.presentation import (
+    address_registry_rows,
+    format_display_text,
+    prepare_report_for_display,
+)
 
 
 TARGET = "TUxHyMSwPWRUGS7PH25VXtsQHUkwZdq95n"
@@ -95,6 +100,9 @@ def _document():
                 "share_of_target_outflow": "0.66",
                 "transaction_count": 10,
                 "evidence_refs": [f"tx-{index}"],
+                "verification_status": "unverified",
+                "onward_data_status": "not_available",
+                "priority": "high",
             }
             for index in range(1, 6)
         ],
@@ -123,11 +131,14 @@ def _document():
     )
 
 
+def _registry(document=None):
+    document = document or _document()
+    return {row[2]: row[0] for row in address_registry_rows(document)}
+
+
 def test_productized_sections_focus_on_usdt_and_trx():
-    sections = build_productized_sections(
-        _document(),
-        {TARGET: "地址-001", SOURCE: "地址-002", DESTINATION: "地址-003"},
-    )
+    document = _document()
+    sections = build_productized_sections(document, _registry(document))
     facts = next(item for item in sections if item.section_id == "product_asset_facts")
     rendered = " ".join(cell for row in facts.tables[0].rows for cell in row)
     assert "USDT" in rendered
@@ -136,7 +147,8 @@ def test_productized_sections_focus_on_usdt_and_trx():
 
 
 def test_productized_amounts_are_rounded_to_two_decimals():
-    sections = build_productized_sections(_document(), {})
+    document = _document()
+    sections = build_productized_sections(document, _registry(document))
     structure = next(
         item for item in sections if item.section_id == "benchmark_usdt_structure"
     )
@@ -147,13 +159,16 @@ def test_productized_amounts_are_rounded_to_two_decimals():
 
 
 def test_only_top_three_first_hop_candidates_become_cards():
-    sections = build_productized_sections(_document(), {})
+    document = _document()
+    sections = build_productized_sections(document, _registry(document))
     candidates = next(item for item in sections if item.section_id == "first_hop_candidates")
     assert len(candidates.tables) == 3
     assert all(len(table.columns) == 2 for table in candidates.tables)
 
 
 def test_front_registry_is_compact_and_separates_role_from_asset():
+    document = _document()
+    snapshot_rows = address_registry_rows(document)
     raw = ReportSection(
         "address_registry",
         "raw",
@@ -163,21 +178,11 @@ def test_front_registry_is_compact_and_separates_role_from_asset():
                 "address_registry_identity",
                 "raw",
                 tuple(str(index) for index in range(7)),
-                (
-                    (
-                        "地址-001",
-                        "TRON",
-                        TARGET,
-                        "未標記",
-                        "候選角色未確認",
-                        "請見正文",
-                        "技術附錄",
-                    ),
-                ),
+                snapshot_rows,
             ),
         ),
     )
-    normalized = normalize_address_registry(raw, _document())
+    normalized = normalize_address_registry(raw, document)
     assert normalized.tables[0].columns == (
         "調查角色",
         "完整地址（地址編號）",
@@ -191,7 +196,8 @@ def test_front_registry_is_compact_and_separates_role_from_asset():
 
 
 def test_usdt_total_nonzero_and_zero_value_counts_are_explicit():
-    sections = build_productized_sections(_document(), {})
+    document = _document()
+    sections = build_productized_sections(document, _registry(document))
     summary = next(
         item for item in sections if item.section_id == "benchmark_usdt_structure"
     )
@@ -202,13 +208,54 @@ def test_usdt_total_nonzero_and_zero_value_counts_are_explicit():
 
 
 def test_three_deterministic_chart_sections_are_present():
-    sections = build_productized_sections(_document(), {})
+    document = _document()
+    sections = build_productized_sections(document, _registry(document))
     ids = {item.section_id for item in sections}
     assert {
         "deterministic_flow_chart",
         "deterministic_monthly_chart",
         "deterministic_destination_chart",
     } <= ids
+
+
+def test_deterministic_charts_are_real_png_assets(tmp_path):
+    document = _document()
+    document = replace(
+        document,
+        sections=build_productized_sections(document, _registry(document)),
+    )
+    rendered = attach_deterministic_chart_assets(document, tmp_path)
+    chart_sections = {
+        item.section_id: item
+        for item in rendered.sections
+        if item.section_id.startswith("deterministic_")
+        and item.section_id.endswith("_chart")
+    }
+    assert len(chart_sections) == 3
+    assert all(not item.tables for item in chart_sections.values())
+    assert all(item.figures[0].path.endswith(".png") for item in chart_sections.values())
+    assert all(
+        (tmp_path / item.figures[0].path).read_bytes().startswith(b"\x89PNG")
+        for item in chart_sections.values()
+    )
+
+
+def test_single_registry_snapshot_prevents_unnumbered_addresses():
+    document = _document()
+    display = prepare_report_for_display(document)
+    rendered = " ".join(
+        cell
+        for section in display.sections
+        for table in section.tables
+        for row in table.rows
+        for cell in row
+    )
+    assert "地址-未編號" not in rendered
+    assert sum(section.section_id == "key_addresses" for section in display.sections) == 1
+    assert not any(
+        section.section_id == "address_registry" for section in display.sections
+    )
+    assert "淨流量 ÷ USDT 流入總額" in display.conclusion.text
 
 
 def test_technical_exclusions_do_not_collapse_to_a_false_zero():
@@ -220,7 +267,7 @@ def test_technical_exclusions_do_not_collapse_to_a_false_zero():
             unclassified_count=3,
         ),
     )
-    sections = build_productized_sections(document, {})
+    sections = build_productized_sections(document, _registry(document))
     technical = next(
         item for item in sections if item.section_id == "technical_exclusions"
     )
@@ -241,7 +288,8 @@ def test_non_material_artifacts_are_external_and_reversible(tmp_path):
 
 
 def test_productized_main_sections_do_not_render_none_or_raw_unknown_enum():
-    sections = build_productized_sections(_document(), {})
+    document = _document()
+    sections = build_productized_sections(document, _registry(document))
     rendered = " ".join(
         [
             *(

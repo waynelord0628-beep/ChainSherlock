@@ -1,5 +1,19 @@
 # Development Progress
 
+## V8 First-Hop final report tuning
+
+- Unified every report address reference against one immutable Address Registry snapshot;
+  report generation now fails safely instead of emitting `地址-未編號`.
+- Consolidated the front-matter address reference into one core-address section while
+  retaining the complete registry in CSV and technical artifacts.
+- Separated primary and secondary roles/assets, generated dynamic Top-N headings, and
+  stated the net-flow calculation denominator explicitly.
+- Replaced text-based bars with deterministic first-hop flow, monthly USDT flow, and
+  leading-destination charts.
+- Strengthened the deterministic conclusion without implying transaction-level tracing,
+  identity attribution, or confirmed off-ramps.
+- Provider calls: 0. AI calls: 0.
+
 ## V8 第一層報告可讀性封版
 
 - 明確區分 USDT 總紀錄、非零資金移轉與零值合約互動。

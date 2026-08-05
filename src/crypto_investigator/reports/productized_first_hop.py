@@ -34,7 +34,9 @@ def _bar(value, maximum, width: int = 18) -> str:
 
 
 def _address_ref(address: str, registry: Mapping[str, str], *, full=False) -> str:
-    display_id = registry.get(address, "地址-未編號")
+    if address not in registry:
+        raise ValueError("Address registry snapshot is incomplete")
+    display_id = registry[address]
     if full:
         return f"{address}（{display_id}）"
     return f"{display_id}\n{abbreviate_identifier(address)}"
@@ -470,8 +472,8 @@ def _insights(document: ReportDocument, registry) -> ReportSection:
     rows.append(
         (
             "OBS-NET-001",
-            f"{asset} 淨流量為 {_amount(net, asset)}，約占總流入 "
-            f"{_percent(retention)}。",
+            f"{asset} 淨流量為 {_amount(net, asset)}；以「淨流量 ÷ "
+            f"{asset} 流入總額」計算，占流入總額 {_percent(retention)}。",
             "收付規模接近",
             "不等同逐筆快速轉出或 FIFO 路徑證明",
         )
@@ -596,7 +598,9 @@ def normalize_address_registry(
     rows = []
     amount_by_address = {}
     for address in addresses:
-        display_id, _chain = identity.get(address, ("地址-未編號", "TRON"))
+        if address not in identity:
+            raise ValueError("Address registry snapshot is incomplete")
+        display_id, _chain = identity[address]
         if address == target:
             rows.append(("調查標的", f"{address}（{display_id}）", "—", "—", "高"))
             amount_by_address[address] = Decimal("0")

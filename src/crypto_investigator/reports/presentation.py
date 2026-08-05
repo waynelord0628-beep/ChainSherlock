@@ -478,7 +478,22 @@ def address_registry_rows(document):
         )
         for match in IDENTIFIER.finditer(str(value))
     }
+    product = document.metadata.first_hop_product or {}
+    for asset in product.get("assets", ()):
+        for group in ("sources", "destinations"):
+            all_addresses.update(
+                str(item.get("address"))
+                for item in asset.get(group, ())
+                if item.get("address")
+            )
+    all_addresses.update(
+        str(item.get("address"))
+        for item in product.get("first_hop_candidates", ())
+        if item.get("address")
+    )
     target = document.metadata.target_address
+    if target:
+        all_addresses.add(target)
     ordered = []
 
     def add(address):
@@ -596,6 +611,29 @@ def _display_amount_2(value) -> str:
         return str(value)
     rounded = number.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
     return f"{rounded:,.2f}"
+
+
+def _product_conclusion_text(document) -> str:
+    principal = (document.metadata.first_hop_product or {}).get(
+        "principal_asset"
+    ) or {}
+    inflow = _number(principal.get("incoming_total", 0))
+    net = _number(principal.get("net_flow", 0))
+    retention = (net / inflow * 100) if inflow else Decimal("0")
+    source_share = _number(
+        (principal.get("source_concentration") or {}).get("top_1_share", 0)
+    ) * 100
+    destination_share = _number(
+        (principal.get("destination_concentration") or {}).get("top_1_share", 0)
+    ) * 100
+    return (
+        "該地址於分析期間呈現高額 USDT 雙向周轉；最大來源占流入"
+        f" {source_share:.2f}%，最大第一層去向占流出 {destination_share:.2f}%。"
+        f"淨流量為 {_display_amount_2(net)} USDT，以「淨流量 ÷ USDT "
+        f"流入總額」計算為 {retention:.2f}%。整體較符合資金承接、集中與"
+        "再分配節點候選，但目前只完成第一層分析；現有資料不足以確認"
+        "地址實體身分、交易目的、最終下車點或資金最終受益人。"
+    )
 
 
 def _find_table(document, table_id):
@@ -980,7 +1018,7 @@ def _asset_first_sections(document, registry, material_assets):
             ),
             ReportTable(
                 f"outgoing_rank_{asset.casefold()}",
-                f"{asset} 主要資金去向 Top 10（依流出金額）",
+                f"{asset} 主要資金去向 Top {len(outgoing_rows)}（依流出金額）",
                 ("排名", "地址參照", "方向", "交易次數", "流出金額"),
                 tuple(row[:5] for row in outgoing_rows),
             ),
@@ -995,7 +1033,7 @@ def _asset_first_sections(document, registry, material_assets):
             ),
             ReportTable(
                 f"frequency_rank_{asset.casefold()}",
-                f"{asset} 高頻交易對手 Top 10（依交易次數）",
+                f"{asset} 高頻交易對手 Top {len(frequent_rows)}（依交易次數）",
                 ("排名", "地址參照", "方向", "交易次數", "流出金額"),
                 tuple(row[:5] for row in frequent_rows),
             ),
@@ -1039,7 +1077,8 @@ def _asset_first_sections(document, registry, material_assets):
                         else f"{asset} 不得與主要價值資產使用同一追蹤排行。"
                     ),
                     f"以下依序呈現 {asset} 的來源、去向及互動頻率排名；三種排名不得混為同一結論。",
-                    "地址編號是全報告固定索引，不等於本表排名；排名以最左欄為準。重要地址已於前段對照，其餘完整地址保留於後段地址對照表及 address_registry.csv。",
+                    "地址編號是全報告固定索引，不等於本表排名；排名以最左欄為準。"
+                    "完整地址與固定編號均保存於 address_registry.csv。",
                 ),
                 tables=tuple(tables),
             )
@@ -1087,17 +1126,35 @@ def _asset_first_sections(document, registry, material_assets):
     def readable_roles(values):
         unique = []
         for value in values:
+            normalized = re.sub(r"\s+\d+$", "", value)
+            if normalized not in unique:
+                unique.append(normalized)
+        if not unique:
+            return "主要：待確認"
+        rendered = f"主要：{unique[0]}"
+        if len(unique) > 1:
+            rendered += f"\n次要：{unique[1]}"
+        return rendered
+
+    def readable_assets(values):
+        unique = []
+        for value in values:
             if value not in unique:
                 unique.append(value)
-        if not unique:
-            return "待確認"
-        return re.sub(r"\s+\d+$", "", unique[0])
+        if not unique or unique == ["—"]:
+            return "主要：—"
+        rendered = f"主要：{unique[0]}"
+        if len(unique) > 1:
+            rendered += f"\n次要：{unique[1]}"
+        return rendered
 
     important_rows = tuple(
         (
             readable_roles(roles),
             _full_address_reference(address, registry),
-            "\n".join(important_address_context.get(address, {}).get("assets", ["—"])),
+            readable_assets(
+                important_address_context.get(address, {}).get("assets", ["—"])
+            ),
             "\n".join(important_address_context.get(address, {}).get("amounts", ["—"])),
             "；".join(
                 important_address_context.get(address, {}).get(
@@ -1642,7 +1699,7 @@ def _reorder_booklet(document, sections, registry, material_assets):
             else section
             for section in base
         ]
-        if registry_tables:
+        if registry_tables and not document.metadata.first_hop_product:
             identity = next(
                 (
                     table
@@ -1768,6 +1825,14 @@ def _reorder_booklet(document, sections, registry, material_assets):
             and document.metadata.first_hop_product
         ):
             section = normalize_address_registry(section, document)
+        if (
+            section.section_id == "conclusion"
+            and document.metadata.first_hop_product
+        ):
+            section = replace(
+                section,
+                content_blocks=(_product_conclusion_text(document),),
+            )
         if (
             section.section_id == "address_pollution_safety"
             and product.get("address_pollution")
@@ -2552,6 +2617,14 @@ def prepare_report_for_display(document):
             for item in document.metadata.first_hop_product.get("asset_roles", ())
             if item.get("asset") in {"USDT", "TRX"}
         )
+    conclusion_text = (
+        f"本次分析範圍共納入 {document.metadata.transaction_count:,} 筆交易；"
+        f"主要資產為 {'、'.join(conclusion_assets) or 'unavailable'}。"
+        "已確認資料事實、規則式觀察與候選解釋均分層呈現；"
+        "地址身分、控制權、交易目的及法律性質仍須外部資料與人工查證。"
+    )
+    if document.metadata.first_hop_product:
+        conclusion_text = _product_conclusion_text(document)
     return replace(
         document,
         title=report_title,
@@ -2563,20 +2636,6 @@ def prepare_report_for_display(document):
         evidence=evidence,
         conclusion=replace(
             document.conclusion,
-            text=(
-                (
-                    "該地址於分析期間呈現高額 USDT 雙向周轉，流出高度集中於"
-                    "少數第一層地址，且淨留存占整體流量比例低，較符合資金承接、"
-                    "集中與再分配節點候選。現有資料尚不足以確認其實體身分、"
-                    "交易目的或最終下車點。"
-                )
-                if document.metadata.first_hop_product
-                else (
-                    f"本次分析範圍共納入 {document.metadata.transaction_count:,} 筆交易；"
-                    f"主要資產為 {'、'.join(conclusion_assets) or 'unavailable'}。"
-                    "已確認資料事實、規則式觀察與候選解釋均分層呈現；"
-                    "地址身分、控制權、交易目的及法律性質仍須外部資料與人工查證。"
-                )
-            ),
+            text=conclusion_text,
         ),
     )

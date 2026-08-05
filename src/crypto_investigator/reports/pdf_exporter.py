@@ -10,6 +10,7 @@ from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.platypus import (
     CondPageBreak,
+    Image,
     KeepTogether,
     PageBreak,
     Paragraph,
@@ -390,6 +391,10 @@ class PdfReportExporter:
                     story.append(PageBreak())
                 if section.section_id == "first_hop_candidates":
                     story.append(CondPageBreak(160 * mm))
+                if section.figures and section.section_id.startswith(
+                    "deterministic_"
+                ):
+                    story.append(CondPageBreak(150 * mm))
                 heading = Paragraph(
                     self._styled_text(section.title, self._latin_font_name),
                     styles["Heading1"],
@@ -399,7 +404,7 @@ class PdfReportExporter:
                 for block_index, block in enumerate(section.content_blocks):
                     block_style = styles["BodyText"]
                     if (
-                        section.tables
+                        (section.tables or section.figures)
                         and block_index == len(section.content_blocks) - 1
                     ):
                         block_style = styles["BodyText"].clone(
@@ -412,6 +417,23 @@ class PdfReportExporter:
                             block_style,
                         )
                     )
+                for figure in section.figures:
+                    figure_path = path.parent / figure.path
+                    if figure_path.suffix.lower() not in {
+                        ".png",
+                        ".jpg",
+                        ".jpeg",
+                    }:
+                        continue
+                    image = Image(str(figure_path))
+                    scale = min(
+                        (165 * mm) / image.imageWidth,
+                        (118 * mm) / image.imageHeight,
+                    )
+                    image.drawWidth = image.imageWidth * scale
+                    image.drawHeight = image.imageHeight * scale
+                    image.hAlign = "CENTER"
+                    story.append(KeepTogether([image, Spacer(1, 3 * mm)]))
                 for table in section.tables:
                     story.append(
                         Paragraph(

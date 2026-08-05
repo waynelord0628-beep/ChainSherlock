@@ -26,6 +26,12 @@
 {% for block in section.content_blocks %}{{ block }}
 
 {% endfor %}
+{% for figure in section.figures %}
+{% if figure.path.lower().endswith(('.png', '.jpg', '.jpeg')) %}
+![{{ figure.description }}]({{ figure.path }})
+
+{% endif %}
+{% endfor %}
 {% for table in section.tables %}
 ### {{ table.title }}
 

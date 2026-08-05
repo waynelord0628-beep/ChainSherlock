@@ -1,5 +1,14 @@
 # Changelog
 
+## Unreleased — First-Hop final report tuning
+
+- Use a single Address Registry snapshot across report sections and exports.
+- Remove duplicate visible core-address tables and clarify primary/secondary roles.
+- Replace textual chart approximations with deterministic image charts in all four formats.
+- Make Top-N labels reflect the actual row count.
+- Clarify the net-flow denominator and strengthen the bounded deterministic conclusion.
+- Remove obsolete references directing readers to a later address table.
+
 ## V8 - First-hop report readability finalization
 
 - Simplified the core address table and removed unsourced transaction-count cells.

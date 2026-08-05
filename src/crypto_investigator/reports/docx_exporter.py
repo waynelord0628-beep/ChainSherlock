@@ -232,6 +232,22 @@ class DocxReportExporter:
                     paragraph.paragraph_format.widow_control = True
                     if report_section.section_id.startswith("ai_"):
                         paragraph.paragraph_format.keep_together = True
+                for figure in report_section.figures:
+                    figure_path = path.parent / figure.path
+                    if figure_path.suffix.lower() not in {
+                        ".png",
+                        ".jpg",
+                        ".jpeg",
+                    }:
+                        continue
+                    paragraph = output.add_paragraph()
+                    paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER
+                    run = paragraph.add_run()
+                    run.add_picture(
+                        str(figure_path),
+                        width=Mm(165),
+                    )
+                    paragraph.paragraph_format.keep_together = True
                 for table_data in report_section.tables:
                     if (
                         report_section.section_id == "key_addresses"

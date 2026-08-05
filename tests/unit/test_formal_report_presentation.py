@@ -1237,10 +1237,10 @@ def test_72_principal_value_addresses_precede_operational_addresses():
         if table.table_id == "key_address_summary"
     )
     usdt_index = next(
-        index for index, row in enumerate(table.rows) if row[2] == "USDT"
+        index for index, row in enumerate(table.rows) if "USDT" in row[2]
     )
     trx_index = next(
-        index for index, row in enumerate(table.rows) if row[2] == "TRX"
+        index for index, row in enumerate(table.rows) if "TRX" in row[2]
     )
     assert usdt_index < trx_index
     assert table.rows[trx_index][4] == "營運型"
@@ -1291,3 +1291,13 @@ def test_75_core_address_section_is_before_completeness_and_assets():
     assert ids.index("key_addresses") < ids.index("completeness")
     assert ids.index("key_addresses") < ids.index("asset_flows")
     assert _section(display, "key_addresses").title == "核心地址對照表"
+def test_first_hop_top_n_titles_use_actual_row_count():
+    display = prepare_report_for_display(_two_asset_document())
+    titles = [
+        table.title
+        for section in display.sections
+        for table in section.tables
+        if "主要資金去向 Top" in table.title
+    ]
+    assert titles
+    assert all("Top 10" not in title for title in titles)
