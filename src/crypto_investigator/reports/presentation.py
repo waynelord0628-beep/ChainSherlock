@@ -48,6 +48,12 @@ def format_display_text(value, timezone: str) -> str:
         "candidate": "候選",
         "batch rule": "批次規則",
         "Deterministic ranking": "規則式排名",
+        "retrieval completeness": "資料取得完整度",
+        "asset classification completeness": "資產分類完整度",
+        "material analysis scope": "主要分析範圍",
+        "review status": "審閱狀態",
+        "not_reviewed": "尚未審閱",
+        "medium": "中",
     }
     for source, target in replacements.items():
         text = re.sub(
@@ -99,17 +105,21 @@ def _row_mapping(table):
 
 
 def _graph_truncated(document) -> bool:
-    if any(item.code == "graph_truncated" for item in document.limitations):
-        return True
-    return any(
-        "graph_truncated" in str(row[0]) and str(row[1]).casefold() == "true"
-        or "交易關係圖因安全上限發生截斷" in str(row[0])
-        for section in document.sections
-        for table in section.tables
-        if table.table_id == "investigation_facts"
-        for row in table.rows
-        if len(row) >= 2
+    graph_section = next(
+        (
+            section
+            for section in document.sections
+            if section.section_id == "graph"
+        ),
+        None,
     )
+    if graph_section is not None:
+        status = " ".join(graph_section.content_blocks)
+        if "截斷：否" in status:
+            return False
+        if "截斷：是" in status:
+            return True
+    return any(item.code == "graph_truncated" for item in document.limitations)
 
 
 def _provider_truncated(document) -> bool:
@@ -135,11 +145,21 @@ def _confirmed_fact_table(document) -> ReportTable:
     rows = (
         ("FACT-SCOPE-001", "分析標的與鏈別", f"{document.metadata.target_address}／{document.metadata.chain}", "analysis.json", completeness, ""),
         ("FACT-COUNT-001", "分析範圍內交易總數", f"{document.metadata.transaction_count:,}", "analysis.json", completeness, f"其中 {summary.get('unclassified_direction_count', '0')} 筆方向未分類"),
-        ("FACT-DIRECTION-001", "流入／流出／未分類筆數", f"{summary.get('incoming_count', '—')}／{summary.get('outgoing_count', '—')}／{summary.get('unclassified_direction_count', '—')}", "analysis.json", completeness, ""),
-        ("FACT-ASSET-USDT-001", "USDT 為主要分析資產", "USDT" if "USDT" in assets else "未列入", "analysis.json", completeness, ""),
+        ("FACT-DIRECTION-001", "流入／流出／未分類筆數", f"{document.metadata.incoming_count:,}／{document.metadata.outgoing_count:,}／{document.metadata.unclassified_count:,}", "analysis.json", completeness, ""),
         ("FACT-ASSET-TRX-001", "TRX 為主要分析資產", "TRX" if "TRX" in assets else "未列入", "analysis.json", completeness, "TRX material flow 另見 reconciliation"),
         ("FACT-PROVIDER-001", "Provider 取得狀態", provider, "provider_status.json", completeness, "Provider 完整不代表 Graph 完整"),
-        ("FACT-GRAPH-001", "Graph 安全上限狀態", graph, "flow_graph.json", "部分" if _graph_truncated(document) else completeness, "Graph 截斷不影響 Provider 原始取得完整度"),
+        (
+            "FACT-GRAPH-001",
+            "Graph 安全上限狀態",
+            graph,
+            "flow_graph.json",
+            "部分" if _graph_truncated(document) else completeness,
+            (
+                "Graph 截斷不影響 Provider 原始取得完整度"
+                if _graph_truncated(document)
+                else "Graph 未截斷；狀態以 flow_graph.json 為準"
+            ),
+        ),
     )
     return ReportTable(
         "confirmed_data_facts",
@@ -156,10 +176,8 @@ def _additional_observation_table(document) -> ReportTable:
     rows = (
         ("OBS-BATCH-IN-001", f"目前分析範圍內辨識到 {patterns.get('批次流入視窗數', patterns.get('batch_incoming_count', '0'))} 個批次流入視窗。", "規則式計算", "中", "批次視窗不代表共同控制人"),
         ("OBS-BATCH-OUT-001", f"目前分析範圍內辨識到 {patterns.get('批次流出視窗數', patterns.get('batch_outgoing_count', '0'))} 個批次流出視窗。", "規則式計算", "中", "批次視窗不代表同一資金路徑"),
-        ("OBS-FIXED-USDT-001", "USDT 存在重複固定金額模式。", "規則式計算", "中", "完整金額清單見 fixed_amounts.csv"),
-        ("OBS-FIXED-TRX-001", "TRX 存在重複固定金額模式；可疑宣傳型候選已另行隔離。", "規則式計算", "中", "候選仍待人工覆核"),
         ("OBS-DORMANCY-001", "目前分析範圍內未偵測到符合規則門檻的休眠區間。", "規則式計算", "中", "門檻及資料範圍可能影響結果"),
-        ("OBS-STAGE-001", "目前資料可分為啟動期與來源多元化階段。", "規則式計算", "中", "階段由 deterministic 規則產生"),
+        ("OBS-STAGE-001", "目前資料可分為初始活動期與交易量擴張期。", "規則式計算", "中", "階段由 deterministic 規則產生"),
     )
     return ReportTable(
         "rule_observation_summary",
@@ -169,6 +187,63 @@ def _additional_observation_table(document) -> ReportTable:
     )
 
 
+def _completeness_section(document) -> ReportSection:
+    metadata = document.metadata
+    graph_status = (
+        "完整（未截斷）"
+        if metadata.graph_completeness == "complete"
+        else "部分（已截斷）"
+        if metadata.graph_completeness == "partial"
+        else "未納入"
+    )
+    return ReportSection(
+        "completeness_layers",
+        "資料完整度與分析母體",
+        21,
+        (
+            "完整度按資料取得、資產分類、主要分析母體與 Graph 分層揭露，"
+            "不得以單一「完整」概括不同處理階段。",
+        ),
+        tables=(
+            ReportTable(
+                "completeness_layers",
+                "完整度分層",
+                ("層級", "筆數／狀態", "說明"),
+                (
+                    (
+                        "完整取得交易",
+                        f"{metadata.transaction_count:,}",
+                        f"retrieval completeness：{metadata.retrieval_completeness}",
+                    ),
+                    (
+                        "原生 TRX",
+                        f"{metadata.native_trx_transaction_count:,}",
+                        "TransferContract 且 symbol=TRX",
+                    ),
+                    (
+                        "TRC10／其他資產",
+                        f"{metadata.other_asset_transaction_count:,}",
+                        f"asset classification completeness：{metadata.asset_classification_completeness}",
+                    ),
+                    (
+                        "微額 TRX 技術性排除",
+                        f"{metadata.micro_excluded_count:,}",
+                        "保留於 Evidence 與技術 metadata，不進主要行為分析",
+                    ),
+                    (
+                        "主要資金流與行為分析",
+                        f"{metadata.analysis_record_count:,}",
+                        f"material analysis scope：{metadata.material_analysis_scope}",
+                    ),
+                    (
+                        "Graph completeness",
+                        graph_status,
+                        f"{metadata.graph_node_count} 節點／{metadata.graph_edge_count} 聚合邊",
+                    ),
+                ),
+            ),
+        ),
+    )
 def _material_assets(document) -> tuple[str, ...]:
     ranked = []
     for section in document.sections:
@@ -523,7 +598,16 @@ def _asset_first_sections(document, registry, material_assets):
             row for row in (funding.rows if funding else ())
             if len(row) >= 7 and str(row[1]) == asset
         ]
-        source_rows = all_source_rows
+        total_incoming = _number(asset_row[1]) if asset_row else Decimal("0")
+        source_materiality = max(
+            Decimal("1"),
+            total_incoming * Decimal("0.001"),
+        )
+        source_rows = [
+            row
+            for row in all_source_rows
+            if _number(row[3]) >= source_materiality
+        ]
         source_rows.sort(
             key=lambda row: (
                 -_number(row[3]),
@@ -661,7 +745,8 @@ def _asset_first_sections(document, registry, material_assets):
             ),
             ReportTable(
                 f"funding_rank_{asset.casefold()}",
-                f"{asset} 主要資金來源 Top 10（依流入金額）",
+                f"{asset} 主要資金來源 Top {len(source_table_rows)}"
+                "（依流入金額及重要性門檻）",
                 ("排名", "地址參照", "流入金額", "占比", "首次", "最後"),
                 source_table_rows,
             ),
@@ -863,34 +948,6 @@ def _reorder_booklet(document, sections, registry, material_assets):
                     tables=registry_tables,
                 )
             )
-    toc_titles = (
-        "執行摘要",
-        "調查標的與分析範圍",
-        "關鍵地址與角色摘要",
-        "資產總覽",
-        *(f"{asset} 分析" for asset in booklet_assets),
-        "地址排名總覽",
-        "主要來源與去向關聯摘要",
-        "時間軸與運作階段",
-        "固定金額、批次與停留時間",
-        "已確認事實",
-        "規則式觀察",
-        "候選解釋",
-        "AI 專業綜合",
-        "尚待查證",
-        "後續調查建議",
-        "資料限制",
-        "綜合研判",
-        "Evidence Index",
-        "附錄",
-        "地址對照表",
-    )
-    toc = ReportSection(
-        "table_of_contents",
-        "目錄",
-        2,
-        tuple(f"{index}. {title}" for index, title in enumerate(toc_titles, 1)),
-    )
     order_map = {
         "cover": 1,
         "table_of_contents": 2,
@@ -898,6 +955,7 @@ def _reorder_booklet(document, sections, registry, material_assets):
         "analysis_summary": 11,
         "target": 20,
         "completeness": 21,
+        "completeness_layers": 22,
         "key_addresses": 30,
         "asset_flows": 40,
         "address_rankings": 100,
@@ -925,7 +983,7 @@ def _reorder_booklet(document, sections, registry, material_assets):
     ai_sections = [section for section in base if section.section_id.startswith("ai_")]
     base = [section for section in base if not section.section_id.startswith("ai_")]
     ordered = []
-    for section in (*base, toc, *generated, *ai_sections):
+    for section in (*base, *generated, *ai_sections):
         if section.section_id.startswith("asset_analysis_"):
             order = section.order
         elif section.section_id.startswith("ai_"):
@@ -933,7 +991,32 @@ def _reorder_booklet(document, sections, registry, material_assets):
         else:
             order = order_map.get(section.section_id, section.order + 300)
         ordered.append(replace(section, order=order))
-    return tuple(sorted(ordered, key=lambda item: (item.order, item.section_id)))
+    ordered = sorted(ordered, key=lambda item: (item.order, item.section_id))
+    visible = tuple(
+        section
+        for section in ordered
+        if section.section_id not in {"cover", "table_of_contents"}
+        and (
+            section.content_blocks
+            or section.tables
+            or section.figures
+        )
+    )
+    toc = ReportSection(
+        "table_of_contents",
+        "目錄",
+        2,
+        tuple(
+            f"{index}. {section.title}"
+            for index, section in enumerate(visible, 1)
+        ),
+    )
+    return tuple(
+        sorted(
+            (*ordered, toc),
+            key=lambda item: (item.order, item.section_id),
+        )
+    )
 
 
 def _formalize_table(table):
@@ -1244,6 +1327,7 @@ def _operation_stage_tables(table, registry, timezone) -> tuple[ReportTable, ...
             value("信心").casefold(), value("信心")
         )
         limitation = value("資料限制", "")
+        display_stage = "初始活動期" if order == 1 else stage
         changes = []
         if previous is None:
             changes.append("首個階段，無前一階段可供比較。")
@@ -1271,11 +1355,19 @@ def _operation_stage_tables(table, registry, timezone) -> tuple[ReportTable, ...
                 if assets == previous["assets"]
                 else "主要資產組成發生變化。"
             )
+            changes.append("階段頻率明細未保存，無法判定交易頻率變化。")
             changes.append("階段金額彙總未保存，無法判定金額變化。")
+            if (
+                sources == previous["sources"]
+                and destinations == previous["destinations"]
+                and assets == previous["assets"]
+                and current_count > previous_count
+            ):
+                display_stage = "交易量擴張期"
         tables.append(
             ReportTable(
                 f"operation_stage_{order:02d}",
-                f"運作階段：{stage}",
+                f"運作階段：{display_stage}",
                 ("項目", "內容"),
                 (
                     ("期間", f"{format_display_text(started, timezone)} 至 {format_display_text(ended, timezone)}"),
@@ -1488,6 +1580,25 @@ def prepare_report_for_display(document):
             content_blocks = (
                 "本節為 deterministic 規則式判讀，不等同鏈上直接事實或已確認身分。",
             )
+        elif section.section_id == "transfer_patterns":
+            content_blocks = (
+                "目前 artifact 僅保存固定金額候選值，未保存各值出現次數及占比，"
+                "故本版不作正式模式排行。",
+                "候選值保留於 fixed_amounts.csv 與技術 metadata；"
+                "微額 TRX 不納入固定金額或批次模式。",
+            )
+            source_tables = tuple(
+                replace(
+                    table,
+                    rows=tuple(
+                        row
+                        for row in table.rows
+                        if not row
+                        or str(row[0]) not in {"fixed_amounts", "主要固定金額"}
+                    ),
+                )
+                for table in source_tables
+            )
         elif section.section_id.startswith("ai_") and _graph_truncated(document):
             rewritten = []
             for block in content_blocks:
@@ -1585,6 +1696,12 @@ def prepare_report_for_display(document):
                 tables=tuple(tables),
             )
         )
+    sections = [
+        section
+        for section in sections
+        if section.section_id != "completeness_layers"
+    ]
+    sections.append(_completeness_section(document))
     sections = _reorder_booklet(
         document,
         tuple(sections),

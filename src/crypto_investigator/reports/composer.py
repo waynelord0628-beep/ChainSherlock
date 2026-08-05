@@ -198,7 +198,11 @@ class ReportComposer:
             providers=providers,
             analysis_completeness=completeness,
             graph_completeness=(
-                str(graph_data.get("metadata", {}).get("source_completeness", completeness))
+                (
+                    "partial"
+                    if graph_data.get("metadata", {}).get("truncated", False)
+                    else "complete"
+                )
                 if graph_data
                 else "not_included"
             ),
@@ -246,6 +250,31 @@ class ReportComposer:
                 )
                 if graph_data
                 else 0
+            ),
+            incoming_count=int(
+                data.get("summary", {}).get("incoming_count", 0)
+            ),
+            outgoing_count=int(
+                data.get("summary", {}).get("outgoing_count", 0)
+            ),
+            native_trx_transaction_count=int(
+                metadata_source.get("native_trx_transaction_count", 0)
+            ),
+            other_asset_transaction_count=int(
+                metadata_source.get("trc10_other_asset_excluded_count", 0)
+            ),
+            micro_excluded_count=int(
+                metadata_source.get("micro_trx_excluded_count", 0)
+            ),
+            retrieval_completeness=completeness,
+            asset_classification_completeness=(
+                "complete"
+                if int(metadata_source.get("normalized_record_count", 0))
+                == int(metadata_source.get("provider_raw_record_count", 0))
+                else "partial"
+            ),
+            material_analysis_scope=(
+                f"{int(metadata_source.get('analysis_record_count', 0))} records"
             ),
             rejected_count=rejected_count,
             deduplicated_count=int(
@@ -591,10 +620,11 @@ class ReportComposer:
             )
         if trc10_summary:
             class_labels = {
-                "advertisement_token_candidate": "Advertisement Token Candidate",
-                "spam_token_candidate": "Spam Token Candidate",
-                "unknown_trc10_asset": "Unknown TRC10 Asset",
+                "advertisement_token_candidate": "宣傳型資產候選",
+                "spam_token_candidate": "Spam 資產候選",
+                "unknown_trc10_asset": "未知 TRC10 資產",
             }
+            confidence_labels = {"low": "低", "medium": "中", "high": "高"}
             sections.append(
                 ReportSection(
                     "trc10_other_assets",
@@ -607,7 +637,7 @@ class ReportComposer:
                     tables=(
                         ReportTable(
                             "trc10_other_asset_summary",
-                            "TRC10／Other Asset Transfers",
+                            "TRC10／其他資產轉入",
                             (
                                 "資產／Symbol",
                                 "交易筆數",
@@ -615,7 +645,7 @@ class ReportComposer:
                                 "來源地址數",
                                 "候選類型",
                                 "信心",
-                                "人工審閱",
+                                "審閱狀態",
                             ),
                             tuple(
                                 (
@@ -630,9 +660,12 @@ class ReportComposer:
                                                 "unknown_trc10_asset",
                                             )
                                         ),
-                                        "Unknown TRC10 Asset",
+                                        "未知 TRC10 資產",
                                     ),
-                                    str(item.get("confidence", "low")),
+                                    confidence_labels.get(
+                                        str(item.get("confidence", "low")),
+                                        "低",
+                                    ),
                                     "尚未審閱",
                                 )
                                 for item in trc10_summary[:10]

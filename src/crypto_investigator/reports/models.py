@@ -111,6 +111,14 @@ class ReportMetadata:
     investigation_edge_count: int = 0
     graph_node_count: int = 0
     graph_edge_count: int = 0
+    incoming_count: int = 0
+    outgoing_count: int = 0
+    native_trx_transaction_count: int = 0
+    other_asset_transaction_count: int = 0
+    micro_excluded_count: int = 0
+    retrieval_completeness: str = "unavailable"
+    asset_classification_completeness: str = "unavailable"
+    material_analysis_scope: str = "unavailable"
     rejected_count: int = 0
     deduplicated_count: int = 0
     failed_count: int = 0

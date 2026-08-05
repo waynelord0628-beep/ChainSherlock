@@ -16,6 +16,7 @@ from reportlab.platypus import (
     Table,
     TableStyle,
 )
+from reportlab.platypus.tableofcontents import TableOfContents
 from reportlab.lib import colors
 from reportlab.graphics.shapes import Circle, Drawing, Line, Rect, String
 
@@ -28,6 +29,17 @@ _WINDOWS_CJK_FONTS = (
     ("kaiu.ttf", "標楷體"),
     ("msjh.ttc", "Microsoft JhengHei"),
 )
+
+
+class _ReportDocTemplate(SimpleDocTemplate):
+    def afterFlowable(self, flowable) -> None:
+        title = getattr(flowable, "_chainsherlock_toc_title", None)
+        if not title:
+            return
+        key = f"section-{self.page}-{abs(hash(title))}"
+        self.canv.bookmarkPage(key)
+        self.canv.addOutlineEntry(title, key, level=0, closed=False)
+        self.notify("TOCEntry", (0, title, self.page, key))
 
 
 def resolve_cjk_font(
@@ -276,55 +288,23 @@ class PdfReportExporter:
                         )
                     )
                     story.append(Spacer(1, 12 * mm))
-                    midpoint = (len(section.content_blocks) + 1) // 2
-                    left = section.content_blocks[:midpoint]
-                    right = section.content_blocks[midpoint:]
-                    rows = [
-                        (
-                            left[index] if index < len(left) else "",
-                            right[index] if index < len(right) else "",
-                        )
-                        for index in range(max(len(left), len(right)))
-                    ]
                     toc_style = styles["BodyText"].clone("BookletContentsItem")
                     toc_style.fontSize = 10
                     toc_style.leading = 16
-                    toc = Table(
-                        [
-                            [
-                                Paragraph(
-                                    self._styled_text(value, self._latin_font_name),
-                                    toc_style,
-                                )
-                                for value in row
-                            ]
-                            for row in rows
-                        ],
-                        colWidths=(80 * mm, 80 * mm),
-                    )
-                    toc.setStyle(
-                        TableStyle(
-                            [
-                                ("VALIGN", (0, 0), (-1, -1), "TOP"),
-                                ("LEFTPADDING", (0, 0), (-1, -1), 5),
-                                ("RIGHTPADDING", (0, 0), (-1, -1), 5),
-                                ("TOPPADDING", (0, 0), (-1, -1), 3),
-                                ("BOTTOMPADDING", (0, 0), (-1, -1), 3),
-                                ("LINEABOVE", (0, 0), (-1, 0), 0.5, pale),
-                            ]
-                        )
-                    )
+                    toc = TableOfContents()
+                    toc.levelStyles = [toc_style]
+                    toc.dotsMinLevel = 0
                     story.append(toc)
                     story.append(PageBreak())
                     continue
                 if section.section_id.startswith("asset_analysis_"):
                     story.append(PageBreak())
-                story.append(
-                    Paragraph(
-                        self._styled_text(section.title, self._latin_font_name),
-                        styles["Heading1"],
-                    )
+                heading = Paragraph(
+                    self._styled_text(section.title, self._latin_font_name),
+                    styles["Heading1"],
                 )
+                heading._chainsherlock_toc_title = section.title
+                story.append(heading)
                 for block_index, block in enumerate(section.content_blocks):
                     block_style = styles["BodyText"]
                     if (
@@ -420,7 +400,7 @@ class PdfReportExporter:
                 if section.section_id == "table_of_contents":
                     story.append(PageBreak())
             path.parent.mkdir(parents=True, exist_ok=True)
-            SimpleDocTemplate(
+            _ReportDocTemplate(
                 str(path),
                 pagesize=(
                     landscape(A4)
@@ -432,7 +412,7 @@ class PdfReportExporter:
                     else A4
                 ),
                 bottomMargin=20 * mm,
-            ).build(
+            ).multiBuild(
                 story,
                 onFirstPage=self._page_number,
                 onLaterPages=self._page_number,

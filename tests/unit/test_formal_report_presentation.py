@@ -887,3 +887,169 @@ def test_58_display_does_not_use_if0_as_primary_claim_reference():
     display = prepare_report_for_display(_document())
     rendered = str(display.sections)
     assert "IF0" not in rendered
+
+
+def test_59_graph_fact_uses_graph_section_as_single_source_of_truth():
+    document = _document()
+    sections = tuple(
+        replace(section, content_blocks=("節點：17；邊：17；截斷：否。",))
+        if section.section_id == "graph"
+        else section
+        for section in document.sections
+    )
+    display = prepare_report_for_display(replace(document, sections=sections))
+    facts = _section(display, "confirmed_facts").tables[0]
+    graph = next(row for row in facts.rows if row[0] == "FACT-GRAPH-001")
+    assert graph[2] == "未標示截斷"
+    assert graph[4] == "部分"
+
+
+def test_60_direction_fact_and_layered_counts_use_report_metadata():
+    document = _document()
+    metadata = replace(
+        document.metadata,
+        transaction_count=3099,
+        incoming_count=2410,
+        outgoing_count=689,
+        unclassified_count=0,
+        native_trx_transaction_count=3034,
+        other_asset_transaction_count=65,
+        micro_excluded_count=2316,
+        analysis_record_count=718,
+        retrieval_completeness="complete",
+        asset_classification_completeness="complete",
+        material_analysis_scope="718 records",
+        graph_completeness="complete",
+        graph_node_count=17,
+        graph_edge_count=17,
+    )
+    display = prepare_report_for_display(replace(document, metadata=metadata))
+    facts = _section(display, "confirmed_facts").tables[0]
+    direction = next(row for row in facts.rows if row[0] == "FACT-DIRECTION-001")
+    assert direction[2] == "2,410／689／0"
+    layers = _section(display, "completeness_layers").tables[0]
+    assert [row[1] for row in layers.rows[:5]] == [
+        "3,099", "3,034", "65", "2,316", "718"
+    ]
+
+
+def test_61_absent_usdt_does_not_create_usdt_fact():
+    document = _document()
+    sections = tuple(
+        replace(
+            section,
+            tables=tuple(
+                replace(
+                    table,
+                    rows=tuple(
+                        ("TRX", *row[1:]) if table.table_id == "asset_flows" else row
+                        for row in table.rows
+                    ),
+                )
+                for table in section.tables
+            ),
+        )
+        for section in document.sections
+    )
+    display = prepare_report_for_display(replace(document, sections=sections))
+    facts = _section(display, "confirmed_facts").tables[0]
+    assert all(row[0] != "FACT-ASSET-USDT-001" for row in facts.rows)
+
+
+def test_62_funding_ranking_stops_at_material_sources():
+    document = _two_asset_document()
+    addresses = tuple(f"T{'A' * 32}{suffix}" for suffix in "23456")
+    funding_rows = tuple(
+        (
+            str(index),
+            "TRX",
+            address,
+            amount,
+            share,
+            "2025-01-01T00:00:00+00:00",
+            "2025-02-01T00:00:00+00:00",
+        )
+        for index, (address, amount, share) in enumerate(
+            zip(
+                addresses,
+                ("4668.72", "202.99", "91.66", "7", "0.64"),
+                ("89.04%", "3.87%", "1.75%", "0.13%", "0.01%"),
+            ),
+            1,
+        )
+    )
+    sections = tuple(
+        replace(
+            section,
+            tables=tuple(
+                replace(table, rows=funding_rows)
+                if table.table_id == "funding_sources"
+                else table
+                for table in section.tables
+            ),
+        )
+        for section in document.sections
+    )
+    display = prepare_report_for_display(replace(document, sections=sections))
+    table = next(
+        table
+        for table in _section(display, "asset_analysis_trx").tables
+        if table.table_id == "funding_rank_trx"
+    )
+    assert len(table.rows) == 4
+    assert "Top 4" in table.title
+    assert "0.64" not in str(table.rows)
+
+
+def test_63_fixed_amount_candidates_are_not_formally_ranked():
+    display = prepare_report_for_display(_document())
+    section = _section(display, "transfer_patterns")
+    assert "未保存各值出現次數及占比" in " ".join(section.content_blocks)
+    assert "Observation ID" not in str(section.tables)
+    assert "主要固定金額" not in str(section.tables)
+
+
+def test_64_deterministic_toc_is_generated_from_existing_sections_only():
+    display = prepare_report_for_display(_document())
+    toc = _section(display, "table_of_contents")
+    rendered = " ".join(toc.content_blocks)
+    assert "AI 專業綜合" not in rendered
+    assert "資料完整度與分析母體" in rendered
+
+
+def test_65_operation_stage_uses_neutral_names_and_missing_data_wording():
+    document = _document()
+    sections = tuple(
+        replace(
+            section,
+            tables=tuple(
+                replace(
+                    table,
+                    rows=(
+                        table.rows[0],
+                        (
+                            "來源多元化",
+                            table.rows[0][1],
+                            table.rows[0][2],
+                            "575",
+                            *table.rows[0][4:],
+                        ),
+                    ),
+                )
+                if table.table_id == "operation_stages"
+                else table
+                for table in section.tables
+            ),
+        )
+        for section in document.sections
+    )
+    stages = _section(
+        prepare_report_for_display(replace(document, sections=sections)),
+        "operation_stages",
+    )
+    rendered = str(stages.tables)
+    assert "初始活動期" in rendered
+    assert "交易量擴張期" in rendered
+    assert "來源多元化" not in rendered
+    assert "無法判定交易頻率變化" in rendered
+    assert "無法判定金額變化" in rendered
