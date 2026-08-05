@@ -1,5 +1,13 @@
 # Development Progress
 
+## V8 第一層報告可讀性封版
+
+- 明確區分 USDT 總紀錄、非零資金移轉與零值合約互動。
+- 核心地址表縮減為五欄，主要角色、資產與金額改採分行顯示。
+- 技術性排除改為 USDT 零值、非核心資產、微額原生資產及未分類事件分項揭露。
+- 新增第一層資金流向、月度流入／流出及前五大去向三張規則式圖表。
+- 補強地址功能判讀，並維持第一層分析與候選語意邊界。
+
 ## V8 Desktop Visual Final Validation
 
 - 修正 System Readiness 語意：Blockscout「程式支援」與 Blockstream「公開服務」

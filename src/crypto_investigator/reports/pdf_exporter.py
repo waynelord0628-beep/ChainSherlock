@@ -9,6 +9,7 @@ from reportlab.lib.units import mm
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.platypus import (
+    CondPageBreak,
     KeepTogether,
     PageBreak,
     Paragraph,
@@ -388,7 +389,7 @@ class PdfReportExporter:
                 if section.section_id == "key_addresses":
                     story.append(PageBreak())
                 if section.section_id == "first_hop_candidates":
-                    story.append(PageBreak())
+                    story.append(CondPageBreak(160 * mm))
                 heading = Paragraph(
                     self._styled_text(section.title, self._latin_font_name),
                     styles["Heading1"],

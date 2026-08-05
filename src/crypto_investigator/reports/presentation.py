@@ -1083,12 +1083,22 @@ def _asset_first_sections(document, registry, material_assets):
 
     priority_order = {"高": 0, "中": 1, "營運型": 2, "低": 3}
     important_limit = 10 if document.metadata.first_hop_product else 15
+
+    def readable_roles(values):
+        unique = []
+        for value in values:
+            if value not in unique:
+                unique.append(value)
+        if not unique:
+            return "待確認"
+        return re.sub(r"\s+\d+$", "", unique[0])
+
     important_rows = tuple(
         (
-            "／".join(roles),
+            readable_roles(roles),
             _full_address_reference(address, registry),
-            "／".join(important_address_context.get(address, {}).get("assets", ["—"])),
-            "；".join(important_address_context.get(address, {}).get("amounts", ["—"])),
+            "\n".join(important_address_context.get(address, {}).get("assets", ["—"])),
+            "\n".join(important_address_context.get(address, {}).get("amounts", ["—"])),
             "；".join(
                 important_address_context.get(address, {}).get(
                     "transaction_counts", ["—"]
@@ -1136,11 +1146,10 @@ def _asset_first_sections(document, registry, material_assets):
                         "完整地址（地址編號）",
                         "資產",
                         "流入／流出金額",
-                        "交易次數",
                         "追蹤優先級",
                     ),
                     tuple(
-                        (row[0], row[1], row[2], row[3], row[4], row[6])
+                        (row[0], row[1], row[2], row[3], row[6])
                         for row in important_rows
                     ),
                 ),
@@ -1711,6 +1720,9 @@ def _reorder_booklet(document, sections, registry, material_assets):
         "asset_flows": 40,
         "product_asset_facts": 41,
         "benchmark_usdt_structure": 49,
+        "deterministic_flow_chart": 52,
+        "deterministic_monthly_chart": 53,
+        "deterministic_destination_chart": 54,
         "first_hop_candidates": 55,
         "benchmark_timeline": 60,
         "benchmark_labels": 90,
@@ -2552,11 +2564,19 @@ def prepare_report_for_display(document):
         conclusion=replace(
             document.conclusion,
             text=(
-                f"本次分析範圍共納入 {document.metadata.transaction_count:,} 筆交易；"
-                f"主要資產為 {'、'.join(conclusion_assets) or 'unavailable'}。"
-                "已確認資料事實、規則式觀察與候選解釋均分層呈現；"
-                "地址身分、控制權、交易目的及法律性質仍須外部資料與人工查證。"
-                "本報告尚未完成多層追蹤，不據此確認最終下車點或資金最終受益人。"
+                (
+                    "該地址於分析期間呈現高額 USDT 雙向周轉，流出高度集中於"
+                    "少數第一層地址，且淨留存占整體流量比例低，較符合資金承接、"
+                    "集中與再分配節點候選。現有資料尚不足以確認其實體身分、"
+                    "交易目的或最終下車點。"
+                )
+                if document.metadata.first_hop_product
+                else (
+                    f"本次分析範圍共納入 {document.metadata.transaction_count:,} 筆交易；"
+                    f"主要資產為 {'、'.join(conclusion_assets) or 'unavailable'}。"
+                    "已確認資料事實、規則式觀察與候選解釋均分層呈現；"
+                    "地址身分、控制權、交易目的及法律性質仍須外部資料與人工查證。"
+                )
             ),
         ),
     )

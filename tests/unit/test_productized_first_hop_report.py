@@ -27,6 +27,7 @@ def _asset(asset, role, incoming, outgoing, excluded=0):
         "role": role,
         "transaction_count": 10,
         "material_transaction_count": 8,
+        "zero_value_count": 2 if asset == "USDT" else 0,
         "excluded_count": excluded,
         "incoming_count": 5,
         "outgoing_count": 3,
@@ -152,7 +153,7 @@ def test_only_top_three_first_hop_candidates_become_cards():
     assert all(len(table.columns) == 2 for table in candidates.tables)
 
 
-def test_front_registry_has_six_readable_columns():
+def test_front_registry_is_compact_and_separates_role_from_asset():
     raw = ReportSection(
         "address_registry",
         "raw",
@@ -178,15 +179,56 @@ def test_front_registry_has_six_readable_columns():
     )
     normalized = normalize_address_registry(raw, _document())
     assert normalized.tables[0].columns == (
-        "地址編號",
-        "完整地址",
-        "鏈別",
-        "主要角色",
-        "主要資產",
-        "Label",
+        "調查角色",
+        "完整地址（地址編號）",
+        "資產",
+        "流入／流出金額",
+        "優先級",
     )
-    assert normalized.tables[0].rows[0][1] == TARGET
-    assert normalized.tables[0].rows[0][3] == "調查標的"
+    assert len(normalized.tables[0].rows) <= 10
+    assert TARGET in normalized.tables[0].rows[0][1]
+    assert normalized.tables[0].rows[0][0] == "調查標的"
+
+
+def test_usdt_total_nonzero_and_zero_value_counts_are_explicit():
+    sections = build_productized_sections(_document(), {})
+    summary = next(
+        item for item in sections if item.section_id == "benchmark_usdt_structure"
+    )
+    rows = dict(summary.tables[0].rows)
+    assert rows["USDT 總紀錄"] == "10 筆"
+    assert rows["非零資金移轉"] == "8 筆"
+    assert rows["零值合約互動"] == "2 筆"
+
+
+def test_three_deterministic_chart_sections_are_present():
+    sections = build_productized_sections(_document(), {})
+    ids = {item.section_id for item in sections}
+    assert {
+        "deterministic_flow_chart",
+        "deterministic_monthly_chart",
+        "deterministic_destination_chart",
+    } <= ids
+
+
+def test_technical_exclusions_do_not_collapse_to_a_false_zero():
+    document = replace(
+        _document(),
+        metadata=replace(
+            _document().metadata,
+            micro_excluded_count=7,
+            unclassified_count=3,
+        ),
+    )
+    sections = build_productized_sections(document, {})
+    technical = next(
+        item for item in sections if item.section_id == "technical_exclusions"
+    )
+    rows = dict((row[0], row[1]) for row in technical.tables[0].rows)
+    assert rows["USDT 零值合約互動"] == "2"
+    assert rows["低重要性／非核心資產"] == "10"
+    assert rows["微額原生資產"] == "7"
+    assert rows["未分類技術事件"] == "3"
 
 
 def test_non_material_artifacts_are_external_and_reversible(tmp_path):

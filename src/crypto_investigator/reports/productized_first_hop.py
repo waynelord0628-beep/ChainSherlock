@@ -24,6 +24,15 @@ def _percent(value) -> str:
     return f"{_decimal(value) * Decimal('100'):.2f}%"
 
 
+def _bar(value, maximum, width: int = 18) -> str:
+    current = _decimal(value)
+    ceiling = _decimal(maximum)
+    if current <= 0 or ceiling <= 0:
+        return ""
+    filled = max(1, min(width, int((current / ceiling) * width)))
+    return "|" * filled
+
+
 def _address_ref(address: str, registry: Mapping[str, str], *, full=False) -> str:
     display_id = registry.get(address, "地址-未編號")
     if full:
@@ -54,8 +63,11 @@ def _executive_summary(document: ReportDocument, registry) -> ReportSection:
             "下車點確認或地址身分認定。"
         ),
         (
-            f"主要價值資產為 {asset}；共納入 "
-            f"{int(principal.get('material_transaction_count', 0)):,} 筆重要交易，"
+            f"主要價值資產為 {asset}；共取得 "
+            f"{int(principal.get('transaction_count', 0)):,} 筆 {asset} 紀錄，"
+            f"其中 {int(principal.get('material_transaction_count', 0)):,} 筆為"
+            f"非零資金移轉，另有 {int(principal.get('zero_value_count', 0)):,} 筆"
+            "零值合約互動。"
             f"流入 {_amount(principal.get('incoming_total', 0), asset)}，"
             f"流出 {_amount(principal.get('outgoing_total', 0), asset)}，"
             f"淨流量 {_amount(principal.get('net_flow', 0), asset)}。"
@@ -196,7 +208,12 @@ def _principal_structure(document: ReportDocument) -> ReportSection:
     source_share = principal.get("source_concentration") or {}
     destination_share = principal.get("destination_concentration") or {}
     rows = (
-        ("重要交易數", f"{int(principal.get('material_transaction_count', 0)):,} 筆"),
+        ("USDT 總紀錄", f"{int(principal.get('transaction_count', 0)):,} 筆"),
+        (
+            "非零資金移轉",
+            f"{int(principal.get('material_transaction_count', 0)):,} 筆",
+        ),
+        ("零值合約互動", f"{int(principal.get('zero_value_count', 0)):,} 筆"),
         ("流入筆數", f"{int(principal.get('incoming_count', 0)):,} 筆"),
         ("流出筆數", f"{int(principal.get('outgoing_count', 0)):,} 筆"),
         ("流入總額", _amount(principal.get("incoming_total", 0), asset)),
@@ -237,6 +254,122 @@ def _principal_structure(document: ReportDocument) -> ReportSection:
                 f"{asset} 資產摘要",
                 ("項目", "結果"),
                 rows,
+            ),
+        ),
+    )
+
+
+def _chart_sections(
+    document: ReportDocument,
+    registry: Mapping[str, str],
+) -> tuple[ReportSection, ...]:
+    principal = _principal(document)
+    asset = str(principal.get("asset") or "USDT")
+    sources = tuple(principal.get("sources") or ())[:5]
+    destinations = tuple(principal.get("destinations") or ())[:5]
+
+    flow_rows = []
+    for index in range(max(len(sources), len(destinations))):
+        source = sources[index] if index < len(sources) else {}
+        destination = destinations[index] if index < len(destinations) else {}
+        flow_rows.append(
+            (
+                (
+                    f"{_address_ref(str(source['address']), registry)}\n"
+                    f"{_amount(source.get('amount', 0), asset)}"
+                    if source
+                    else ""
+                ),
+                f"{asset}\n調查標的",
+                (
+                    f"{_address_ref(str(destination['address']), registry)}\n"
+                    f"{_amount(destination.get('amount', 0), asset)}"
+                    if destination
+                    else ""
+                ),
+            )
+        )
+
+    monthly = tuple(principal.get("monthly") or ())
+    monthly_max = max(
+        (
+            max(_decimal(item.get("incoming", 0)), _decimal(item.get("outgoing", 0)))
+            for item in monthly
+        ),
+        default=Decimal("0"),
+    )
+    monthly_rows = tuple(
+        (
+            str(item.get("period") or ""),
+            _bar(item.get("incoming", 0), monthly_max),
+            _amount(item.get("incoming", 0)),
+            _bar(item.get("outgoing", 0), monthly_max),
+            _amount(item.get("outgoing", 0)),
+        )
+        for item in monthly
+    )
+
+    destination_max = max(
+        (_decimal(item.get("amount", 0)) for item in destinations),
+        default=Decimal("0"),
+    )
+    destination_rows = tuple(
+        (
+            str(index),
+            _address_ref(str(item.get("address") or ""), registry),
+            _bar(item.get("amount", 0), destination_max),
+            _amount(item.get("amount", 0), asset),
+            _percent(item.get("share", 0)),
+        )
+        for index, item in enumerate(destinations, 1)
+    )
+
+    return (
+        ReportSection(
+            "deterministic_flow_chart",
+            "USDT 第一層資金流向圖",
+            52,
+            (
+                "本圖分別呈現前五大來源與前五大去向；左右兩側為獨立規則式排名，"
+                "不代表同一筆資金已完成路徑級追蹤。",
+            ),
+            tables=(
+                ReportTable(
+                    "deterministic_flow_chart",
+                    "前五大來源 → 調查標的 → 前五大去向",
+                    ("主要來源", "調查標的", "主要去向"),
+                    tuple(flow_rows),
+                ),
+            ),
+        ),
+        ReportSection(
+            "deterministic_monthly_chart",
+            "USDT 月度流入／流出圖",
+            53,
+            (
+                "橫條依全期間單月最大值等比例繪製；金額以 USDT 表示，"
+                "原始 Decimal 精度仍保留於 report_data.json。",
+            ),
+            tables=(
+                ReportTable(
+                    "deterministic_monthly_chart",
+                    "月度資金活動",
+                    ("月份", "流入強度", "流入金額", "流出強度", "流出金額"),
+                    monthly_rows,
+                ),
+            ),
+        ),
+        ReportSection(
+            "deterministic_destination_chart",
+            "USDT 前五大去向金額圖",
+            54,
+            tables=(
+                ReportTable(
+                    "deterministic_destination_chart",
+                    "第一層去向金額與占比",
+                    ("排名", "地址參照", "相對金額", "流出金額", "占比"),
+                    destination_rows,
+                ),
             ),
         ),
     )
@@ -364,19 +497,38 @@ def _insights(document: ReportDocument, registry) -> ReportSection:
 
 def _technical_exclusions(document: ReportDocument) -> ReportSection:
     product = document.metadata.first_hop_product or {}
-    excluded = sum(
-        int(item.get("excluded_count", 0))
-        for item in product.get("assets", ())
+    assets = tuple(product.get("assets", ()))
+    principal = _principal(document)
+    zero_value = int(principal.get("zero_value_count", 0))
+    non_core = sum(
+        int(item.get("transaction_count", 0))
+        for item in assets
+        if item.get("asset") not in {"USDT", "TRX"}
     )
+    micro_native = int(document.metadata.micro_excluded_count)
+    unclassified = int(document.metadata.unclassified_count)
     return ReportSection(
         "technical_exclusions",
         "技術性排除摘要",
         209,
         (
-            f"另有 {excluded:,} 筆低於重要性門檻、TRC10、Spam 候選或未知資產"
-            "紀錄保留於原始 Evidence 與技術 artifact，未納入主要資金流、"
-            "階段、停留時間或規則式洞察。詳細資料請參閱 "
+            "下列項目保留於原始 Evidence 與技術 artifact，但不納入主要資金流、"
+            "地址角色或規則式洞察。各類別可能屬不同統計層級，不應直接相加；"
+            "排除結果可逆，詳細欄位保存於 "
             "technical_exclusions.json、non_material_assets.csv 與 report_data.json。",
+        ),
+        tables=(
+            ReportTable(
+                "technical_exclusion_summary",
+                "技術性排除摘要",
+                ("類別", "筆數", "處理方式", "可逆"),
+                (
+                    ("USDT 零值合約互動", f"{zero_value:,}", "保留紀錄，不計金額", "是"),
+                    ("低重要性／非核心資產", f"{non_core:,}", "移至技術附件", "是"),
+                    ("微額原生資產", f"{micro_native:,}", "排除主要行為分析", "是"),
+                    ("未分類技術事件", f"{unclassified:,}", "保留待查", "是"),
+                ),
+            ),
         ),
     )
 
@@ -392,6 +544,7 @@ def build_productized_sections(
         _completeness(document),
         _asset_facts(document),
         _principal_structure(document),
+        *_chart_sections(document, registry),
         *_candidate_sections(document, registry),
         _insights(document, registry),
         _technical_exclusions(document),
@@ -404,65 +557,117 @@ def normalize_address_registry(
 ) -> ReportSection:
     """Keep the front registry compact; complete technical mapping remains in CSV."""
     product = document.metadata.first_hop_product or {}
-    roles: dict[str, list[str]] = {}
-    assets: dict[str, set[str]] = {}
-    labels: dict[str, str] = {}
+    identity: dict[str, tuple[str, str]] = {}
+    for table in section.tables:
+        if table.table_id == "address_registry_identity":
+            for row in table.rows:
+                if len(row) >= 3:
+                    identity[str(row[2])] = (str(row[0]), str(row[1]))
+
+    activities: dict[str, list[dict]] = {}
     target = str(document.metadata.target_address or "")
-    if target:
-        roles[target] = ["調查標的"]
     for analysis in product.get("assets", ()):
         asset = str(analysis.get("asset") or "")
         if asset not in {"USDT", "TRX"}:
             continue
-        for side, role in (
-            ("sources", f"{asset} 主要來源"),
-            ("destinations", f"{asset} 主要去向"),
+        for side, direction in (
+            ("sources", "來源"),
+            ("destinations", "去向"),
         ):
             for item in analysis.get(side, ()):
                 address = str(item.get("address") or "")
-                roles.setdefault(address, [])
-                if role not in roles[address]:
-                    roles[address].append(role)
-                assets.setdefault(address, set()).add(asset)
-                if item.get("label"):
-                    labels[address] = str(item["label"])
-    for item in product.get("first_hop_candidates", ()):
-        address = str(item.get("address") or "")
-        roles.setdefault(address, [])
-        if "後續追蹤優先" not in roles[address]:
-            roles[address].append("後續追蹤優先")
-        assets.setdefault(address, set()).add(str(item.get("asset") or ""))
+                activities.setdefault(address, []).append(
+                    {
+                        "asset": asset,
+                        "direction": direction,
+                        "amount": _decimal(item.get("amount", 0)),
+                        "rank": int(item.get("rank", 999)),
+                    }
+                )
 
-    tables = []
-    for table in section.tables:
-        if table.table_id != "address_registry_identity":
+    candidate_addresses = {
+        str(item.get("address") or "")
+        for item in product.get("first_hop_candidates", ())
+    }
+    addresses = set(activities)
+    if target:
+        addresses.add(target)
+
+    rows = []
+    amount_by_address = {}
+    for address in addresses:
+        display_id, _chain = identity.get(address, ("地址-未編號", "TRON"))
+        if address == target:
+            rows.append(("調查標的", f"{address}（{display_id}）", "—", "—", "高"))
+            amount_by_address[address] = Decimal("0")
             continue
-        rows = []
-        for row in table.rows:
-            address = str(row[2]) if len(row) >= 3 else ""
-            role = "／".join(roles.get(address, ("其他主文引用地址",))[:2])
-            asset = "／".join(sorted(value for value in assets.get(address, ()) if value))
-            label = labels.get(address) or (str(row[3]) if len(row) >= 4 else "未標記")
-            if len(row) >= 7:
-                rows.append((row[0], address, row[1], role, asset or "未分類", label))
-            elif len(row) >= 4:
-                rows.append((row[0], address, row[1], role, asset or "未分類", label))
-        tables.append(
-            ReportTable(
-                table.table_id,
-                "完整地址索引",
-                ("地址編號", "完整地址", "鏈別", "主要角色", "主要資產", "Label"),
-                tuple(rows),
+        ranked = sorted(
+            activities.get(address, ()),
+            key=lambda item: (-item["amount"], item["asset"], item["direction"]),
+        )
+        primary = ranked[0]
+        secondary = []
+        for item in ranked[1:]:
+            label = f"{item['asset']} {item['direction']}活動"
+            if label not in secondary:
+                secondary.append(label)
+        if address in candidate_addresses:
+            secondary.append("後續追蹤候選")
+        role = f"主要：{primary['asset']} 主要{primary['direction']}"
+        if secondary:
+            role += "\n次要：" + "、".join(secondary[:2])
+        asset_lines = []
+        for item in ranked:
+            if item["asset"] not in asset_lines:
+                asset_lines.append(item["asset"])
+        amount_lines = [
+            f"{item['direction']} {_amount(item['amount'], item['asset'])}"
+            for item in ranked[:2]
+        ]
+        priority = "高" if address in candidate_addresses or primary["rank"] == 1 else "中"
+        rows.append(
+            (
+                role,
+                f"{address}（{display_id}）",
+                "\n".join(asset_lines),
+                "\n".join(amount_lines),
+                priority,
             )
         )
+        amount_by_address[address] = max(item["amount"] for item in ranked)
+
+    def sort_key(row):
+        if row[0] == "調查標的":
+            return (0, 0, Decimal("0"), row[1])
+        address = next(
+            (value for value in amount_by_address if value in row[1]),
+            "",
+        )
+        return (
+            1,
+            0 if row[4] == "高" else 1,
+            -amount_by_address.get(address, Decimal("0")),
+            row[1],
+        )
+
+    rows = sorted(rows, key=sort_key)[:10]
+    tables = (
+        ReportTable(
+            "address_registry_identity",
+            "核心地址一覽",
+            ("調查角色", "完整地址（地址編號）", "資產", "流入／流出金額", "優先級"),
+            tuple(rows),
+        ),
+    )
     return replace_section(
         section,
-        title="本報告地址索引",
+        title="核心地址一覽表",
         content_blocks=(
-            "下列完整地址供正文查核與複製；地址編號僅為固定引用索引，"
-            "不代表資金排名。完整 Evidence mapping 另存於 address_registry.csv。",
+            "本表只列正文所需核心地址；主要角色與次要活動分行呈現，"
+            "避免將雙向活動誤讀為同一角色。完整 Evidence mapping 另存於 "
+            "address_registry.csv。",
         ),
-        tables=tuple(tables),
+        tables=tables,
     )
 
 

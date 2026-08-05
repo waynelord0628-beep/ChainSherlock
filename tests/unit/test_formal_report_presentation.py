@@ -1203,11 +1203,10 @@ def test_70_key_address_table_is_complete_and_trace_prioritized():
         "完整地址（地址編號）",
         "資產",
         "流入／流出金額",
-        "交易次數",
         "追蹤優先級",
     )
     assert any("調查標的" in row[0] and ADDRESS in row[1] for row in table.rows)
-    assert any("主要價值" in row[0] for row in table.rows)
+    assert any("USDT" in row[0] for row in table.rows)
     assert all("…" not in row[1] for row in table.rows)
 
 
@@ -1244,7 +1243,7 @@ def test_72_principal_value_addresses_precede_operational_addresses():
         index for index, row in enumerate(table.rows) if row[2] == "TRX"
     )
     assert usdt_index < trx_index
-    assert table.rows[trx_index][5] == "營運型"
+    assert table.rows[trx_index][4] == "營運型"
 
 
 def test_73_core_address_table_is_bounded_and_not_address_id_sorted():
@@ -1257,7 +1256,7 @@ def test_73_core_address_table_is_bounded_and_not_address_id_sorted():
         if table.table_id == "key_address_summary"
     )
     assert 1 <= len(table.rows) <= 15
-    priorities = [row[5] for row in table.rows]
+    priorities = [row[4] for row in table.rows]
     assert priorities.index("中") < priorities.index("營運型")
 
 

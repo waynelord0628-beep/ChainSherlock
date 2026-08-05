@@ -1,5 +1,12 @@
 # Changelog
 
+## V8 - First-hop report readability finalization
+
+- Simplified the core address table and removed unsourced transaction-count cells.
+- Reconciled 872 USDT records with 837 non-zero transfers and 35 zero-value interactions.
+- Corrected technical exclusion summaries and added deterministic flow visualizations.
+- Strengthened the rule-based conclusion without adding AI or Provider calls.
+
 ## V8 Desktop Visual Final Validation
 
 - Corrected public-provider readiness badges so support is not presented as verified
