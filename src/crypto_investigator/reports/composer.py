@@ -326,6 +326,8 @@ class ReportComposer:
             ),
             deterministic_section_count=len(sections),
             evidence_reference_count=len(evidence),
+            benchmark=metadata_source.get("full_asset_benchmark", {}),
+            first_hop_product=metadata_source.get("first_hop_product", {}),
         )
         citations = build_citations(evidence, "evidence_index")
         document = ReportDocument(

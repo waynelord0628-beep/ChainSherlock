@@ -1,0 +1,24 @@
+[
+  {"name":"token_and_native","records":[
+    {"tx_hash":"1","asset_symbol":"VALUE","asset_contract":"c1","amount":"100","from_address":"s","to_address":"target-address","timestamp":"2026-01-01T00:00:00+00:00","source_type":"token_transfer","transaction_type":"token_transfer"},
+    {"tx_hash":"2","asset_symbol":"COIN","amount":"2","from_address":"f","to_address":"target-address","timestamp":"2026-01-02T00:00:00+00:00","source_type":"native","transaction_type":"native_transfer"}],"expected_principal":"VALUE"},
+  {"name":"native_only","records":[
+    {"tx_hash":"1","asset_symbol":"COIN","amount":"2","from_address":"s","to_address":"target-address","timestamp":"2026-01-01T00:00:00+00:00","source_type":"native","transaction_type":"native_transfer"}],"expected_principal":"COIN"},
+  {"name":"multiple_tokens","records":[
+    {"tx_hash":"1","asset_symbol":"A","asset_contract":"a","amount":"2","from_address":"s","to_address":"target-address","timestamp":"2026-01-01T00:00:00+00:00","source_type":"token_transfer","transaction_type":"token_transfer"},
+    {"tx_hash":"2","asset_symbol":"B","asset_contract":"b","amount":"9","from_address":"s","to_address":"target-address","timestamp":"2026-01-02T00:00:00+00:00","source_type":"token_transfer","transaction_type":"token_transfer"}],"expected_principal":"B"},
+  {"name":"no_principal","records":[],"expected_principal":null},
+  {"name":"with_label","records":[
+    {"tx_hash":"1","asset_symbol":"VALUE","asset_contract":"c","amount":"10","from_address":"s","to_address":"target-address","timestamp":"2026-01-01T00:00:00+00:00","source_type":"token_transfer","transaction_type":"token_transfer"}],"expected_principal":"VALUE"},
+  {"name":"without_label","records":[
+    {"tx_hash":"1","asset_symbol":"VALUE","asset_contract":"c","amount":"10","from_address":"s","to_address":"target-address","timestamp":"2026-01-01T00:00:00+00:00","source_type":"token_transfer","transaction_type":"token_transfer"}],"expected_principal":"VALUE"},
+  {"name":"dust_and_spam","records":[
+    {"tx_hash":"1","asset_symbol":"VALUE","asset_contract":"c","amount":"0.001","from_address":"d","to_address":"target-address","timestamp":"2026-01-01T00:00:00+00:00","source_type":"token_transfer","transaction_type":"token_transfer"},
+    {"tx_hash":"2","asset_symbol":"VALUE","asset_contract":"c","amount":"10","from_address":"s","to_address":"target-address","timestamp":"2026-01-02T00:00:00+00:00","source_type":"token_transfer","transaction_type":"token_transfer"}],"expected_principal":"VALUE","threshold":"0.01"},
+  {"name":"provider_partial","records":[
+    {"tx_hash":"1","asset_symbol":"VALUE","asset_contract":"c","amount":"10","from_address":"s","to_address":"target-address","timestamp":"2026-01-01T00:00:00+00:00","source_type":"token_transfer","transaction_type":"token_transfer"}],"expected_principal":"VALUE","partial":true},
+  {"name":"custom_date_range","records":[
+    {"tx_hash":"1","asset_symbol":"VALUE","asset_contract":"c","amount":"10","from_address":"s","to_address":"target-address","timestamp":"2026-01-01T00:00:00+00:00","source_type":"token_transfer","transaction_type":"token_transfer"}],"expected_principal":"VALUE","scope_type":"custom_date_range"},
+  {"name":"small_no_stage","records":[
+    {"tx_hash":"1","asset_symbol":"VALUE","asset_contract":"c","amount":"10","from_address":"s","to_address":"target-address","timestamp":"2026-01-01T00:00:00+00:00","source_type":"token_transfer","transaction_type":"token_transfer"}],"expected_principal":"VALUE","expect_stages":false}
+]

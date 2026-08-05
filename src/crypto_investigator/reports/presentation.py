@@ -793,32 +793,36 @@ def _asset_first_sections(document, registry, material_assets):
         outgoing_rows = counterparty_rows(outgoing, 6)
         frequent_rows = counterparty_rows(frequent, 6)
         if source_rows:
-            address = str(source_rows[0][2])
             role = asset_role(asset)
-            add_important_role(
-                address,
-                (
-                    f"{asset} 主要價值來源"
-                    if role == "principal_value_asset"
-                    else f"{asset} 營運型來源候選"
-                    if role == "operational_asset"
-                    else f"{asset} 低重要性來源"
-                ),
-            )
-            priority, display_order = role_priority(asset)
-            add_important_context(
-                address,
-                asset=asset,
-                amount=f"流入 {_display_amount_2(source_rows[0][3])}",
-                transaction_count="未保存",
-                priority=priority,
-                reason=(
-                    "主要價值資產來源"
-                    if role == "principal_value_asset"
-                    else "營運／費用型資產來源"
-                ),
-                display_order=display_order,
-            )
+            source_limit = 5 if role == "principal_value_asset" else 1
+            for source_rank, source_row in enumerate(
+                source_rows[:source_limit], 1
+            ):
+                address = str(source_row[2])
+                add_important_role(
+                    address,
+                    (
+                        f"{asset} 主要價值來源 {source_rank}"
+                        if role == "principal_value_asset"
+                        else f"{asset} 營運型來源候選"
+                        if role == "operational_asset"
+                        else f"{asset} 低重要性來源"
+                    ),
+                )
+                priority, display_order = role_priority(asset, source_rank)
+                add_important_context(
+                    address,
+                    asset=asset,
+                    amount=f"流入 {_display_amount_2(source_row[3])}",
+                    transaction_count="未保存",
+                    priority=priority,
+                    reason=(
+                        f"主要價值資產來源第 {source_rank} 名"
+                        if role == "principal_value_asset"
+                        else "營運／費用型資產來源"
+                    ),
+                    display_order=display_order,
+                )
         outgoing_materiality = max(
             Decimal("1"),
             (_number(asset_row[2]) if asset_row else Decimal("0"))
@@ -828,7 +832,8 @@ def _asset_first_sections(document, registry, material_assets):
             row for row in outgoing
             if _number(row[6]) >= outgoing_materiality
         ]
-        for rank, row in enumerate(material_outgoing[:3], 1):
+        outgoing_limit = 5 if asset_role(asset) == "principal_value_asset" else 3
+        for rank, row in enumerate(material_outgoing[:outgoing_limit], 1):
             address = str(row[1])
             role = asset_role(asset)
             add_important_role(
@@ -996,6 +1001,8 @@ def _asset_first_sections(document, registry, material_assets):
                 ),
             ),
         ]
+        if document.metadata.first_hop_product:
+            tables = tables[:4]
         sections.append(
             ReportSection(
                 f"asset_analysis_{asset.casefold()}",
@@ -1006,7 +1013,13 @@ def _asset_first_sections(document, registry, material_assets):
                     if asset_role(asset) == "operational_asset"
                     else f"{asset} 其他／低重要性資產分析"
                 ),
-                50 + asset_index,
+                (
+                    50 + asset_index
+                    if asset_role(asset) == "principal_value_asset"
+                    else 70 + asset_index
+                    if asset_role(asset) == "operational_asset"
+                    else 80 + asset_index
+                ),
                 tuple(narrative)
                 + (
                     (
@@ -1061,6 +1074,7 @@ def _asset_first_sections(document, registry, material_assets):
                 add_important_role(match.group(0), "AI／綜合研判引用")
 
     priority_order = {"高": 0, "中": 1, "營運型": 2, "低": 3}
+    important_limit = 10 if document.metadata.first_hop_product else 15
     important_rows = tuple(
         (
             "／".join(roles),
@@ -1092,7 +1106,7 @@ def _asset_first_sections(document, registry, material_assets):
                 address_id(item[0]),
             ),
         )
-    )[:15]
+    )[:important_limit]
 
     return (
         ReportSection(
@@ -1164,8 +1178,359 @@ def _asset_first_sections(document, registry, material_assets):
     )
 
 
+def _full_asset_benchmark_sections(document, registry):
+    product = getattr(document.metadata, "first_hop_product", {})
+    benchmark = document.metadata.benchmark
+    if product:
+        principal = product.get("principal_asset") or {}
+        asset_name = str(principal.get("asset") or "主要價值資產")
+        timing = principal.get("timing", {})
+        benchmark = {
+            "full_history_complete": product.get("retrieval_complete", False),
+            "usdt": {
+                **principal,
+                "top_incoming_sources": principal.get("sources", ()),
+                "top_outgoing_destinations": principal.get("destinations", ()),
+                "timing": {
+                    "adjacent_inflow_outflow_pairs": timing.get(
+                        "adjacent_inflow_outflow_count", 0
+                    ),
+                    "within_1_hour": timing.get("within_1_hour_count", 0),
+                    "within_24_hours": timing.get("within_24_hours_count", 0),
+                    "median_transaction_interval_seconds": timing.get(
+                        "median_transaction_interval_seconds"
+                    ),
+                    "limitation": timing.get("limitation", ""),
+                },
+            },
+            "first_hop_candidates": tuple(
+                {
+                    "destination_address": item["address"],
+                    "received_usdt": item["received_amount"],
+                    "transaction_count": item["transaction_count"],
+                    "share_of_usdt_outflow": item["share_of_target_outflow"],
+                    "label_status": item["verification_status"],
+                    "onward_status": item["onward_data_status"],
+                    "priority": item["priority"],
+                }
+                for item in product.get("first_hop_candidates", ())
+            ),
+            "other_asset_record_count": sum(
+                int(item.get("transaction_count", 0))
+                for item in product.get("assets", ())
+                if item.get("role")
+                in {
+                    "spam_or_low_materiality_asset",
+                    "unknown_or_non_value_event",
+                }
+            ),
+            "labels": product.get("labels", {}),
+        }
+    else:
+        asset_name = "USDT"
+    if not benchmark or not benchmark.get("full_history_complete"):
+        return ()
+    usdt = benchmark.get("usdt", {})
+    first_hop = benchmark.get("first_hop_candidates", ())
+    monthly = usdt.get("monthly", ())
+    source_concentration = usdt.get("source_concentration", {})
+    destination_concentration = usdt.get("destination_concentration", {})
+
+    def percent(value):
+        try:
+            return f"{Decimal(str(value)) * Decimal('100'):.2f}%"
+        except (InvalidOperation, TypeError):
+            return "未保存"
+
+    def address_reference(value):
+        split_at = (len(value) + 1) // 2
+        display_id = registry.get(value, "地址-未登錄")
+        return (
+            f"{value[:split_at]}\n"
+            f"{value[split_at:]}（{display_id}）"
+        )
+
+    product_prefix = (
+        (
+            ReportSection(
+                "product_executive_summary",
+                "執行摘要",
+                10,
+                tuple(str(item) for item in product.get("executive_summary", ())),
+            ),
+        )
+        if product.get("executive_summary")
+        else ()
+    )
+    stage_tables = (
+        (
+            ReportTable(
+                "product_stages",
+                "主要價值資產階段變化",
+                ("階段", "期間", "流入", "流出", "淨額", "判定依據"),
+                tuple(
+                    (
+                        str(item["stage"]),
+                        f"{item['period_from']} 至 {item['period_to']}",
+                        _display_amount_2(item["incoming"]),
+                        _display_amount_2(item["outgoing"]),
+                        _display_amount_2(item["net"]),
+                        str(item["change_from_previous"]),
+                    )
+                    for item in product.get("stages", ())
+                ),
+            ),
+        )
+        if product.get("stages")
+        else ()
+    )
+    product_suffix = (
+        (
+            ReportSection(
+                "product_follow_up",
+                "後續查證任務",
+                171,
+                (
+                    "下列任務由本案第一層候選與完整度狀態生成；"
+                    "未取得下一層真實交易前，不形成下車點結論。",
+                ),
+                tables=(
+                    ReportTable(
+                        "product_follow_up_tasks",
+                        "案件特定查證清單",
+                        (
+                            "優先地址",
+                            "資產",
+                            "收受金額",
+                            "需取得資料",
+                            "預期回答",
+                            "停止條件",
+                        ),
+                        tuple(
+                            (
+                                _address_reference(str(item.get("address", "")), registry)
+                                if item.get("address")
+                                else "Evidence 補強",
+                                str(item.get("asset", "—")),
+                                _display_amount_2(item.get("received_amount", 0)),
+                                str(item["next_data_required"]),
+                                str(item["expected_question_answered"]),
+                                str(item["stop_condition"]),
+                            )
+                            for item in product.get("follow_up_tasks", ())
+                        ),
+                    ),
+                ),
+            ),
+        )
+        if product.get("follow_up_tasks")
+        else ()
+    )
+    core_sections = (
+        ReportSection(
+            "benchmark_usdt_structure",
+            f"{asset_name} 整體資金結構",
+            49,
+            (
+                f"{asset_name} 已依資產識別資訊獨立分類；"
+                "零值互動保留於交易紀錄，但不計入資產金額。",
+            ),
+            tables=(
+                ReportTable(
+                    "benchmark_usdt_summary",
+                    f"{asset_name} 完整歷史摘要",
+                    ("指標", "數值"),
+                    (
+                        ("交易紀錄", f"{int(usdt.get('transaction_count', 0)):,} 筆"),
+                        ("流入", f"{int(usdt.get('incoming_count', 0)):,} 筆"),
+                        ("流出", f"{int(usdt.get('outgoing_count', 0)):,} 筆"),
+                        ("0 值互動", f"{int(usdt.get('zero_value_count', 0)):,} 筆"),
+                        ("流入總額", f"{_display_amount_2(usdt.get('incoming_total', 0))} {asset_name}"),
+                        ("流出總額", f"{_display_amount_2(usdt.get('outgoing_total', 0))} {asset_name}"),
+                        (
+                            "雙向總量",
+                            f"{_display_amount_2(usdt.get('bidirectional_volume', 0))} {asset_name}",
+                        ),
+                        ("淨流入", f"{_display_amount_2(usdt.get('net_flow', 0))} {asset_name}"),
+                        (
+                            "非零直接對手",
+                            f"{int(usdt.get('total_nonzero_counterparties', 0)):,}",
+                        ),
+                    ),
+                ),
+                ReportTable(
+                    "benchmark_usdt_concentration",
+                    f"{asset_name} 集中度",
+                    ("方向", "第一大", "前五大", "前十大"),
+                    (
+                        (
+                            "來源",
+                            percent(source_concentration.get("top_1_share")),
+                            percent(source_concentration.get("top_5_share")),
+                            percent(source_concentration.get("top_10_share")),
+                        ),
+                        (
+                            "去向",
+                            percent(destination_concentration.get("top_1_share")),
+                            percent(destination_concentration.get("top_5_share")),
+                            percent(destination_concentration.get("top_10_share")),
+                        ),
+                    ),
+                ),
+            ),
+        ),
+        ReportSection(
+            "first_hop_candidates",
+            f"{asset_name} 第一層追查優先級",
+            55,
+            (
+                "下列項目依主要價值資產、收受金額與流出占比排序；"
+                "僅為第一層追查候選，不代表已確認下車點或最終受益人。",
+            ),
+            tables=(
+                ReportTable(
+                    "first_hop_candidates_flow",
+                    f"第一層 {asset_name} 去向候選：金額與排名",
+                    (
+                        "排名",
+                        "完整地址（地址編號）",
+                        f"收受 {asset_name}",
+                        "交易次數",
+                        "占流出",
+                        "優先級",
+                    ),
+                    tuple(
+                        (
+                            str(index),
+                            address_reference(str(item["destination_address"])),
+                            _display_amount_2(item["received_usdt"]),
+                            str(item["transaction_count"]),
+                            percent(item["share_of_usdt_outflow"]),
+                            "高" if item["priority"] == "high" else "中",
+                        )
+                        for index, item in enumerate(first_hop[:10], 1)
+                    ),
+                ),
+                ReportTable(
+                    "first_hop_candidates_status",
+                    f"第一層 {asset_name} 去向候選：查證狀態",
+                    ("排名", "地址編號", "標籤狀態", "後續資料狀態"),
+                    tuple(
+                        (
+                            str(index),
+                            registry.get(
+                                str(item["destination_address"]), "地址-未登錄"
+                            ),
+                            (
+                                "未驗證"
+                                if item["label_status"] == "unverified"
+                                else "候選"
+                            ),
+                            (
+                                "尚未蒐集"
+                                if item["onward_status"] == "not_collected"
+                                else str(item["onward_status"])
+                            ),
+                        )
+                        for index, item in enumerate(first_hop[:10], 1)
+                    ),
+                ),
+            ),
+        ),
+        ReportSection(
+            "benchmark_timeline",
+            "交易時序與階段變化",
+            70,
+            (
+                str(usdt.get("timing", {}).get("limitation", "")),
+                "本輪未建立足以支持具名階段的 change-point 證據，"
+                "因此僅列月度變化，不強制產生故事式階段名稱。",
+            ),
+            tables=(
+                ReportTable(
+                    "benchmark_monthly_usdt",
+                    f"{asset_name} 月度流入／流出",
+                    ("月份", "流入", "流出", "淨額"),
+                    tuple(
+                        (
+                            str(item["period"]),
+                            _display_amount_2(item["incoming"]),
+                            _display_amount_2(item["outgoing"]),
+                            _display_amount_2(item["net"]),
+                        )
+                        for item in monthly
+                    ),
+                ),
+                ReportTable(
+                    "benchmark_adjacent_timing",
+                    "相鄰流入後流出摘要",
+                    ("配對數", "1 小時內", "24 小時內", "中位交易間隔（秒）"),
+                    (
+                        (
+                            str(usdt.get("timing", {}).get("adjacent_inflow_outflow_pairs", 0)),
+                            str(usdt.get("timing", {}).get("within_1_hour", 0)),
+                            str(usdt.get("timing", {}).get("within_24_hours", 0)),
+                            str(usdt.get("timing", {}).get("median_transaction_interval_seconds", "未保存")),
+                        ),
+                    ),
+                ),
+                *stage_tables,
+            ),
+        ),
+        ReportSection(
+            "benchmark_labels",
+            "已標註對手方",
+            90,
+            (
+                "僅顯示本案已匯入且可追溯來源的 Local Label；"
+                "未匹配地址維持未驗證，不由規則或 AI 猜測身分。",
+            ),
+        ),
+        *(
+            (
+                ReportSection(
+                    "benchmark_other_assets",
+                    "其他資產與資料污染",
+                    91,
+                    (
+                        f"另有 {int(benchmark.get('other_asset_record_count', 0)):,} 筆"
+                        "低重要性、未知或非價值事件，均與主要價值資產"
+                        "獨立分類，不參與主要價值資產排行。",
+                    ),
+                ),
+            )
+            if int(benchmark.get("other_asset_record_count", 0))
+            else ()
+        ),
+    )
+    return (*product_prefix, *core_sections, *product_suffix)
+
+
 def _reorder_booklet(document, sections, registry, material_assets):
-    generated = _asset_first_sections(document, registry, material_assets)
+    if document.metadata.first_hop_product:
+        product_assets = {
+            str(item.get("asset"))
+            for item in document.metadata.first_hop_product.get("asset_roles", ())
+            if item.get("role")
+            in {
+                "principal_value_asset",
+                "secondary_value_asset",
+                "operational_asset",
+            }
+        }
+        material_assets = tuple(
+            asset for asset in material_assets if asset in product_assets
+        )
+    generated = (
+        *_asset_first_sections(document, registry, material_assets),
+        *_full_asset_benchmark_sections(document, registry),
+    )
+    if document.metadata.first_hop_product:
+        generated = tuple(
+            section
+            for section in generated
+            if section.section_id not in {"address_rankings", "fund_flow_paths"}
+        )
     booklet_assets = tuple(
         asset for asset in ("USDT", "TRX") if asset in material_assets
     ) + tuple(
@@ -1184,6 +1549,18 @@ def _reorder_booklet(document, sections, registry, material_assets):
         "investigation_facts",
         "data_sources",
     }
+    if document.metadata.first_hop_product:
+        excluded.update(
+            {
+                "executive_summary",
+                "recommended_follow_up",
+                "address_rankings",
+                "fund_flow_paths",
+                "operation_stages",
+                "dormancy",
+                "transfer_patterns",
+            }
+        )
     base = [section for section in sections if section.section_id not in excluded]
     appendix = next(
         (section for section in base if section.section_id == "appendix"),
@@ -1230,6 +1607,12 @@ def _reorder_booklet(document, sections, registry, material_assets):
         "completeness": 30,
         "completeness_layers": 31,
         "asset_flows": 40,
+        "benchmark_usdt_structure": 49,
+        "first_hop_candidates": 55,
+        "benchmark_timeline": 60,
+        "benchmark_labels": 90,
+        "benchmark_other_assets": 91,
+        "product_executive_summary": 10,
         "address_rankings": 100,
         "fund_flow_paths": 110,
         "graph": 111,
@@ -1245,6 +1628,7 @@ def _reorder_booklet(document, sections, registry, material_assets):
         "candidate_interpretations": 142,
         "unresolved_questions": 170,
         "recommended_follow_up": 171,
+        "product_follow_up": 171,
         "limitations": 180,
         "conclusion": 190,
         "evidence_index": 200,

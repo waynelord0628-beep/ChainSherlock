@@ -344,3 +344,14 @@ V3 contains no Provider, blockchain API, graph rendering, report, Word/PDF, AI, 
 - 低重要性及 Spam Candidate 採可追溯、可恢復的候選排除，不修改原始 Evidence。
 - 最終 PDF 共 27 頁，已逐頁渲染檢查封面、表頭、分頁、溢位、頁尾與 AI 章節。
 - 驗收：targeted 191 passed；完整 pytest 1,383 passed、1 skipped；pip check 通過。
+
+## V8 First-Hop Investigation Report Productization
+
+- 建立 Goal 驅動的通用 `first_hop_product`，不依賴 Benchmark 地址、外部參考報告或 AI。
+- 資產角色、來源／去向集中度、淨流量、第一層候選、時序、保守階段與案件特定後續任務
+  均由 structured facts 產生。
+- Provider 正式分析流程保存 `first_hop_product.json` 與本地 SVG 圖表 manifest；
+  每張圖表保存 SHA-256。
+- Local Label 增加 verification status 與 imported_at，衝突依可信層級處理。
+- 以十類 recorded fixtures 覆蓋不同資產、完整度、Label、dust、期間與小資料集。
+- 本階段不執行第二層追蹤、不呼叫 AI，亦不開始 Windows 打包。

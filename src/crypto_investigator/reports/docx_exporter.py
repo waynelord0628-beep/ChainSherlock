@@ -171,6 +171,8 @@ class DocxReportExporter:
                     output.add_page_break()
                 if report_section.section_id == "key_addresses":
                     output.add_page_break()
+                if report_section.section_id == "first_hop_candidates":
+                    output.add_page_break()
                 heading = output.add_heading(report_section.title, level=1)
                 heading.paragraph_format.keep_with_next = True
                 for block in report_section.content_blocks:
@@ -214,6 +216,44 @@ class DocxReportExporter:
                             card.cell(4, 1).merge(card.cell(4, 3))
                             output.add_paragraph()
                         continue
+                    if (
+                        report_section.section_id == "first_hop_candidates"
+                        and len(table_data.columns) == 8
+                    ):
+                        table_heading = output.add_heading(
+                            table_data.title, level=2
+                        )
+                        table_heading.paragraph_format.keep_with_next = True
+                        for row in table_data.rows:
+                            card = output.add_table(rows=5, cols=4)
+                            card.style = "Table Grid"
+                            card.autofit = False
+                            values = (
+                                ("排名", row[0], "優先級", row[7]),
+                                ("完整地址（地址編號）", row[1], "", ""),
+                                ("收受 USDT", row[2], "占流出", row[4]),
+                                ("交易次數", row[3], "標籤", row[5]),
+                                ("後續資料", row[6], "", ""),
+                            )
+                            for row_index, values_row in enumerate(values):
+                                self._prevent_row_split(card.rows[row_index])
+                                for column_index, value in enumerate(values_row):
+                                    cell = card.cell(row_index, column_index)
+                                    cell.text = value
+                                    for paragraph in cell.paragraphs:
+                                        paragraph.paragraph_format.keep_with_next = (
+                                            row_index < len(values) - 1
+                                        )
+                                    for run in cell.paragraphs[0].runs:
+                                        self._set_run_font(
+                                            run,
+                                            address=row_index == 1
+                                            and column_index == 1,
+                                        )
+                            card.cell(1, 1).merge(card.cell(1, 3))
+                            card.cell(4, 1).merge(card.cell(4, 3))
+                            output.add_paragraph()
+                        continue
                     wide = len(table_data.columns) > 8
                     if wide:
                         current = output.add_section(WD_SECTION.NEW_PAGE)
@@ -231,7 +271,12 @@ class DocxReportExporter:
                     table.style = "Table Grid"
                     table.autofit = False
                     table.alignment = WD_TABLE_ALIGNMENT.CENTER
-                    weights = self._column_weights(columns)
+                    weights = (
+                        (0.6, 4.0, 1.5, 1.0, 1.2, 0.8)
+                        if table_data.table_id
+                        == "first_hop_candidates_flow"
+                        else self._column_weights(columns)
+                    )
                     usable_mm = 253 if wide else 166
                     total_weight = sum(weights) or 1
                     for index, column in enumerate(columns):
@@ -275,6 +320,8 @@ class DocxReportExporter:
                         current.top_margin = current.bottom_margin = Mm(20)
                         current.left_margin = current.right_margin = Mm(22)
                 if report_section.section_id == "key_addresses":
+                    output.add_page_break()
+                if report_section.section_id == "first_hop_candidates":
                     output.add_page_break()
                 if report_section.section_id == "table_of_contents":
                     output.add_page_break()

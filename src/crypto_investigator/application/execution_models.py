@@ -65,6 +65,8 @@ class ArtifactType(StrEnum):
     REJECTED_RECORDS = "rejected_records"
     EXECUTION_LOG = "execution_log"
     CHECKPOINT = "checkpoint"
+    FIRST_HOP_PRODUCT = "first_hop_product"
+    FIRST_HOP_CHART_MANIFEST = "first_hop_chart_manifest"
     OTHER = "other"
 
 

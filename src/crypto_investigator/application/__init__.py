@@ -28,6 +28,12 @@ from crypto_investigator.application.offline_handlers import (
 from crypto_investigator.application.case_result_service import CaseResultService
 from crypto_investigator.application.case_report_service import CaseReportService
 from crypto_investigator.application.case_package_service import CasePackageService
+from crypto_investigator.application.first_hop_product import (
+    AssetInvestigationRole,
+    FirstHopGoal,
+    build_first_hop_product,
+    write_first_hop_product,
+)
 
 __all__ = [
     "ArtifactCandidate",
@@ -56,6 +62,10 @@ __all__ = [
     "CasePackageService",
     "CaseReportService",
     "CaseResultService",
+    "AssetInvestigationRole",
+    "FirstHopGoal",
+    "build_first_hop_product",
+    "write_first_hop_product",
 ]
 
 

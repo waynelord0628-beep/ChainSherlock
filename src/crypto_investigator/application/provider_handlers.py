@@ -142,6 +142,8 @@ class ProviderAnalysisStepHandler:
             "provider_status": ArtifactType.PROVIDER_STATUS,
             "provider_errors": ArtifactType.PROVIDER_ERRORS,
             "rejected_records": ArtifactType.REJECTED_RECORDS,
+            "first_hop_product": ArtifactType.FIRST_HOP_PRODUCT,
+            "first_hop_chart_manifest": ArtifactType.FIRST_HOP_CHART_MANIFEST,
         }
         candidates = [
             ArtifactCandidate(
@@ -164,6 +166,7 @@ class ProviderAnalysisStepHandler:
                 },
             )
             for name, artifact_type in type_by_name.items()
+            if name in paths
         ]
         return StepExecutionResult(
             status=(

@@ -154,6 +154,8 @@ class ReportMetadata:
     ai_output_token_limit: int = 0
     ai_output_tokens: int = 0
     ai_finish_reason: str | None = None
+    benchmark: Mapping[str, Any] = field(default_factory=dict)
+    first_hop_product: Mapping[str, Any] = field(default_factory=dict)
 
 
 @dataclass(frozen=True, slots=True)

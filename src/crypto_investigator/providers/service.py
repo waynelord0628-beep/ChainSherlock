@@ -5,6 +5,11 @@ from crypto_investigator.application.analysis_scope import (
     apply_scope,
     build_time_scope_result,
 )
+from crypto_investigator.application.first_hop_product import (
+    FirstHopGoal,
+    build_first_hop_product,
+    write_first_hop_product,
+)
 from crypto_investigator.analyzers.base import AnalysisContext
 from crypto_investigator.analyzers.engine import AnalysisEngine
 from crypto_investigator.analyzers.export import AnalysisExporter
@@ -39,6 +44,8 @@ async def analyze_provider_identifier(
     refresh: bool = False,
     cache_ttl: int | None = None,
     analysis_scope: AnalysisScope | None = None,
+    first_hop_goal: FirstHopGoal | None = None,
+    local_labels: tuple = (),
 ) -> dict[str, Path]:
     registry = ProviderFactory.create_registry(
         settings, refresh=refresh, cache_ttl=cache_ttl
@@ -149,6 +156,52 @@ async def analyze_provider_identifier(
             else "complete"
         )
     )
+    provider_status_for_product = tuple(
+        {
+            "capability": result.capability.value,
+            "final_completeness": result.completeness.value,
+            "truncated": result.truncated,
+        }
+        for result in collection.results
+    )
+    product_goal = first_hop_goal or FirstHopGoal(
+        required_capabilities=tuple(
+            dict.fromkeys(result.capability.value for result in collection.results)
+        ),
+        scope_type=scope.scope_type.value,
+        completeness_required="complete",
+    )
+    first_hop_product = (
+        build_first_hop_product(
+            tuple(
+                {
+                    "tx_hash": item.tx_hash,
+                    "asset_symbol": item.asset_symbol,
+                    "asset_contract": item.asset_contract,
+                    "amount": str(item.amount or 0),
+                    "decimals": 0,
+                    "from_address": item.from_address,
+                    "to_address": item.to_address,
+                    "timestamp": item.timestamp.isoformat() if item.timestamp else None,
+                    "source_type": (
+                        "token_transfer"
+                        if item.transaction_type.value == "token_transfer"
+                        else "native"
+                    ),
+                    "transaction_type": item.transaction_type.value,
+                }
+                for item in transactions
+                if item.timestamp is not None
+            ),
+            provider_status_for_product,
+            target_address=identifier,
+            chain=chain.value,
+            goal=product_goal,
+            labels=local_labels,
+        )
+        if kind == "address"
+        else {}
+    )
     analysis = replace(
         analysis,
         metadata={
@@ -165,6 +218,12 @@ async def analyze_provider_identifier(
             "analysis_record_count": len(transactions),
             "excluded_by_scope": time_scope.excluded_by_scope,
             "deduplicated_record_count": deduplicated_count,
+            "first_hop_product": first_hop_product,
+            "principal_assets": (
+                [first_hop_product["principal_asset"]["asset"]]
+                if first_hop_product.get("principal_asset")
+                else []
+            ),
         },
         warnings=(
             *analysis.warnings,
@@ -172,6 +231,10 @@ async def analyze_provider_identifier(
         ),
     )
     paths = AnalysisExporter().export_all(analysis, output_dir)
+    if first_hop_product:
+        product_paths = write_first_hop_product(first_hop_product, output_dir)
+        paths["first_hop_product"] = product_paths["product"]
+        paths["first_hop_chart_manifest"] = product_paths["chart_manifest"]
     paths.update(
         write_provider_outputs(
             output_dir,

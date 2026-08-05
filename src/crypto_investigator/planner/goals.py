@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from datetime import date
+from decimal import Decimal
 from enum import IntEnum, StrEnum
 from typing import Any
 from uuid import uuid4
@@ -9,6 +10,16 @@ from pydantic import BaseModel, ConfigDict, Field
 
 
 class GoalType(StrEnum):
+    ADDRESS_PROFILE = "address_profile"
+    FIRST_HOP_FUND_FLOW = "first_hop_fund_flow"
+    PRIORITIZE_FIRST_HOP = "prioritize_first_hop"
+    ANALYZE_DATE_RANGE = "analyze_date_range"
+    IDENTIFY_PRINCIPAL_ASSET = "identify_principal_asset"
+    ANALYZE_COUNTERPARTY_CONCENTRATION = "analyze_counterparty_concentration"
+    ANALYZE_TEMPORAL_CHANGES = "analyze_temporal_changes"
+    ANALYZE_LABELED_ADDRESSES = "analyze_labeled_addresses"
+    EXCLUDE_DATA_POLLUTION = "exclude_data_pollution"
+    PREPARE_MULTI_HOP_TRACE = "prepare_multi_hop_trace"
     TRACE_FUNDS = "trace_funds"
     IDENTIFY_MAIN_SOURCES = "identify_main_sources"
     IDENTIFY_MAIN_DESTINATIONS = "identify_main_destinations"
@@ -55,6 +66,11 @@ class InvestigationGoal(BaseModel):
     target_entities: list[str] = Field(default_factory=list)
     target_assets: list[str] = Field(default_factory=list)
     target_date_range: DateRange | None = None
+    required_capabilities: list[str] = Field(default_factory=list)
+    scope_type: str = "full_history"
+    materiality_thresholds: dict[str, Decimal] = Field(default_factory=dict)
+    output_type: str = "investigation_report"
+    completeness_requirement: str = "complete"
     completion_criteria: list[str] = Field(default_factory=list)
     status: GoalStatus = GoalStatus.PROPOSED
     created_by: str = "local-user"

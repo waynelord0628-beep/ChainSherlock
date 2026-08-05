@@ -36,6 +36,13 @@ class LabelRegistry:
         else:
             raise ValueError("Supported label formats are CSV, XLS, XLSX, and JSON")
         records = {}
+        verification_priority = {
+            "manual_confirmed": 5,
+            "trusted_local": 4,
+            "provider_label": 3,
+            "unverified_candidate": 2,
+            "unlabeled": 1,
+        }
         for row in rows:
             chain = str(row.get("chain", "unknown")).strip().casefold()
             address = normalize_label_address(chain, str(row.get("address", "")))
@@ -45,7 +52,7 @@ class LabelRegistry:
             if category not in ALLOWED_CATEGORIES:
                 category = "unknown"
             key = (chain, address)
-            records[key] = LabelRecord(
+            candidate = LabelRecord(
                 address=address,
                 label=str(row.get("label", "")).strip(),
                 category=category,
@@ -61,7 +68,18 @@ class LabelRegistry:
                     and str(row.get("reference")).strip()
                     else None
                 ),
+                verification_status=(
+                    str(row.get("verification_status", "unverified_candidate"))
+                    .strip()
+                    .casefold()
+                ),
+                imported_at=cls._datetime(row.get("imported_at")),
             )
+            current = records.get(key)
+            if current is None or verification_priority.get(
+                candidate.verification_status, 0
+            ) > verification_priority.get(current.verification_status, 0):
+                records[key] = candidate
         return cls(records[key] for key in sorted(records))
 
     def check(self, chain: str, address: str):
@@ -87,6 +105,10 @@ class LabelRegistry:
                         "first_seen": item.first_seen.isoformat() if item.first_seen else None,
                         "last_verified": item.last_verified.isoformat() if item.last_verified else None,
                         "reference": item.reference,
+                        "verification_status": item.verification_status,
+                        "imported_at": (
+                            item.imported_at.isoformat() if item.imported_at else None
+                        ),
                     }
                     for item in self.records
                 ],

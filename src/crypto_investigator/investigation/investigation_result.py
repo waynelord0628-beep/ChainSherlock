@@ -186,6 +186,8 @@ class LabelRecord:
     first_seen: datetime | None = None
     last_verified: datetime | None = None
     reference: str | None = None
+    verification_status: str = "unverified_candidate"
+    imported_at: datetime | None = None
 
 
 @dataclass(frozen=True, slots=True)

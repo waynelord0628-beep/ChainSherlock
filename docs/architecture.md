@@ -504,3 +504,17 @@ Report composition separately records Provider truncation, Graph truncation,
 Analysis completeness and Investigation completeness. The deterministic
 ReportDocument is the immutable base; `AIReportIntegrator` may only append grounded
 sections and every exporter receives the same final document.
+
+## First-Hop product boundary
+
+```text
+Case Goal + Evidence + Provider Results + Local Labels
+  -> Normalized Domain Transactions
+  -> FirstHopProduct (asset roles, facts, rankings, candidates, limitations)
+  -> Deterministic ReportDocument + local chart artifacts
+  -> Markdown / HTML / DOCX / PDF
+```
+
+`FirstHopProduct` is an Application-layer public output. It never consumes a reference
+report and does not require AI. Candidate priority is not a risk score or identity
+decision. Multi-hop acquisition remains a separate, explicitly approved workflow.

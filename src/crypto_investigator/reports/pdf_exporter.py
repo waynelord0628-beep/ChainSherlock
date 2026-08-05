@@ -9,6 +9,7 @@ from reportlab.lib.units import mm
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.platypus import (
+    KeepTogether,
     PageBreak,
     Paragraph,
     SimpleDocTemplate,
@@ -330,6 +331,8 @@ class PdfReportExporter:
                     story.append(PageBreak())
                 if section.section_id == "key_addresses":
                     story.append(PageBreak())
+                if section.section_id == "first_hop_candidates":
+                    story.append(PageBreak())
                 heading = Paragraph(
                     self._styled_text(section.title, self._latin_font_name),
                     styles["Heading1"],
@@ -415,7 +418,64 @@ class PdfReportExporter:
                                     ]
                                 )
                             )
-                            story.append(rendered_card)
+                            story.append(KeepTogether(rendered_card))
+                            story.append(Spacer(1, 2 * mm))
+                        continue
+                    if (
+                        section.section_id == "first_hop_candidates"
+                        and len(table.columns) == 8
+                    ):
+                        card_style = styles["BodyText"].clone(
+                            f"FirstHopCard-{table.table_id}"
+                        )
+                        card_style.fontSize = 8.5
+                        card_style.leading = 10
+                        for row in table.rows:
+                            card_data = [
+                                ["排名", row[0], "優先級", row[7]],
+                                ["完整地址（地址編號）", row[1], "", ""],
+                                ["收受 USDT", row[2], "占流出", row[4]],
+                                ["交易次數", row[3], "標籤", row[5]],
+                                ["後續資料", row[6], "", ""],
+                            ]
+                            rendered_card = Table(
+                                [
+                                    [
+                                        Paragraph(
+                                            self._styled_text(
+                                                str(value),
+                                                self._table_font_name,
+                                            ),
+                                            card_style,
+                                        )
+                                        for value in card_row
+                                    ]
+                                    for card_row in card_data
+                                ],
+                                colWidths=[
+                                    31 * mm,
+                                    58 * mm,
+                                    31 * mm,
+                                    45 * mm,
+                                ],
+                                splitByRow=1,
+                                splitInRow=0,
+                            )
+                            rendered_card.setStyle(
+                                TableStyle(
+                                    [
+                                        ("GRID", (0, 0), (-1, -1), 0.25, colors.grey),
+                                        ("BACKGROUND", (0, 0), (0, -1), colors.lightgrey),
+                                        ("BACKGROUND", (2, 0), (2, -1), colors.lightgrey),
+                                        ("SPAN", (1, 1), (3, 1)),
+                                        ("SPAN", (1, 4), (3, 4)),
+                                        ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+                                        ("TOPPADDING", (0, 0), (-1, -1), 4),
+                                        ("BOTTOMPADDING", (0, 0), (-1, -1), 4),
+                                    ]
+                                )
+                            )
+                            story.append(KeepTogether(rendered_card))
                             story.append(Spacer(1, 2 * mm))
                         continue
                     table_cell_style = styles["BodyText"].clone(
@@ -441,8 +501,17 @@ class PdfReportExporter:
                         ],
                     ]
                     available_width = 252 if len(table.columns) > 8 else 165
-                    widths = self._column_widths(
-                        table.columns, available_width
+                    widths = (
+                        (
+                            12 * mm,
+                            72 * mm,
+                            27 * mm,
+                            18 * mm,
+                            22 * mm,
+                            14 * mm,
+                        )
+                        if table.table_id == "first_hop_candidates_flow"
+                        else self._column_widths(table.columns, available_width)
                     )
                     data = [
                         [
@@ -491,6 +560,8 @@ class PdfReportExporter:
                         story.append(rendered)
                 story.append(Spacer(1, 3 * mm))
                 if section.section_id == "key_addresses":
+                    story.append(PageBreak())
+                if section.section_id == "first_hop_candidates":
                     story.append(PageBreak())
                 if section.section_id == "table_of_contents":
                     story.append(PageBreak())

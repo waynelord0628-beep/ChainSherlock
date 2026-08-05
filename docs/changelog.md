@@ -237,6 +237,15 @@
 - 修正正式 Full History 不沿用 preview 上限，並保存 pagination checkpoint 與 scope metadata。
 - AI 專業綜合改為 deterministic report enrichment，且位於 Evidence Index 前。
 
+## V8 First-Hop Report Productization
+
+- Added a chain-agnostic, Goal-driven first-hop investigation product service.
+- Added deterministic executive summaries, asset roles, concentration, time series,
+  cautious stage detection, trace-candidate priorities and case-specific follow-up tasks.
+- Added offline SVG chart artifacts with SHA-256 manifests.
+- Extended Local Label provenance and verification metadata.
+- Suppressed empty and duplicate report sections while preserving four-format parity.
+
 - Bounded compact facts, output paragraphs, claims and grounding references.
 - Replaced the legacy 1,800/2,000-token assumption with a live-validated
   3,000–8,000 completion policy and 3,500 default.
