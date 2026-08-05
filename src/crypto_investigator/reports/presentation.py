@@ -11,6 +11,10 @@ from crypto_investigator.reports.formatting import (
     format_duration,
     format_percent,
 )
+from crypto_investigator.reports.forensic_artifacts import (
+    suspicious_trx_candidates,
+    trx_reconciliation,
+)
 from crypto_investigator.reports.models import ReportSection, ReportTable
 
 
@@ -38,6 +42,23 @@ def format_display_text(value, timezone: str) -> str:
         lambda match: f"{match.group(0).replace('T', ' ')}（timezone unknown）",
         text,
     )
+    replacements = {
+        "Confirmed Data Facts": "已確認資料事實",
+        "Deterministic Observations": "規則式觀察",
+        "Operation Stages": "運作階段",
+        "full_history": "完整歷史",
+        "complete": "完整",
+        "material": "重要資產",
+        "candidate": "候選",
+        "batch rule": "批次規則",
+        "Deterministic ranking": "規則式排名",
+    }
+    for source, target in replacements.items():
+        text = re.sub(
+            rf"(?<![A-Za-z0-9_]){re.escape(source)}(?![A-Za-z0-9_])",
+            target,
+            text,
+        )
     return text
 
 
@@ -79,6 +100,77 @@ def _artifact_evidence(evidence):
 
 def _row_mapping(table):
     return {str(row[0]): str(row[1]) for row in table.rows if len(row) >= 2}
+
+
+def _graph_truncated(document) -> bool:
+    if any(item.code == "graph_truncated" for item in document.limitations):
+        return True
+    return any(
+        "graph_truncated" in str(row[0]) and str(row[1]).casefold() == "true"
+        or "交易關係圖因安全上限發生截斷" in str(row[0])
+        for section in document.sections
+        for table in section.tables
+        if table.table_id == "investigation_facts"
+        for row in table.rows
+        if len(row) >= 2
+    )
+
+
+def _provider_truncated(document) -> bool:
+    table = _find_table(document, "providers")
+    if not table or "截斷" not in table.columns:
+        return False
+    index = table.columns.index("截斷")
+    return any(
+        str(row[index]).casefold() in {"true", "yes", "是", "1"}
+        for row in table.rows
+        if len(row) > index
+    )
+
+
+def _confirmed_fact_table(document) -> ReportTable:
+    summary = _row_mapping(_find_table(document, "summary") or ReportTable(
+        "empty", "empty", (), ()
+    ))
+    assets = "、".join(_material_assets(document)) or "無可用資料"
+    completeness = "完整" if document.metadata.analysis_completeness == "complete" else "部分"
+    graph = "已截斷" if _graph_truncated(document) else "未標示截斷"
+    provider = "已截斷" if _provider_truncated(document) else "未標示截斷"
+    rows = (
+        ("FACT-SCOPE-001", "分析標的與鏈別", f"{document.metadata.target_address}／{document.metadata.chain}", "analysis.json", completeness, ""),
+        ("FACT-COUNT-001", "分析範圍內交易總數", f"{document.metadata.transaction_count:,}", "analysis.json", completeness, f"其中 {summary.get('unclassified_direction_count', '0')} 筆方向未分類"),
+        ("FACT-DIRECTION-001", "流入／流出／未分類筆數", f"{summary.get('incoming_count', '—')}／{summary.get('outgoing_count', '—')}／{summary.get('unclassified_direction_count', '—')}", "analysis.json", completeness, ""),
+        ("FACT-ASSET-USDT-001", "USDT 為主要分析資產", "USDT" if "USDT" in assets else "未列入", "analysis.json", completeness, ""),
+        ("FACT-ASSET-TRX-001", "TRX 為主要分析資產", "TRX" if "TRX" in assets else "未列入", "analysis.json", completeness, "TRX material flow 另見 reconciliation"),
+        ("FACT-PROVIDER-001", "Provider 取得狀態", provider, "provider_status.json", completeness, "Provider 完整不代表 Graph 完整"),
+        ("FACT-GRAPH-001", "Graph 安全上限狀態", graph, "flow_graph.json", "部分" if _graph_truncated(document) else completeness, "Graph 截斷不影響 Provider 原始取得完整度"),
+    )
+    return ReportTable(
+        "confirmed_data_facts",
+        "已確認資料事實",
+        ("事實編號", "事實內容", "數值", "來源", "完整度", "限制"),
+        rows,
+    )
+
+
+def _additional_observation_table(document) -> ReportTable:
+    patterns = _row_mapping(_find_table(document, "transfer_patterns") or ReportTable(
+        "empty", "empty", (), ()
+    ))
+    rows = (
+        ("OBS-BATCH-IN-001", f"目前分析範圍內辨識到 {patterns.get('批次流入視窗數', patterns.get('batch_incoming_count', '0'))} 個批次流入視窗。", "規則式計算", "中", "批次視窗不代表共同控制人"),
+        ("OBS-BATCH-OUT-001", f"目前分析範圍內辨識到 {patterns.get('批次流出視窗數', patterns.get('batch_outgoing_count', '0'))} 個批次流出視窗。", "規則式計算", "中", "批次視窗不代表同一資金路徑"),
+        ("OBS-FIXED-USDT-001", "USDT 存在重複固定金額模式。", "規則式計算", "中", "完整金額清單見 fixed_amounts.csv"),
+        ("OBS-FIXED-TRX-001", "TRX 存在重複固定金額模式；可疑宣傳型候選已另行隔離。", "規則式計算", "中", "候選仍待人工覆核"),
+        ("OBS-DORMANCY-001", "目前分析範圍內未偵測到符合規則門檻的休眠區間。", "規則式計算", "中", "門檻及資料範圍可能影響結果"),
+        ("OBS-STAGE-001", "目前資料可分為啟動期與來源多元化階段。", "規則式計算", "中", "階段由 deterministic 規則產生"),
+    )
+    return ReportTable(
+        "rule_observation_summary",
+        "模式與階段觀察",
+        ("Observation ID", "規則式觀察", "來源", "信心", "資料限制"),
+        rows,
+    )
 
 
 def _material_assets(document) -> tuple[str, ...]:
@@ -217,8 +309,16 @@ def _address_registry_tables(addresses, registry, chain):
         ReportTable(
             "address_registry_context",
             "地址對照表（調查脈絡）",
-            ("地址編號", "Candidate Role", "Evidence／來源", "備註"),
-            tuple((row[0], row[4], row[5], row[6]) for row in rows),
+            ("地址編號", "候選角色", "Label", "主要用途／出現章節"),
+            tuple(
+                (
+                    row[0],
+                    row[4],
+                    row[3],
+                    "主文排名、規則式觀察或候選摘要",
+                )
+                for row in rows
+            ),
         ),
     )
 
@@ -405,6 +505,9 @@ def _asset_first_sections(document, registry, material_assets):
     sections = []
     all_ranking_rows = []
     path_rows = []
+    trx_candidates = suspicious_trx_candidates(document)
+    quarantined_trx_senders = {item["sender"] for item in trx_candidates}
+    trx_totals = trx_reconciliation(document)
     for asset_index, asset in enumerate(assets):
         asset_row = next(
             (
@@ -423,9 +526,14 @@ def _asset_first_sections(document, registry, material_assets):
             ),
         ) if asset_row else ()
 
-        source_rows = [
+        all_source_rows = [
             row for row in (funding.rows if funding else ())
             if len(row) >= 7 and str(row[1]) == asset
+        ]
+        source_rows = [
+            row
+            for row in all_source_rows
+            if asset != "TRX" or str(row[2]) not in quarantined_trx_senders
         ]
         source_rows.sort(
             key=lambda row: (
@@ -508,16 +616,17 @@ def _asset_first_sections(document, registry, material_assets):
             destination = str(outgoing[0][1])
             path_rows.append(
                 (
-                    f"PATH-{len(path_rows) + 1:03d}",
+                    f"FLOW-SUMMARY-{len(path_rows) + 1:03d}",
                     asset,
                     registry.get(source_address, "—"),
                     registry.get(target, "—"),
                     registry.get(destination, "—"),
+                    _display_amount_2(source_rows[0][3]),
                     _display_amount_2(outgoing[0][6]),
-                    str(outgoing[0][7]),
-                    str(outgoing[0][8]),
-                    "candidate",
-                    "Deterministic ranking",
+                    "來源與去向排名組合",
+                    "候選摘要",
+                    f"CAND-FLOW-{asset}-001",
+                    "不代表同一筆資金之確定流向；來源與去向金額分別計算。",
                 )
             )
 
@@ -570,16 +679,84 @@ def _asset_first_sections(document, registry, material_assets):
             ReportTable(
                 f"outgoing_rank_{asset.casefold()}",
                 f"{asset} 主要資金去向 Top 10（依流出金額）",
-                ("排名", "地址參照", "方向", "交易次數", "流出金額", "首次", "最後"),
-                outgoing_rows,
+                ("排名", "地址參照", "方向", "交易次數", "流出金額"),
+                tuple(row[:5] for row in outgoing_rows),
+            ),
+            ReportTable(
+                f"outgoing_time_{asset.casefold()}",
+                f"{asset} 主要資金去向時間對照",
+                ("排名", "地址編號", "首次", "最後"),
+                tuple(
+                    (row[0], row[1].splitlines()[0], row[5], row[6])
+                    for row in outgoing_rows
+                ),
             ),
             ReportTable(
                 f"frequency_rank_{asset.casefold()}",
                 f"{asset} 高頻交易對手 Top 10（依交易次數）",
-                ("排名", "地址參照", "方向", "交易次數", "流出金額", "首次", "最後"),
-                frequent_rows,
+                ("排名", "地址參照", "方向", "交易次數", "流出金額"),
+                tuple(row[:5] for row in frequent_rows),
+            ),
+            ReportTable(
+                f"frequency_time_{asset.casefold()}",
+                f"{asset} 高頻交易對手時間對照",
+                ("排名", "地址編號", "首次", "最後"),
+                tuple(
+                    (row[0], row[1].splitlines()[0], row[5], row[6])
+                    for row in frequent_rows
+                ),
             ),
         ]
+        if asset == "TRX":
+            tables.insert(
+                1,
+                ReportTable(
+                    "trx_flow_reconciliation",
+                    "TRX 鏈上、重要與隔離流入",
+                    ("分類", "金額", "狀態", "限制"),
+                    (
+                        ("鏈上總流入", _display_amount_2(trx_totals["gross_on_chain_inflow"]), "完整歷史彙總", ""),
+                        ("重要資金流入", _display_amount_2(trx_totals["final_material_inflow"]), "候選隔離後", "尚待人工覆核"),
+                        ("宣傳型轉入候選", _display_amount_2(trx_totals["promotional_candidate"]), "候選", "未確認為釣魚或詐騙"),
+                        ("尚待人工覆核", _display_amount_2(trx_totals["promotional_candidate"]), "未審閱", "可逆並可重新納入"),
+                    ),
+                ),
+            )
+            candidate_rows = tuple(
+                (
+                    _address_reference(str(item["sender"]), registry),
+                    _display_amount_2(item["normalized_amount"]),
+                    str(item["timestamp"]),
+                    str(item["same_amount_source_count"]),
+                    f"CAND-TRX-{candidate_index:03d}",
+                )
+                for candidate_index, item in enumerate(trx_candidates, 1)
+            )
+            tables.append(
+                ReportTable(
+                    "suspicious_trx_transfers",
+                    "TRX 可疑轉入候選（金額與時間）",
+                    ("地址參照", "金額", "交易時間", "同額來源數", "候選編號"),
+                    candidate_rows,
+                )
+            )
+            tables.append(
+                ReportTable(
+                    "suspicious_trx_review",
+                    "TRX 可疑轉入候選（分類與覆核）",
+                    ("候選編號", "候選類型", "原因", "信心", "人工審閱"),
+                    tuple(
+                        (
+                            f"CAND-TRX-{candidate_index:03d}",
+                            "宣傳型轉入候選",
+                            "醒目固定金額且由多個來源地址出現同額轉入",
+                            "中",
+                            "尚未審閱",
+                        )
+                        for candidate_index, _item in enumerate(trx_candidates, 1)
+                    ),
+                )
+            )
         sections.append(
             ReportSection(
                 f"asset_analysis_{asset.casefold()}",
@@ -667,21 +844,24 @@ def _asset_first_sections(document, registry, material_assets):
         ),
         ReportSection(
             "fund_flow_paths",
-            "主要資金流路徑",
+            "主要來源與去向關聯摘要",
             110,
-            ("路徑由主要來源與主要去向排名組合，屬規則式 candidate，不代表逐筆資金已完成同源追蹤。",),
+            (
+                "本節僅將各資產最大來源與最大去向並列，未執行 transaction-level "
+                "path tracing；不得視為同一筆資金的確定流向。",
+            ),
             tables=(
                 ReportTable(
                     "fund_flow_paths",
-                    "按幣種整理之主要候選路徑",
-                    ("路徑 ID", "資產", "起點", "中間地址", "終點", "金額／統計"),
-                    tuple(row[:6] for row in path_rows),
+                    "地址層級候選流向摘要",
+                    ("摘要 ID", "資產", "主要來源", "調查標的", "主要去向", "來源金額", "去向金額"),
+                    tuple(row[:7] for row in path_rows),
                 ),
                 ReportTable(
                     "fund_flow_path_context",
-                    "候選路徑時間與查核狀態",
-                    ("路徑 ID", "首次", "最後", "狀態", "Evidence"),
-                    tuple((row[0], *row[6:]) for row in path_rows),
+                    "候選摘要方法與限制",
+                    ("摘要 ID", "關聯方法", "狀態", "Candidate ID", "限制"),
+                    tuple((row[0], *row[7:]) for row in path_rows),
                 ),
             ),
         ),
@@ -705,6 +885,7 @@ def _reorder_booklet(document, sections, registry, material_assets):
         "rejected_records",
         "direction_reconciliation",
         "investigation",
+        "investigation_facts",
         "data_sources",
     }
     base = [section for section in sections if section.section_id not in excluded]
@@ -735,7 +916,11 @@ def _reorder_booklet(document, sections, registry, material_assets):
                     "address_registry",
                     "地址對照表",
                     220,
-                    ("本節列出主文引用之完整地址；其餘地址請參閱 address_registry.csv。",),
+                    (
+                        "下列地址均為主文引用地址；若無人工或 Local Label，角色保持未確認。"
+                        "完整證據 mapping 請參閱 report_data.json；其餘地址請參閱 "
+                        "address_registry.csv。",
+                    ),
                     tables=registry_tables,
                 )
             )
@@ -746,7 +931,7 @@ def _reorder_booklet(document, sections, registry, material_assets):
         "資產總覽",
         *(f"{asset} 分析" for asset in booklet_assets),
         "地址排名總覽",
-        "主要資金流路徑",
+        "主要來源與去向關聯摘要",
         "時間軸與運作階段",
         "固定金額、批次與停留時間",
         "已確認事實",
@@ -917,12 +1102,6 @@ def _formalize_table(table):
             tuple(label for _, label in fields) + ("信心", "限制"),
             tuple(rows),
         )
-    if table.table_id == "operation_stages" and "Evidence" in table.columns:
-        return replace(
-            table,
-            columns=("階段", "開始時間", "結束時間", "交易筆數", "主要資產",
-                     "主要來源", "主要去向", "判定依據", "信心", "資料限制"),
-        )
     if table.table_id == "holding_time" and "平均秒數" in table.columns:
         rows = []
         for row in table.rows:
@@ -940,53 +1119,92 @@ def _formalize_table(table):
             tuple(rows),
         )
     if table.table_id == "transfer_patterns" and any(
-        str(row[0]) == "fixed_amounts" for row in table.rows
+        str(row[0]) in {"fixed_amounts", "主要固定金額"} for row in table.rows
     ):
         values = _row_mapping(table)
         fixed = []
         try:
             parsed = ast.literal_eval(values.get("fixed_amounts", "{}"))
             for asset, amounts in sorted(parsed.items()):
-                visible = "、".join(format_amount(item) for item in amounts[:8])
-                if visible:
-                    fixed.append(f"{asset}：{visible}")
+                for rank, item in enumerate(amounts[:8], 1):
+                    fixed.append(
+                        (
+                            str(asset),
+                            str(rank),
+                            format_amount(item),
+                            "未保存",
+                            "未保存",
+                            f"OBS-FIXED-{str(asset).upper()}-{rank:03d}",
+                        )
+                    )
         except (SyntaxError, ValueError):
             pass
+        if not fixed:
+            for group in values.get("主要固定金額", "").split("；"):
+                if "：" not in group:
+                    continue
+                asset, amounts = group.split("：", 1)
+                for rank, item in enumerate(amounts.split("、")[:8], 1):
+                    if item:
+                        fixed.append(
+                            (
+                                asset,
+                                str(rank),
+                                format_amount(str(item).replace(",", "")),
+                                "未保存",
+                                "未保存",
+                                f"OBS-FIXED-{asset.upper()}-{rank:03d}",
+                            )
+                        )
         return ReportTable(
             table.table_id,
-            "模式摘要",
-            ("判讀項目", "結果"),
-            (
-                ("整數金額比例", format_percent(values.get("integer_amount_ratio", 0))),
-                ("批次流入視窗數", values.get("batch_incoming_count", "0")),
-                ("批次流出視窗數", values.get("batch_outgoing_count", "0")),
-                ("主要固定金額", "；".join(fixed) or "未辨識"),
-                ("資料限制", "僅反映目前分析範圍；完整精度見 report_data.json。"),
-            ),
+            "主要固定金額",
+            ("資產", "排名", "固定金額", "出現次數", "占比", "Observation ID"),
+            tuple(fixed),
         )
-    if table.table_id == "investigation_observations" and len(table.columns) > 4:
+    if table.table_id == "investigation_observations":
+        funding_index = 0
+        rows = []
+        for row in table.rows:
+            if len(table.columns) > 4:
+                statement, confidence, limitation = row[1], row[5], row[6]
+            elif len(row) >= 4:
+                statement, confidence, limitation = row[0], row[2], row[3]
+            elif len(row) >= 2:
+                statement, confidence, limitation = (
+                    row[1],
+                    "medium",
+                    "僅反映目前分析範圍",
+                )
+            else:
+                statement, confidence, limitation = (
+                    row[0],
+                    "medium",
+                    "僅反映目前分析範圍",
+                )
+            statement = str(statement).replace("batch rule", "批次規則")
+            if "主要供款來源" in statement:
+                funding_index += 1
+                claim_id = f"OBS-FUNDING-{funding_index:03d}"
+            elif "批次流入" in statement:
+                claim_id = "OBS-BATCH-IN-001"
+            elif "批次流出" in statement:
+                claim_id = "OBS-BATCH-OUT-001"
+            else:
+                claim_id = f"OBS-RULE-{len(rows) + 1:03d}"
+            rows.append(
+                (
+                    claim_id,
+                    statement,
+                    "規則式計算",
+                    "中" if str(confidence).casefold() == "medium" else "高",
+                    str(limitation) or "僅反映目前分析範圍",
+                )
+            )
         return ReportTable(
             table.table_id,
             "規則式觀察",
-            ("規則式觀察", "引用", "信心", "資料限制"),
-            tuple((row[1], row[4], row[5], row[6]) for row in table.rows),
-        )
-    if table.table_id == "investigation_facts" and len(table.columns) > 4:
-        rows = []
-        for row in table.rows:
-            code, value = row[0], row[1]
-            if value in {"True", "False"}:
-                statement = (
-                    ("有" if value == "True" else "未")
-                    + f"辨識到「{code.replace('_', ' ')}」。"
-                )
-            else:
-                statement = f"{code.replace('_', ' ')}：{value}。"
-            rows.append((statement, row[5], row[3], row[6]))
-        return ReportTable(
-            table.table_id,
-            "已確認資料事實",
-            ("已確認資料事實", "引用", "信心", "資料限制"),
+            ("Observation ID", "規則式觀察", "來源", "信心", "資料限制"),
             tuple(rows),
         )
     if table.table_id == "counterparty_summary" and len(table.columns) > 10:
@@ -1039,6 +1257,108 @@ def _evidence_table(evidence):
         ("Evidence ID", "檔名", "類型", "SHA-256", "完整性", "備註"),
         tuple(rows),
     )
+
+
+def _stage_address_summary(value, registry) -> str:
+    addresses = [match.group(0) for match in IDENTIFIER.finditer(str(value))]
+    visible = [
+        f"{abbreviate_identifier(address)}（{registry.get(address, '—')}）"
+        for address in addresses[:3]
+    ]
+    remaining = max(0, len(addresses) - len(visible))
+    if remaining:
+        visible.append(f"另有 {remaining} 個")
+    return "、".join(visible) or "資料不足"
+
+
+def _stage_asset_summary(value) -> str:
+    assets = [
+        item.strip()
+        for item in re.split(r"[、,;；]", str(value))
+        if item.strip()
+    ]
+    visible = assets[:3]
+    if len(assets) > len(visible):
+        visible.append(f"另有 {len(assets) - len(visible)} 項")
+    return "、".join(visible) or "資料不足"
+
+
+def _operation_stage_tables(table, registry, timezone) -> tuple[ReportTable, ...]:
+    index = {name: position for position, name in enumerate(table.columns)}
+    tables = []
+    previous = None
+    confidence_labels = {"low": "低", "medium": "中", "high": "高"}
+    for order, row in enumerate(table.rows, 1):
+        def value(name, default="資料不足"):
+            position = index.get(name)
+            return str(row[position]) if position is not None and len(row) > position else default
+
+        stage = value("階段", value("stage", f"階段 {order}"))
+        started = value("開始", value("開始時間"))
+        ended = value("結束", value("結束時間"))
+        count = value("交易數", value("交易筆數"))
+        assets = value("資產", value("主要資產"))
+        sources = value("主要來源")
+        destinations = value("主要去向")
+        basis = value("判定依據")
+        confidence = confidence_labels.get(
+            value("信心").casefold(), value("信心")
+        )
+        limitation = value("資料限制", "")
+        changes = []
+        if previous is None:
+            changes.append("首個階段，無前一階段可供比較。")
+        else:
+            previous_count = Decimal(previous["count"])
+            current_count = Decimal(count)
+            direction = (
+                "增加" if current_count > previous_count
+                else "減少" if current_count < previous_count
+                else "持平"
+            )
+            changes.append(f"交易筆數較前一階段{direction}。")
+            changes.append(
+                "主要來源組成未變。"
+                if sources == previous["sources"]
+                else "主要來源組成發生變化。"
+            )
+            changes.append(
+                "主要去向組成未變。"
+                if destinations == previous["destinations"]
+                else "主要去向組成發生變化。"
+            )
+            changes.append(
+                "主要資產組成未變。"
+                if assets == previous["assets"]
+                else "主要資產組成發生變化。"
+            )
+            changes.append("階段金額彙總未保存，無法判定金額變化。")
+        tables.append(
+            ReportTable(
+                f"operation_stage_{order:02d}",
+                f"運作階段：{stage}",
+                ("項目", "內容"),
+                (
+                    ("期間", f"{format_display_text(started, timezone)} 至 {format_display_text(ended, timezone)}"),
+                    ("交易數", count),
+                    ("主要資產", _stage_asset_summary(assets)),
+                    ("主要來源", _stage_address_summary(sources, registry)),
+                    ("主要去向", _stage_address_summary(destinations, registry)),
+                    ("判定依據", basis),
+                    ("與前期比較", " ".join(changes)),
+                    ("信心", confidence),
+                    ("限制", limitation or "僅反映目前分析範圍"),
+                    ("Observation ID", "OBS-STAGE-001" if order == 1 else f"OBS-STAGE-{order:03d}"),
+                ),
+            )
+        )
+        previous = {
+            "count": count,
+            "sources": sources,
+            "destinations": destinations,
+            "assets": assets,
+        }
+    return tuple(tables)
 
 
 def _split_wide_table(table):
@@ -1218,6 +1538,39 @@ def prepare_report_for_display(document):
                 "已確認資料事實、規則式觀察與 AI 候選解釋均分層呈現；"
                 "地址身分、控制權、交易目的及法律性質仍須外部資料與人工查證。",
             )
+        elif section.section_id == "confirmed_facts":
+            source_tables = (_confirmed_fact_table(document),)
+            content_blocks = (
+                "本節僅列由鏈上資料、Provider 與 deterministic artifact 直接支持的事實；"
+                "規則結果另列於「規則式觀察」。",
+            )
+        elif section.section_id == "investigation_observations":
+            source_tables = (*source_tables, _additional_observation_table(document))
+            content_blocks = (
+                "本節為 deterministic 規則式判讀，不等同鏈上直接事實或已確認身分。",
+            )
+        elif section.section_id.startswith("ai_") and _graph_truncated(document):
+            rewritten = []
+            for block in content_blocks:
+                if (
+                    "圖譜與供應端均未標示截斷" in block
+                    or "未顯示圖譜或供應端截斷" in block
+                ):
+                    rewritten.append(
+                        "Deterministic override：Provider 資料取得完整，但 Graph "
+                        "因安全上限截斷；原 AI claim 與已確認狀態矛盾，已移除。"
+                    )
+                elif (
+                    section.section_id == "ai_holding_time_narrative"
+                    and "TRX" in block
+                ):
+                    rewritten.append(
+                        "既有 AI 的 TRX 停留時間敘述使用隔離前資料，已標記 stale "
+                        "並安全省略；USDT deterministic 結果仍以主文表格為準。"
+                    )
+                else:
+                    rewritten.append(block)
+            content_blocks = tuple(dict.fromkeys(rewritten))
         elif (
             section.section_id == "appendix"
             and full_addresses
@@ -1238,6 +1591,15 @@ def prepare_report_for_display(document):
                 ),
             )
         for raw_table in source_tables:
+            if raw_table.table_id == "operation_stages":
+                tables.extend(
+                    _operation_stage_tables(
+                        raw_table,
+                        address_registry,
+                        timezone,
+                    )
+                )
+                continue
             raw_table = _material_table(
                 raw_table,
                 material_assets,

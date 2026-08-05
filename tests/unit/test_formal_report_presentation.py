@@ -21,8 +21,13 @@ from crypto_investigator.reports.formatting import (
 )
 from crypto_investigator.reports.models import (
     ReportEvidence,
+    ReportLimitation,
     ReportSection,
     ReportTable,
+)
+from crypto_investigator.reports.forensic_artifacts import (
+    suspicious_trx_candidates,
+    trx_reconciliation,
 )
 from crypto_investigator.reports.pdf_exporter import PdfReportExporter
 from crypto_investigator.reports.presentation import (
@@ -555,6 +560,37 @@ def test_41_address_ids_are_stable_across_sections():
         table for table in _section(display, "key_addresses").tables
         if table.table_id == "key_address_summary"
     )
+
+
+def _repeated_promotional_document():
+    document = _two_asset_document()
+    sections = []
+    senders = (
+        "TQPtmCQeYzn1iUWv6sun2aoKRYiBrB4Aq4",
+        "TL492pHAGYppvE8QKNwai8GakhuWjB8uE7",
+    )
+    for section in document.sections:
+        if section.section_id == "funding_analysis":
+            tables = []
+            for table in section.tables:
+                if table.table_id == "funding_sources":
+                    rows = tuple(table.rows) + tuple(
+                        (
+                            str(index),
+                            "TRX",
+                            sender,
+                            "8888.88",
+                            "10%",
+                            "2025-06-01T00:00:00+00:00",
+                            "2025-06-01T00:00:00+00:00",
+                        )
+                        for index, sender in enumerate(senders, 20)
+                    )
+                    table = replace(table, rows=rows)
+                tables.append(table)
+            section = replace(section, tables=tuple(tables))
+        sections.append(section)
+    return replace(document, sections=tuple(sections))
     for row in key.rows:
         full_address, display_id = row[1].rsplit("（", 1)
         assert display_id.rstrip("）") == known[full_address]
@@ -672,7 +708,9 @@ def test_42_key_address_summary_is_early():
 def test_43_fund_flow_path_section_exists():
     section = _section(prepare_report_for_display(_two_asset_document()), "fund_flow_paths")
     assert section.tables[0].rows
-    assert all(row[3] == "candidate" for row in section.tables[1].rows)
+    assert section.title == "主要來源與去向關聯摘要"
+    assert all(row[2] == "候選摘要" for row in section.tables[1].rows)
+    assert all("不代表同一筆資金" in row[4] for row in section.tables[1].rows)
 
 
 def test_44_ai_sections_follow_deterministic_facts():
@@ -768,3 +806,92 @@ def test_51_asset_chapter_begins_with_narrative():
     )
     assert "共納入" in section.content_blocks[0]
     assert "最大資金來源" in " ".join(section.content_blocks)
+
+
+def test_52_confirmed_facts_are_direct_data_not_rule_results():
+    display = prepare_report_for_display(_document())
+    section = _section(display, "confirmed_facts")
+    rendered = str(section.tables[0].rows)
+    assert "FACT-COUNT-001" in rendered
+    assert "有辨識到" not in rendered
+    assert "未辨識到" not in rendered
+    assert "batch" not in rendered.casefold()
+    assert "investigation_facts" not in {
+        item.section_id for item in display.sections
+    }
+
+
+def test_53_candidate_flow_is_not_presented_as_traced_path():
+    section = _section(
+        prepare_report_for_display(_two_asset_document()),
+        "fund_flow_paths",
+    )
+    rendered = f"{section.title} {section.tables}"
+    assert "主要資金流路徑" not in rendered
+    assert "不代表同一筆資金" in rendered
+    assert "來源與去向排名組合" in rendered
+
+
+def test_54_repeated_promotional_trx_is_quarantined_but_reversible():
+    document = _repeated_promotional_document()
+    candidates = suspicious_trx_candidates(document)
+    assert len(candidates) == 2
+    assert all(item["included_in_fund_flow"] is False for item in candidates)
+    assert all(item["reversible"] is True for item in candidates)
+    reconciliation = trx_reconciliation(document)
+    assert Decimal(reconciliation["gross_on_chain_inflow"]) == Decimal("5000")
+    assert Decimal(reconciliation["promotional_candidate"]) == Decimal("17777.76")
+
+
+def test_55_suspicious_trx_table_is_split_for_readability():
+    display = prepare_report_for_display(_repeated_promotional_document())
+    trx = _section(display, "asset_analysis_trx")
+    primary = next(
+        table for table in trx.tables
+        if table.table_id == "suspicious_trx_transfers"
+    )
+    review = next(
+        table for table in trx.tables
+        if table.table_id == "suspicious_trx_review"
+    )
+    assert len(primary.columns) == 5
+    assert len(review.columns) == 5
+    assert all(len(row) == 5 for row in (*primary.rows, *review.rows))
+
+
+def test_56_operation_stage_uses_chinese_confidence_and_bounded_assets():
+    display = prepare_report_for_display(_document())
+    stages = _section(display, "operation_stages")
+    assert stages.tables
+    rendered = str(stages.tables)
+    assert "medium" not in rendered
+    assert any(value in rendered for value in ("低", "中", "高"))
+    assert all(len(table.columns) == 2 for table in stages.tables)
+
+
+def test_57_graph_truncation_contradiction_is_overridden_without_ai_call():
+    document = _document()
+    contradiction = ReportSection(
+        "ai_conclusion",
+        "AI 專業綜合",
+        500,
+        ("圖譜與供應端均未標示截斷。",),
+    )
+    document = replace(
+        document,
+        sections=(*document.sections, contradiction),
+        limitations=(
+            *document.limitations,
+            ReportLimitation("graph_truncated", "安全上限"),
+        ),
+    )
+    display = prepare_report_for_display(document)
+    rendered = " ".join(_section(display, "ai_conclusion").content_blocks)
+    assert "圖譜與供應端均未標示截斷" not in rendered
+    assert "Graph 因安全上限截斷" in rendered
+
+
+def test_58_display_does_not_use_if0_as_primary_claim_reference():
+    display = prepare_report_for_display(_document())
+    rendered = str(display.sections)
+    assert "IF0" not in rendered

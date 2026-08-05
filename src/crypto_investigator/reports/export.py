@@ -6,6 +6,7 @@ from crypto_investigator.reports.docx_exporter import DocxReportExporter
 from crypto_investigator.reports.evidence import EvidenceManifest
 from crypto_investigator.reports.errors import ReportExportError
 from crypto_investigator.reports.formatting import safe_output_path, validate_output_directory
+from crypto_investigator.reports.forensic_artifacts import write_forensic_artifacts
 from crypto_investigator.reports.html_exporter import HtmlReportExporter
 from crypto_investigator.reports.json_exporter import write_report_data
 from crypto_investigator.reports.markdown_exporter import MarkdownReportExporter
@@ -64,6 +65,7 @@ class ReportExportCoordinator:
             )
             writer.writerows(address_registry_rows(document))
         files["address_registry"] = registry_path.name
+        files.update(write_forensic_artifacts(document, root))
         display_document = prepare_report_for_display(document)
 
         for name in selected:
