@@ -6,6 +6,9 @@
 - Resume incomplete pagination without refetching the first provider page.
 - Preserve previously collected trace edges across a resumed collection.
 - Add synthetic regression coverage for cursor passthrough and resume behavior.
+- Add an explicit confirmed `TRACE_FUNDS` planner step.
+- Persist evidence-backed trace result, trace graph and optional checkpoint artifacts
+  through Case Execution.
 
 ## Unreleased – First-Hop final report tuning
 

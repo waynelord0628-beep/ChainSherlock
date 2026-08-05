@@ -67,6 +67,8 @@ class ArtifactType(StrEnum):
     CHECKPOINT = "checkpoint"
     FIRST_HOP_PRODUCT = "first_hop_product"
     FIRST_HOP_CHART_MANIFEST = "first_hop_chart_manifest"
+    TRACE_RESULT = "trace_result"
+    TRACE_GRAPH = "trace_graph"
     OTHER = "other"
 
 

@@ -203,3 +203,61 @@ def test_offline_excel_evidence_reaches_analysis(tmp_path: Path) -> None:
         item.artifact_type is ArtifactType.ANALYSIS_RESULT
         for item in completed.artifacts
     )
+
+
+def test_offline_trace_funds_produces_evidence_backed_trace_artifacts(
+    tmp_path: Path,
+) -> None:
+    repository = CaseRepository(tmp_path / "cases")
+    ui = CaseUIService(repository)
+    case = ui.create_case("Synthetic multi-hop trace")
+    case = repository.save(
+        case.model_copy(
+            update={
+                "metadata": {
+                    "chain": "ethereum",
+                    "known_addresses": [TARGET],
+                }
+            }
+        )
+    )
+    ui.import_evidence(case.case_id, _csv(tmp_path / "synthetic-trace.csv"))
+    ui.add_goal(
+        case.case_id,
+        "trace_funds",
+        "Trace synthetic funds",
+        [TARGET],
+    )
+    plan = ui.create_plan(case.case_id)
+    trace_step = next(
+        item for item in plan.steps if item.step_type.value == "trace_funds"
+    )
+    assert trace_step.requires_confirmation is True
+    ui.confirm_latest_plan(case.case_id)
+    service = CaseExecutionService(
+        repository, create_offline_execution_registry(repository)
+    )
+
+    execution = service.create_execution(case.case_id, plan.plan_id)
+    completed = service.run_execution(execution.execution_id)
+
+    assert completed.success
+    types = {item.artifact_type for item in completed.artifacts}
+    assert ArtifactType.TRACE_RESULT in types
+    assert ArtifactType.TRACE_GRAPH in types
+    trace_artifact = next(
+        item
+        for item in completed.artifacts
+        if item.artifact_type is ArtifactType.TRACE_RESULT
+    )
+    path = repository.workspace(case.case_id).resolve_relative(
+        trace_artifact.relative_path
+    )
+    payload = json.loads(path.read_text(encoding="utf-8"))
+    assert payload["seed"]["value"] == TARGET
+    assert {item["transaction_hash"] for item in payload["edges"]} == {
+        "0x" + "0" * 63 + "1",
+        "0x" + "0" * 63 + "2",
+        "0x" + "0" * 63 + "3",
+    }
+    assert str(tmp_path) not in path.read_text(encoding="utf-8")

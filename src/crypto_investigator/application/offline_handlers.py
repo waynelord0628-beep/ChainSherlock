@@ -1,8 +1,10 @@
 from __future__ import annotations
 
+import hashlib
 import json
 import shutil
 from dataclasses import replace
+from decimal import Decimal
 from pathlib import Path
 from typing import Any
 
@@ -22,8 +24,19 @@ from crypto_investigator.cases.evidence import EvidenceManager
 from crypto_investigator.cases.models import CaseRecord
 from crypto_investigator.cases.repository import CaseRepository
 from crypto_investigator.core.export import TransactionExporter
+from crypto_investigator.domain.fund_trace_engine import investigate_fund_trace
+from crypto_investigator.domain.fund_tracing import (
+    AllocationMethod,
+    SeedType,
+    TraceDirection,
+    TraceEdge,
+    TraceRunStatus,
+    TraceScope,
+    TraceSeed,
+)
 from crypto_investigator.graphs.builder import GraphBuilder
 from crypto_investigator.graphs.export import GraphExporter
+from crypto_investigator.graphs.trace_adapter import trace_result_to_graph
 from crypto_investigator.importers.factory import ImporterFactory
 from crypto_investigator.importers.validator import DataValidator
 from crypto_investigator.investigation.feature_engine import InvestigationFeatureEngine
@@ -279,6 +292,162 @@ class OfflineStepHandler:
             "offline_analysis_engine",
         )
 
+    def _execute_trace_funds(self, case, step, context, token):
+        transactions = _load_transactions(self.repository, case, token)
+        target = _target_address(case, step)
+        if not target or step.chain is None:
+            raise ValueError("Fund tracing requires a confirmed address and chain")
+        evidence_refs = tuple(
+            sorted(item.evidence_id for item in case.evidence)
+        ) or ("CASE-ANALYSIS",)
+        edges = []
+        for transaction in transactions:
+            token.raise_if_cancelled()
+            if (
+                transaction.chain is not step.chain
+                or transaction.success is False
+                or not transaction.from_address
+                or not transaction.to_address
+                or not transaction.tx_hash
+                or not transaction.asset_symbol
+                or transaction.amount is None
+                or transaction.amount <= 0
+                or transaction.timestamp is None
+            ):
+                continue
+            material = (
+                f"{transaction.chain.value}|{transaction.tx_hash}|"
+                f"{transaction.from_address}|{transaction.to_address}|"
+                f"{transaction.asset_symbol}|{transaction.amount}"
+            )
+            edges.append(
+                TraceEdge(
+                    edge_id="EDGE-" + hashlib.sha256(
+                        material.encode("utf-8")
+                    ).hexdigest()[:20],
+                    from_address=transaction.from_address,
+                    to_address=transaction.to_address,
+                    transaction_hash=transaction.tx_hash,
+                    asset=transaction.asset_symbol,
+                    amount=transaction.amount,
+                    timestamp=transaction.timestamp,
+                    allocation_method=AllocationMethod.DIRECT_TRANSACTION,
+                    confidence=Decimal("1"),
+                    evidence_refs=evidence_refs,
+                )
+            )
+        if not edges:
+            raise ValueError("No evidence-backed transfer edges are available")
+        assets = tuple(step.assets) or tuple(
+            sorted({edge.asset for edge in edges})
+        )
+        parameters = step.parameters
+        scope = TraceScope(
+            scope_type=str(parameters.get("scope_type", "case_evidence")),
+            max_depth=int(parameters.get("max_depth", 3)),
+            max_nodes=int(parameters.get("max_nodes", 100)),
+            max_records=int(parameters.get("max_records") or len(edges)),
+            min_material_amount=Decimal(
+                str(parameters.get("min_material_amount", "0"))
+            ),
+            asset_filters=assets,
+            direction=TraceDirection(
+                str(parameters.get("direction", "bidirectional"))
+            ),
+        )
+        result, checkpoint = investigate_fund_trace(
+            run_id=f"{context.execution.execution_id}:{step.step_id}",
+            seed=TraceSeed(
+                SeedType.ADDRESS,
+                target,
+                step.chain.value,
+                None,
+                evidence_refs,
+            ),
+            scope=scope,
+            available_edges=tuple(edges),
+            cancelled=lambda: token.is_cancelled,
+        )
+        output = _output_dir(context)
+        result_path = _write_json(output / "trace_result.json", result.to_dict())
+        graph_paths = GraphExporter().export_all(
+            trace_result_to_graph(result), output / "trace_graph"
+        )
+        artifacts = [
+            self._artifact(
+                context,
+                result_path,
+                ArtifactType.TRACE_RESULT,
+                "offline_multihop_trace",
+                completeness=(
+                    Completeness.COMPLETE
+                    if result.status is TraceRunStatus.COMPLETED
+                    else Completeness.PARTIAL
+                ),
+            ),
+            *[
+                self._artifact(
+                    context,
+                    path,
+                    ArtifactType.TRACE_GRAPH,
+                    "offline_multihop_trace",
+                    completeness=(
+                        Completeness.COMPLETE
+                        if result.status is TraceRunStatus.COMPLETED
+                        else Completeness.PARTIAL
+                    ),
+                )
+                for path in graph_paths.values()
+            ],
+        ]
+        checkpoint_model = None
+        if checkpoint is not None:
+            checkpoint_path = _write_json(
+                context.checkpoints_dir / f"{step.step_id}.json",
+                checkpoint.to_dict(),
+            )
+            artifacts.append(
+                self._artifact(
+                    context,
+                    checkpoint_path,
+                    ArtifactType.CHECKPOINT,
+                    "offline_multihop_trace",
+                    completeness=Completeness.PARTIAL,
+                )
+            )
+            from crypto_investigator.application.execution_models import (
+                ExecutionCheckpoint,
+            )
+
+            checkpoint_model = ExecutionCheckpoint(
+                execution_id=context.execution.execution_id,
+                step_id=step.step_id,
+                checkpoint_type="multihop_trace",
+                state=checkpoint.to_dict(),
+                completed_units=len(result.edges),
+                artifact_refs=[_candidate_path(context, checkpoint_path)],
+            )
+        partial = result.status is not TraceRunStatus.COMPLETED
+        return StepExecutionResult(
+            status=(
+                ExecutionStepStatus.PARTIAL
+                if partial
+                else ExecutionStepStatus.COMPLETED
+            ),
+            artifacts=artifacts,
+            records_processed=len(result.edges),
+            partial=partial,
+            checkpoint=checkpoint_model,
+            safe_details={
+                "source": "case_evidence",
+                "nodes": len(result.nodes),
+                "edges": len(result.edges),
+                "allocations": len(result.allocations),
+                "patterns": len(result.patterns),
+                "off_ramp_candidates": len(result.off_ramp_candidates),
+            },
+        )
+
     def _execute_build_graph(self, case, step, context, token):
         transactions, analysis = _analysis(
             self.repository, case, token, context=context
@@ -464,6 +633,7 @@ def create_offline_execution_registry(
     repository: CaseRepository,
     *,
     include_analysis_handlers: bool = True,
+    include_trace_handler: bool = True,
 ) -> ExecutionRegistry:
     registry = ExecutionRegistry()
     definitions = {
@@ -483,6 +653,8 @@ def create_offline_execution_registry(
         StepType.EXPORT_EVIDENCE_MANIFEST: ("evidence_manifest",),
         StepType.GENERATE_REPORT: ("report_markdown", "report_html", "report_docx"),
     }
+    if include_trace_handler:
+        definitions[StepType.TRACE_FUNDS] = ("trace_result", "trace_graph")
     if include_analysis_handlers:
         definitions.update(
             {

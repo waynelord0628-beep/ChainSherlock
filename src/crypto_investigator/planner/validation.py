@@ -32,6 +32,7 @@ def plan_validation_issues(plan: InvestigationPlan) -> tuple[str, ...]:
         if step.step_type in {
             StepType.ANALYZE_ADDRESS,
             StepType.ANALYZE_TRANSACTION,
+            StepType.TRACE_FUNDS,
         } and (not step.target_ids or step.chain is None):
             issues.append(f"missing target or chain for {step.step_id}")
         if step.step_type is StepType.GENERATE_NARRATIVE:

@@ -157,7 +157,7 @@ def test_goal_unknown_fields_are_preserved() -> None:
 def test_plan_timestamp_must_be_timezone_aware(
     settings: Settings, descriptors: tuple[ProviderDescriptor, ...]
 ) -> None:
-    plan = make_plan(settings, descriptors, goal(GoalType.TRACE_FUNDS, TRON))
+    plan = make_plan(settings, descriptors, goal(GoalType.TRACE_FUNDS, ETHEREUM))
     with pytest.raises(ValidationError, match="timezone-aware"):
         InvestigationPlan.model_validate(
             {**plan.model_dump(mode="json"), "generated_at": "2026-01-01T00:00:00"}
@@ -354,6 +354,39 @@ def test_chain_detection_precedes_analysis(
     detected = next(step for step in plan.steps if step.step_id in analysis.prerequisites)
     assert detected.step_type is StepType.DETECT_CHAIN
     assert detected.order < analysis.order
+
+
+def test_trace_funds_goal_creates_confirmed_bounded_trace_step(
+    settings: Settings, descriptors: tuple[ProviderDescriptor, ...]
+) -> None:
+    plan = make_plan(settings, descriptors, goal(GoalType.TRACE_FUNDS, ETHEREUM))
+    trace = next(step for step in plan.steps if step.step_type is StepType.TRACE_FUNDS)
+    dependency = next(
+        step for step in plan.steps if step.step_id == trace.prerequisites[0]
+    )
+    assert dependency.step_type is StepType.ANALYZE_ADDRESS
+    assert trace.target_ids == [ETHEREUM]
+    assert trace.chain is Chain.ETHEREUM
+    assert trace.parameters["max_depth"] == 3
+    assert trace.parameters["checkpoint_enabled"] is True
+    assert trace.requires_confirmation is True
+    assert trace.can_cancel is True
+    assert trace.expected_outputs == [
+        "trace_result",
+        "trace_checkpoint",
+        "trace_graph",
+    ]
+
+
+def test_non_trace_goal_does_not_create_trace_step(
+    settings: Settings, descriptors: tuple[ProviderDescriptor, ...]
+) -> None:
+    plan = make_plan(
+        settings,
+        descriptors,
+        goal(GoalType.GENERATE_INVESTIGATION_REPORT, TRON),
+    )
+    assert all(step.step_type is not StepType.TRACE_FUNDS for step in plan.steps)
 
 
 def test_provider_is_selected_from_public_descriptor(

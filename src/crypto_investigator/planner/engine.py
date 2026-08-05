@@ -325,6 +325,50 @@ class DeterministicPlanner:
                 expected_outputs=["investigation_result"],
             )
 
+        if GoalType.TRACE_FUNDS in goal_types:
+            for identifier in detected:
+                if identifier.kind is not IdentifierKind.ADDRESS:
+                    continue
+                analysis = next(
+                    item
+                    for item in analysis_steps
+                    if identifier.value in item.target_ids
+                )
+                add(
+                    StepType.TRACE_FUNDS,
+                    "Trace funds across hops",
+                    (
+                        "The trace-funds goal requires evidence-backed traversal with "
+                        "bounded depth, materiality, checkpoint and cooperative cancellation."
+                    ),
+                    target_ids=[identifier.value],
+                    target_type="address",
+                    chain=identifier.chain,
+                    assets=target_assets,
+                    prerequisites=[analysis.step_id],
+                    parameters={
+                        "max_depth": 3,
+                        "max_nodes": 100,
+                        "min_material_amount": "0",
+                        "direction": "bidirectional",
+                        "checkpoint_enabled": True,
+                        "allocation_method": "fifo",
+                        **(
+                            {"max_records": scope.max_records}
+                            if scope.max_records is not None
+                            else {}
+                        ),
+                    },
+                    expected_outputs=[
+                        "trace_result",
+                        "trace_checkpoint",
+                        "trace_graph",
+                    ],
+                    estimated_records=scope.max_records,
+                    requires_confirmation=True,
+                    can_cancel=True,
+                )
+
         if GoalType.IDENTIFY_EXCHANGE_EXPOSURE in goal_types:
             labels = add(
                 StepType.APPLY_LOCAL_LABELS,

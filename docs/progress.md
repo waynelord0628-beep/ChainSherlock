@@ -402,6 +402,16 @@ V3 contains no Provider, blockchain API, graph rendering, report, Word/PDF, AI, 
 - Cursor passthrough covers TronGrid, Etherscan, Blockscout and Blockstream.
 - Offline targeted validation: 32 passed using synthetic identifiers only.
 
+## V8 Multi-hop Planner and Execution Integration
+
+- `TRACE_FUNDS` is now an explicit confirmed plan step for trace-funds goals.
+- Each target address receives its own chain-aware bounded trace step.
+- Case Evidence execution produces trace result and graph artifacts using real
+  transaction hashes from the imported evidence.
+- Desktop provider execution supports cooperative cancellation and serializable
+  provider cursor checkpoints for resume.
+- Targeted validation: Planner 77 passed; Execution/Provider integration 101 passed.
+
 ## V8 Multi-hop Fund Tracing（開發驗收）
 
 - 已完成公開 Trace contracts、同資產 FIFO、雙向 1～5 層 traversal、

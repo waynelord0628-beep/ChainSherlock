@@ -27,6 +27,7 @@ class StepType(StrEnum):
     COMPARE_KNOWN_ADDRESSES = "compare_known_addresses"
     MATCH_VICTIM_TRANSACTIONS = "match_victim_transactions"
     BUILD_GRAPH = "build_graph"
+    TRACE_FUNDS = "trace_funds"
     RUN_INVESTIGATION_FEATURES = "run_investigation_features"
     APPLY_LOCAL_LABELS = "apply_local_labels"
     GENERATE_NARRATIVE = "generate_narrative"
