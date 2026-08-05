@@ -43,12 +43,22 @@ def format_display_text(value, timezone: str) -> str:
 
 def _display_cell(value: str, column: str, timezone: str) -> str:
     text = format_display_text(value, timezone)
-    if column != "完整地址":
+    if "完整地址" not in column:
         text = IDENTIFIER.sub(
             lambda match: abbreviate_identifier(match.group(0)),
             text,
         )
     return text
+
+
+def _address_reference(address: str, registry: dict[str, str]) -> str:
+    """Return the stable compact representation used by narrow tables."""
+    return f"{registry.get(address, '—')}\n{abbreviate_identifier(address)}"
+
+
+def _full_address_reference(address: str, registry: dict[str, str]) -> str:
+    """Return the complete, copy-safe representation used by the key index."""
+    return f"{address}（{registry.get(address, '—')}）"
 
 
 def _artifact_evidence(evidence):
@@ -377,23 +387,21 @@ def _asset_first_sections(document, registry, material_assets):
     def address_id(address):
         return registry.get(address, "—")
 
-    def key_address_cells(address):
-        return address_id(address), address
+    important_address_roles = {}
 
-    key_rows = []
-    main_address_roles = {}
-
-    def add_main_role(address, role):
-        roles = main_address_roles.setdefault(address, [])
+    def add_role(target_map, address, role):
+        if not address:
+            return
+        roles = target_map.setdefault(address, [])
         if role not in roles:
             roles.append(role)
 
+    def add_important_role(address, role):
+        add_role(important_address_roles, address, role)
+
     target = document.metadata.target_address
     if target:
-        key_rows.append(
-            ("調查標的", *key_address_cells(target), "本案主地址")
-        )
-        add_main_role(target, "調查標的")
+        add_important_role(target, "調查標的")
     sections = []
     all_ranking_rows = []
     path_rows = []
@@ -430,7 +438,7 @@ def _asset_first_sections(document, registry, material_assets):
         source_table_rows = tuple(
             (
                 str(rank),
-                address_id(str(row[2])),
+                _address_reference(str(row[2]), registry),
                 _display_amount_2(row[3]),
                 str(row[4]),
                 str(row[5]),
@@ -438,9 +446,6 @@ def _asset_first_sections(document, registry, material_assets):
             )
             for rank, row in enumerate(source_rows[:10], 1)
         )
-        for rank, row in enumerate(source_rows[:10], 1):
-            add_main_role(str(row[2]), f"{asset} 主要資金來源第 {rank} 名")
-
         asset_counterparties = [
             row for row in (counterparties.rows if counterparties else ())
             if len(row) >= 10 and str(row[4]) == asset
@@ -468,7 +473,7 @@ def _asset_first_sections(document, registry, material_assets):
             return tuple(
                 (
                     str(rank),
-                    address_id(str(row[1])),
+                    _address_reference(str(row[1]), registry),
                     str(row[2]),
                     str(row[3]),
                     _display_amount_2(row[amount_index]),
@@ -480,25 +485,15 @@ def _asset_first_sections(document, registry, material_assets):
 
         outgoing_rows = counterparty_rows(outgoing, 6)
         frequent_rows = counterparty_rows(frequent, 6)
-        for rank, row in enumerate(outgoing[:10], 1):
-            add_main_role(str(row[1]), f"{asset} 主要資金去向第 {rank} 名")
-        for rank, row in enumerate(frequent[:10], 1):
-            add_main_role(str(row[1]), f"{asset} 高頻交易對手第 {rank} 名")
         if source_rows:
             address = str(source_rows[0][2])
-            key_rows.append(
-                (f"主要 {asset} 來源 1", *key_address_cells(address), "主要供款來源")
-            )
+            add_important_role(address, f"{asset} 主要來源")
         if outgoing:
             address = str(outgoing[0][1])
-            key_rows.append(
-                (f"主要 {asset} 去向 1", *key_address_cells(address), "主要去向候選")
-            )
+            add_important_role(address, f"{asset} 主要去向")
         if frequent:
             address = str(frequent[0][1])
-            key_rows.append(
-                (f"高頻 {asset} 對手", *key_address_cells(address), "高頻互動地址")
-            )
+            add_important_role(address, f"{asset} 高頻交易對手")
 
         for category, rows in (
             ("主要資金來源", source_table_rows),
@@ -535,7 +530,8 @@ def _asset_first_sections(document, registry, material_assets):
         if source_rows:
             source_address = str(source_rows[0][2])
             narrative.append(
-                f"最大資金來源為 {registry.get(source_address, '—')}，"
+                f"最大資金來源為 {abbreviate_identifier(source_address)}"
+                f"（{registry.get(source_address, '—')}），"
                 f"目前範圍內流入金額 {_display_amount_2(source_rows[0][3])}、"
                 f"占比 {source_rows[0][4]}。"
             )
@@ -544,7 +540,8 @@ def _asset_first_sections(document, registry, material_assets):
         if outgoing:
             destination = str(outgoing[0][1])
             narrative.append(
-                f"最大資金去向為 {registry.get(destination, '—')}，"
+                f"最大資金去向為 {abbreviate_identifier(destination)}"
+                f"（{registry.get(destination, '—')}），"
                 f"目前範圍內流出金額 {_display_amount_2(outgoing[0][6])}。"
             )
         else:
@@ -552,7 +549,8 @@ def _asset_first_sections(document, registry, material_assets):
         if frequent:
             address = str(frequent[0][1])
             narrative.append(
-                f"互動最頻繁的交易對手為 {registry.get(address, '—')}，"
+                f"互動最頻繁的交易對手為 {abbreviate_identifier(address)}"
+                f"（{registry.get(address, '—')}），"
                 f"共 {frequent[0][3]} 次。"
             )
 
@@ -566,19 +564,19 @@ def _asset_first_sections(document, registry, material_assets):
             ReportTable(
                 f"funding_rank_{asset.casefold()}",
                 f"{asset} 主要資金來源 Top 10（依流入金額）",
-                ("排名", "地址編號", "流入金額", "占比", "首次", "最後"),
+                ("排名", "地址參照", "流入金額", "占比", "首次", "最後"),
                 source_table_rows,
             ),
             ReportTable(
                 f"outgoing_rank_{asset.casefold()}",
                 f"{asset} 主要資金去向 Top 10（依流出金額）",
-                ("排名", "地址編號", "方向", "交易次數", "流出金額", "首次", "最後"),
+                ("排名", "地址參照", "方向", "交易次數", "流出金額", "首次", "最後"),
                 outgoing_rows,
             ),
             ReportTable(
                 f"frequency_rank_{asset.casefold()}",
                 f"{asset} 高頻交易對手 Top 10（依交易次數）",
-                ("排名", "地址編號", "方向", "交易次數", "流出金額", "首次", "最後"),
+                ("排名", "地址參照", "方向", "交易次數", "流出金額", "首次", "最後"),
                 frequent_rows,
             ),
         ]
@@ -595,27 +593,60 @@ def _asset_first_sections(document, registry, material_assets):
             )
         )
 
+    existing_labels = {
+        str(row[address_index]): str(row[label_index])
+        for source_section in document.sections
+        for table in source_section.tables
+        if "完整地址" in table.columns and "人工 Label" in table.columns
+        for address_index in (table.columns.index("完整地址"),)
+        for label_index in (table.columns.index("人工 Label"),)
+        for row in table.rows
+        if len(row) > max(address_index, label_index)
+        and str(row[label_index]) not in {"", "未標記", "unavailable", "—"}
+    }
+    for address, label in existing_labels.items():
+        add_important_role(address, f"人工標籤：{label}")
+    for source_section in document.sections:
+        if not source_section.section_id.startswith("ai_"):
+            continue
+        for value in (
+            *source_section.content_blocks,
+            *(
+                cell
+                for table in source_section.tables
+                for row in table.rows
+                for cell in row
+            ),
+        ):
+            for match in IDENTIFIER.finditer(str(value)):
+                add_important_role(match.group(0), "AI／綜合研判引用")
+
+    important_rows = tuple(
+        (
+            "／".join(roles),
+            _full_address_reference(address, registry),
+        )
+        for address, roles in sorted(
+            important_address_roles.items(),
+            key=lambda item: address_id(item[0]),
+        )
+    )
+
     return (
         ReportSection(
             "key_addresses",
             "關鍵地址與角色摘要",
             30,
-            ("本節先說明主文反覆引用之關鍵地址及其規則式角色。候選角色不代表身分已確認。",),
+            (
+                "本節先列出主文反覆引用的重要地址。完整地址可直接複製；"
+                "括號內地址編號為本報告固定索引，候選角色不代表身分已確認。",
+            ),
             tables=(
                 ReportTable(
-                    "main_address_reference",
-                    "重要地址索引",
-                    ("地址編號", "完整地址"),
-                    tuple(
-                        (
-                            address_id(address),
-                            address,
-                        )
-                        for address, _roles in sorted(
-                            main_address_roles.items(),
-                            key=lambda item: address_id(item[0]),
-                        )
-                    ),
+                    "key_address_summary",
+                    "重要地址一覽表",
+                    ("角色", "完整地址（地址編號）"),
+                    important_rows,
                 ),
             ),
         ),
@@ -1144,13 +1175,16 @@ def prepare_report_for_display(document):
     full_addresses = [row[2] for row in registry_rows]
     target_address = document.metadata.target_address
     address_registry = {row[2]: row[0] for row in registry_rows}
-    pdf_addresses = tuple(dict.fromkeys(
-        (
-            *((target_address,) if target_address else ()),
-            *material_sources[:5],
-            *material_destinations[:5],
-            *material_counterparties[:5],
-        )
+    pdf_addresses = tuple(sorted(
+        dict.fromkeys(
+            (
+                *((target_address,) if target_address else ()),
+                *material_sources[:5],
+                *material_destinations[:5],
+                *material_counterparties[:5],
+            )
+        ),
+        key=lambda address: address_registry.get(address, "地址-999"),
     ))
     sections = []
     for section in document.sections:
@@ -1239,8 +1273,8 @@ def prepare_report_for_display(document):
                         if section.section_id == "cover"
                         else IDENTIFIER.sub(
                             lambda match: (
-                                f"{address_registry.get(match.group(0), '—')} "
                                 f"{abbreviate_identifier(match.group(0))}"
+                                f"（{address_registry.get(match.group(0), '—')}）"
                             ),
                             format_display_text(item, timezone),
                         )

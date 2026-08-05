@@ -24,6 +24,7 @@ from crypto_investigator.reports.models import (
     ReportSection,
     ReportTable,
 )
+from crypto_investigator.reports.pdf_exporter import PdfReportExporter
 from crypto_investigator.reports.presentation import (
     format_display_text,
     prepare_report_for_display,
@@ -550,17 +551,22 @@ def test_41_address_ids_are_stable_across_sections():
         if table.table_id == "address_registry_identity"
     )
     known = {row[2]: row[0] for row in registry.rows}
-    key = _section(display, "key_addresses").tables[0]
+    key = next(
+        table for table in _section(display, "key_addresses").tables
+        if table.table_id == "key_address_summary"
+    )
     for row in key.rows:
-        assert row[0] == known[row[1]]
+        full_address, display_id = row[1].rsplit("（", 1)
+        assert display_id.rstrip("）") == known[full_address]
 
 
 def test_41a_key_addresses_start_with_contiguous_priority_ids():
-    key = _section(
-        prepare_report_for_display(_two_asset_document()),
-        "key_addresses",
-    ).tables[0]
-    unique_ids = list(dict.fromkeys(row[0] for row in key.rows))
+    display = prepare_report_for_display(_two_asset_document())
+    reference = next(
+        table for table in _section(display, "address_registry").tables
+        if table.table_id == "address_registry_identity"
+    )
+    unique_ids = list(dict.fromkeys(row[0] for row in reference.rows))
     assert unique_ids[0] == "地址-001"
     assert unique_ids == sorted(unique_ids)
 
@@ -577,16 +583,16 @@ def test_41b_booklet_amounts_round_half_up_to_two_decimals():
     assert table.rows[0][2] == "291,166.57"
 
 
-def test_41c_every_main_ranking_id_is_mapped_to_a_full_address_up_front():
+def test_41c_every_main_ranking_id_maps_to_a_full_registry_address():
     display = prepare_report_for_display(_two_asset_document())
     reference = next(
         table
-        for table in _section(display, "key_addresses").tables
-        if table.table_id == "main_address_reference"
+        for table in _section(display, "address_registry").tables
+        if table.table_id == "address_registry_identity"
     )
     mapped = {row[0] for row in reference.rows}
     used = {
-        row[1]
+        row[1].splitlines()[0]
         for section in display.sections
         if section.section_id.startswith("asset_analysis_")
         for table in section.tables
@@ -596,9 +602,66 @@ def test_41c_every_main_ranking_id_is_mapped_to_a_full_address_up_front():
         for row in table.rows
     }
     assert used <= mapped
-    assert all(len(row[1]) > 20 for row in reference.rows)
+    assert all(len(row[2]) > 20 for row in reference.rows)
     numbers = [int(row[0].split("-")[1]) for row in reference.rows]
     assert numbers == list(range(1, len(numbers) + 1))
+
+
+def test_41d_key_address_summary_contains_complete_copy_safe_addresses():
+    key = next(
+        table
+        for table in _section(
+            prepare_report_for_display(_two_asset_document()),
+            "key_addresses",
+        ).tables
+        if table.table_id == "key_address_summary"
+    )
+    values = {row[1] for row in key.rows}
+    assert f"{ADDRESS}（地址-001）" in values
+    assert all("…" not in value for value in values)
+    assert all(value.split("（", 1)[0].strip() == value.split("（", 1)[0] for value in values)
+
+
+def test_41e_narrative_uses_one_consistent_abbreviation_with_display_id():
+    display = prepare_report_for_display(_two_asset_document())
+    text = "\n".join(
+        block
+        for section in display.sections
+        for block in section.content_blocks
+    )
+    expected = f"{abbreviate_identifier(ADDRESS)}（地址-001）"
+    assert expected in text
+    assert ADDRESS not in "\n".join(
+        block
+        for section in display.sections
+        if section.section_id != "cover"
+        for block in section.content_blocks
+    )
+
+
+def test_41f_ranking_table_uses_id_and_fixed_abbreviation_not_full_address():
+    display = prepare_report_for_display(_two_asset_document())
+    tables = [
+        table
+        for section in display.sections
+        if section.section_id.startswith("asset_analysis_")
+        for table in section.tables
+        if table.table_id.startswith(
+            ("funding_rank_", "outgoing_rank_", "frequency_rank_")
+        )
+    ]
+    references = [row[1] for table in tables for row in table.rows]
+    assert all(value.startswith("地址-") and "\n" in value for value in references)
+    assert all(ADDRESS not in value for value in references)
+    assert all(
+        value.splitlines()[1] == abbreviate_identifier(next(
+            row[2] for row in next(
+                table for table in _section(display, "address_registry").tables
+                if table.table_id == "address_registry_identity"
+            ).rows if row[0] == value.splitlines()[0]
+        ))
+        for value in references
+    )
 
 
 def test_42_key_address_summary_is_early():
@@ -653,7 +716,35 @@ def test_48_html_has_booklet_page_breaks(tmp_path):
     assert "page-break-after:always" in content
 
 
-def test_49_primary_tables_are_bounded():
+def test_49_four_format_address_display_mapping_is_consistent(tmp_path):
+    display = prepare_report_for_display(_two_asset_document())
+    full = f"{ADDRESS}（地址-001）"
+    compact = f"地址-001\n{abbreviate_identifier(ADDRESS)}"
+
+    html_path = HtmlReportExporter().write(display, tmp_path / "report.html")
+    html = html_path.read_text(encoding="utf-8")
+    assert full in html
+    assert compact in html
+
+    markdown_path = ReportExportCoordinator().export(
+        _two_asset_document(), tmp_path / "markdown", requested_format="markdown"
+    )
+    markdown = (
+        tmp_path / "markdown" / markdown_path.files["markdown"]
+    ).read_text(encoding="utf-8")
+    assert full in markdown
+    assert compact.replace("\n", "<br>") in markdown
+
+    docx_path = DocxReportExporter().write(display, tmp_path / "report.docx")
+    with zipfile.ZipFile(docx_path) as archive:
+        xml = archive.read("word/document.xml").decode("utf-8")
+    assert ADDRESS in xml and "地址-001" in xml
+    assert abbreviate_identifier(ADDRESS) in xml
+
+    assert PdfReportExporter._pdf_cell(compact, "地址參照") == compact
+
+
+def test_50_primary_tables_are_bounded():
     display = prepare_report_for_display(_two_asset_document())
     assert all(
         len(table.rows) <= 10

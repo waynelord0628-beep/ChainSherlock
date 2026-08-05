@@ -61,9 +61,11 @@ class PdfReportExporter:
     @staticmethod
     def _pdf_cell(value: str, column: str) -> str:
         key = column.casefold()
-        if column != "完整地址" and any(
+        if "完整地址" not in column and any(
             marker in key for marker in ("address", "地址", "tx hash", "tx_hash")
         ):
+            if "\n" in str(value):
+                return str(value)
             return abbreviate_identifier(str(value))
         return str(value)
 
@@ -124,14 +126,15 @@ class PdfReportExporter:
 
     @staticmethod
     def _styled_text(value: str, latin_font: str) -> str:
+        value = str(value).replace("\r\n", "\n").replace("\r", "\n")
         parts = []
-        for segment in re.findall(r"[\x00-\x7f]+|[^\x00-\x7f]+", str(value)):
+        for segment in re.findall(r"[\x00-\x7f]+|[^\x00-\x7f]+", value):
             escaped = escape(segment)
             if segment.isascii():
                 parts.append(f'<font name="{latin_font}">{escaped}</font>')
             else:
                 parts.append(escaped)
-        return "".join(parts)
+        return "".join(parts).replace("\n", "<br/>")
 
     def write(
         self, document: ReportDocument, path: Path, font_path: Path | None = None

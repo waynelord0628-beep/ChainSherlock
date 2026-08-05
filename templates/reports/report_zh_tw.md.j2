@@ -32,7 +32,7 @@
 |{% for column in table.columns %} {{ column }} |{% endfor %}
 |{% for column in table.columns %} --- |{% endfor %}
 {% for row in table.rows %}
-|{% for value in row %} {{ value }} |{% endfor %}
+|{% for value in row %} {{ value | replace('\n', '<br>') }} |{% endfor %}
 {% endfor %}
 
 {% endfor %}
