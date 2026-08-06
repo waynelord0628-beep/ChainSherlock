@@ -10,6 +10,14 @@ from crypto_investigator.labels.source_registry import (
     MultiSourceLabelRegistry,
     SourceLabelRecord,
 )
+from crypto_investigator.labels.dune_sync import (
+    DuneLabelClient,
+    DuneSyncError,
+    DuneSyncResult,
+    LocalLabelDatabase,
+    lookup_dune_deposit_address,
+    sync_dune_dataset,
+)
 
 __all__ = [
     "CommercialLabelPolicy",
@@ -20,4 +28,10 @@ __all__ = [
     "LabelSnapshot",
     "MultiSourceLabelRegistry",
     "SourceLabelRecord",
+    "DuneLabelClient",
+    "DuneSyncError",
+    "DuneSyncResult",
+    "LocalLabelDatabase",
+    "lookup_dune_deposit_address",
+    "sync_dune_dataset",
 ]

@@ -41,6 +41,12 @@ from crypto_investigator.investigation.investigation_result import Investigation
 from crypto_investigator.investigation.export import InvestigationExporter
 from crypto_investigator.labels.registry import LabelRegistry
 from crypto_investigator.labels.source_registry import MultiSourceLabelRegistry
+from crypto_investigator.labels.dune_sync import (
+    DuneLabelClient,
+    LocalLabelDatabase,
+    lookup_dune_deposit_address,
+    sync_dune_dataset,
+)
 from crypto_investigator.ai.settings import AISettings
 from crypto_investigator.narratives.engine import NarrativeEngine
 from crypto_investigator.narratives.export import NarrativeExporter
@@ -764,6 +770,87 @@ def labels_build_registry(
     typer.echo(f"Label records: {len(registry.records)}")
     typer.echo(f"Snapshots: {len(registry.snapshots)}")
     typer.echo(f"Registry: {output}")
+
+
+@app.command("labels-sync-dune")
+def labels_sync_dune(
+    dataset: str = typer.Option("cex", "--dataset"),
+    chains: str = typer.Option(
+        "tron,ethereum,bitcoin,bnb", "--chains",
+        help="Comma-separated chains to synchronize, or 'all'.",
+    ),
+    categories: str = typer.Option(
+        "institution,cex users,ofac_sanction,project wallet",
+        "--categories",
+        help="Comma-separated categories used by the labels dataset.",
+    ),
+    output: Path = typer.Option(Path("data/labels/labels.db"), "--output"),
+    page_size: int = typer.Option(10_000, "--page-size", min=1, max=100_000),
+) -> None:
+    """Synchronize a complete Dune label snapshot into the local database."""
+    api_key = os.getenv("DUNE_API_KEY", "").strip()
+    if not api_key:
+        raise typer.BadParameter("DUNE_API_KEY is not configured")
+    selected = tuple(item.strip() for item in chains.split(",") if item.strip())
+    selected_categories = tuple(
+        item.strip() for item in categories.split(",") if item.strip()
+    )
+    result = sync_dune_dataset(
+        client=DuneLabelClient(api_key, page_size=page_size),
+        database=output,
+        dataset=dataset,
+        chains=selected,
+        categories=selected_categories,
+    )
+    typer.echo(f"Dataset: {result.dataset}")
+    typer.echo(f"Fetched rows: {result.fetched_rows}")
+    typer.echo(f"Imported records: {result.imported_records}")
+    typer.echo(f"Snapshot: {result.snapshot_id}")
+    typer.echo(f"Registry: {result.database}")
+
+
+@app.command("labels-query-local")
+def labels_query_local(
+    address: str = typer.Argument(...),
+    chain: Chain = typer.Option(..., "--chain"),
+    database: Path = typer.Option(
+        Path("data/labels/labels.db"),
+        "--database",
+        exists=True,
+        dir_okay=False,
+        readable=True,
+    ),
+) -> None:
+    """Resolve one address from the offline multi-source SQLite registry."""
+    resolution = LocalLabelDatabase(database).resolve(chain.value, address)
+    typer.echo(
+        json.dumps(
+            AnalysisExporter.to_primitive(resolution),
+            ensure_ascii=False,
+            indent=2,
+        )
+    )
+
+
+@app.command("labels-lookup-dune-deposit")
+def labels_lookup_dune_deposit(
+    address: str = typer.Argument(...),
+    chain: str = typer.Option(..., "--chain"),
+    output: Path = typer.Option(Path("data/labels/labels.db"), "--output"),
+) -> None:
+    """Query and cache one Dune CEX deposit-address candidate."""
+    api_key = os.getenv("DUNE_API_KEY", "").strip()
+    if not api_key:
+        raise typer.BadParameter("DUNE_API_KEY is not configured")
+    result = lookup_dune_deposit_address(
+        client=DuneLabelClient(api_key),
+        database=output,
+        chain=chain,
+        address=address,
+    )
+    typer.echo(f"Matched rows: {result.fetched_rows}")
+    typer.echo(f"Imported candidates: {result.imported_records}")
+    typer.echo(f"Registry: {result.database}")
 
 
 @app.command("investigate-file")

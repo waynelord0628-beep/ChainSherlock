@@ -1,5 +1,60 @@
 # ChainSherlock
 
+## 本機標籤資料庫
+
+ChainSherlock 採用分層標籤策略：本機保存全鏈 CEX 核心地址、
+Bridge／Swap 核心合約、高價值標籤與主要服務商；交易所入金地址只在案件需要時
+逐一查詢。大型 Custody、DEX Pair／Pool 與完整入金地址表不做全量下載。
+
+```powershell
+# 全鏈核心資料
+python -m crypto_investigator labels-sync-dune --dataset cex --chains all
+python -m crypto_investigator labels-sync-dune --dataset contracts --chains all
+python -m crypto_investigator labels-sync-dune --dataset labels --chains all
+python -m crypto_investigator labels-sync-dune --dataset services --chains all
+
+# EVM 入金地址按需核驗（結果保持候選狀態）
+python -m crypto_investigator labels-lookup-dune-deposit `
+  0x0000000000000000000000000000000000000000 `
+  --chain ethereum
+
+# 完全離線查詢
+python -m crypto_investigator labels-query-local ADDRESS --chain ethereum
+```
+
+API Key 僅由 `DUNE_API_KEY` 環境變數讀取，不寫入資料庫、報告或 log。
+本機 `data/labels/*.db` 與 Provider cache 已由 Git 排除。
+
+## Dune 大量標籤同步
+
+ChainSherlock 可將 Dune 的交易所地址及 Owner Labels 分頁同步至本機
+SQLite，後續案件直接離線查詢，不需逐地址呼叫 API。
+
+```powershell
+$env:DUNE_API_KEY="..."
+
+# 優先建立交易所地址庫
+python -m crypto_investigator labels-sync-dune `
+  --dataset cex `
+  --chains tron,ethereum,bitcoin,bnb `
+  --output data/labels/labels.db
+
+# 視需要分鏈同步較大的 Owner Labels
+python -m crypto_investigator labels-sync-dune `
+  --dataset owners `
+  --chains tron `
+  --output data/labels/labels.db
+
+# 完全離線查詢
+python -m crypto_investigator labels-query-local `
+  TM1zzNDZD2DPASbKcgdVoTYhfmYgtfwx9R `
+  --chain tron `
+  --database data/labels/labels.db
+```
+
+同步器會保存 snapshot ID、Dune execution ID、SHA-256、匯入時間與來源，
+並依 Dune 的 `next_offset` 自動取得所有頁面。API Key 不寫入資料庫、輸出或 log。
+
 ## 本地多來源地址標籤
 
 ChainSherlock 可將 Dune CEX、Dune Owner Labels 與 OFAC 數位資產地址快照

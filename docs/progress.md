@@ -2,6 +2,22 @@
 
 ## V8 Multi-source Label Foundation
 
+- Completed the prioritized Dune snapshot: 37,007 all-chain CEX records,
+  9,378 Bridge/core Swap contracts, 23,735 high-value labels, and 62,118
+  deduplicated service records. The local registry now contains 132,240 records
+  across 84 chains.
+- Added bounded, single-address `cex.deposit_addresses` lookup for EVM cases.
+  Deposit matches remain unverified candidates and are never promoted to
+  exchange-controlled wallets without corroboration.
+- Real Dune usage after the prioritized sync was 48.27 of 2,500 included credits.
+  Bulk custody, DEX pair/pool, and deposit-address downloads remain intentionally
+  excluded.
+- Added automatic Dune SQL execution, bounded status polling, complete result
+  pagination, snapshot hashing, incremental SQLite upsert, and offline address
+  resolution.
+- Added `labels-sync-dune` and `labels-query-local`; Dune credentials remain
+  environment-only and HTTP errors are safely redacted.
+
 - Added evidence-preserving imports for Dune `cex.addresses`,
   `labels.owner_addresses`, and normalized OFAC digital-currency snapshots.
 - Added SQLite snapshot provenance, SHA-256, multi-label preservation,
@@ -9,8 +25,8 @@
 - Added a commercial enrichment budget/cache policy so MistTrack is considered
   only for unresolved material endpoints.
 - Added the offline `labels-build-registry` command.
-- Validation: 15 new targeted tests; full regression 1,576 passed, 1 skipped;
-  `pip check` reports no broken requirements.
+- Validation: 15 targeted Dune tests pass; full regression is
+  1,591 passed and 1 skipped; `pip check` reports no broken requirements.
 
 ## V8 First-Hop final report tuning
 

@@ -4,6 +4,7 @@
 
 ```text
 Dune CEX / Dune Owner / OFAC snapshots
+  -> Dune API execution + bounded polling + complete pagination
   -> source-specific importers
   -> evidence-preserving SourceLabelRecord
   -> SQLite Label Registry
@@ -15,6 +16,19 @@ One address may retain multiple labels and sources. Official sources outrank
 curated sources, while public reports remain candidates. Entity attribution and
 risk/legal indicators remain separate. Commercial labels never create transaction
 edges or alter deterministic fund-flow facts.
+
+The Dune synchronizer stores complete versioned snapshots in the same SQLite
+registry. `cex.addresses` can be synchronized across selected chains in one run;
+the prioritized owner snapshot is limited to Bridge/core Swap, centralized
+exchange, payment, RWA, and privacy-service entities. Network access is isolated
+to explicit sync or lookup commands. Investigation and report paths only query
+the local database.
+
+Bulk `cex.deposit_addresses`, custody addresses, DEX pair/pool addresses, and
+persona-scale label tables are not mirrored. A case may query one EVM deposit
+address on demand; the result is stored as `exchange_deposit_candidate` with
+`unverified_candidate` status. This separates exchange-controlled core wallets
+from inferred user deposit addresses.
 
 ## V8 Milestone 8: Provider Execution Integration
 

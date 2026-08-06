@@ -8,6 +8,8 @@ __pycache__/
 output/
 work/
 data/cache/
+data/labels/*.db
+data/labels/*.db-*
 examples/v5_graph_output/
 examples/v6_*/
 examples/v65_investigation_output/

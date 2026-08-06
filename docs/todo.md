@@ -2,8 +2,11 @@
 
 ## Label intelligence validation
 
-- Validate a real Dune CSV snapshot without committing licensed or case data.
-- Add scheduled refresh only after Dune credentials and credit policy are approved.
+- Keep the synchronized SQLite snapshot local; do not commit licensed label data
+  or case addresses.
+- Add scheduled refresh only after defining snapshot expiry and a per-run credit cap.
+- Validate on-demand deposit candidates against a second source before using them
+  as report labels.
 - Keep commercial enrichment disabled by default and add a per-case usage ledger.
 
 ## After V8 Milestone 8
