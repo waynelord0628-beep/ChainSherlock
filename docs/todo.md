@@ -1,5 +1,11 @@
 # Planned Work
 
+## Label intelligence validation
+
+- Validate a real Dune CSV snapshot without committing licensed or case data.
+- Add scheduled refresh only after Dune credentials and credit policy are approved.
+- Keep commercial enrichment disabled by default and add a per-case usage ledger.
+
 ## After V8 Milestone 8
 
 - Await explicit approval before Windows packaging and clean-machine acceptance.

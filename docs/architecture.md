@@ -1,5 +1,21 @@
 # ChainSherlock Architecture
 
+## Multi-source label intelligence
+
+```text
+Dune CEX / Dune Owner / OFAC snapshots
+  -> source-specific importers
+  -> evidence-preserving SourceLabelRecord
+  -> SQLite Label Registry
+  -> deterministic preferred-label resolution
+  -> optional budgeted commercial enrichment
+```
+
+One address may retain multiple labels and sources. Official sources outrank
+curated sources, while public reports remain candidates. Entity attribution and
+risk/legal indicators remain separate. Commercial labels never create transaction
+edges or alter deterministic fund-flow facts.
+
 ## V8 Milestone 8: Provider Execution Integration
 
 ```text

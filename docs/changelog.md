@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased - Multi-source label intelligence
+
+- Added Dune CEX/owner and OFAC digital-currency snapshot import.
+- Added evidence-preserving SQLite storage and conflict resolution.
+- Added cache-aware commercial label budgeting and `labels-build-registry`.
+
 ## Unreleased - Multi-hop provider checkpoint
 
 - Preserve per-address, per-capability provider cursors in multi-hop checkpoints.

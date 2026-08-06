@@ -1,5 +1,22 @@
 # ChainSherlock
 
+## 本地多來源地址標籤
+
+ChainSherlock 可將 Dune CEX、Dune Owner Labels 與 OFAC 數位資產地址快照
+匯入本機 SQLite。案件執行時優先查詢本機資料，只有重要且仍未知的終端地址
+才考慮使用商業標籤服務。
+
+```powershell
+python -m crypto_investigator labels-build-registry `
+  --dune-cex data/labels/dune_cex.csv `
+  --dune-owners data/labels/dune_owners.csv `
+  --ofac data/labels/ofac_digital_currency.csv `
+  --output data/labels/labels.db
+```
+
+同一地址可保留多個來源與標籤。OFAC、交易所歸屬與公開舉報不會被合併成
+單一風險結論；來源、Evidence、snapshot SHA-256 與匯入時間均會保留。
+
 本機優先、證據可追溯的區塊鏈幣流調查平台。
 
 ChainSherlock 將 CSV、Excel 與公開區塊鏈 Provider 的交易資料，依序轉換為標準

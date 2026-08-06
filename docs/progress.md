@@ -1,5 +1,17 @@
 # Development Progress
 
+## V8 Multi-source Label Foundation
+
+- Added evidence-preserving imports for Dune `cex.addresses`,
+  `labels.owner_addresses`, and normalized OFAC digital-currency snapshots.
+- Added SQLite snapshot provenance, SHA-256, multi-label preservation,
+  deterministic conflict resolution, and chain/address indexes.
+- Added a commercial enrichment budget/cache policy so MistTrack is considered
+  only for unresolved material endpoints.
+- Added the offline `labels-build-registry` command.
+- Validation: 15 new targeted tests; full regression 1,576 passed, 1 skipped;
+  `pip check` reports no broken requirements.
+
 ## V8 First-Hop final report tuning
 
 - Unified every report address reference against one immutable Address Registry snapshot;

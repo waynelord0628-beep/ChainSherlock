@@ -40,6 +40,7 @@ from crypto_investigator.investigation.feature_engine import InvestigationFeatur
 from crypto_investigator.investigation.investigation_result import InvestigationSettings
 from crypto_investigator.investigation.export import InvestigationExporter
 from crypto_investigator.labels.registry import LabelRegistry
+from crypto_investigator.labels.source_registry import MultiSourceLabelRegistry
 from crypto_investigator.ai.settings import AISettings
 from crypto_investigator.narratives.engine import NarrativeEngine
 from crypto_investigator.narratives.export import NarrativeExporter
@@ -732,6 +733,37 @@ def labels_check(
             indent=2,
         )
     )
+
+
+@app.command("labels-build-registry")
+def labels_build_registry(
+    dune_cex: Path | None = typer.Option(
+        None, "--dune-cex", exists=True, dir_okay=False, readable=True
+    ),
+    dune_owners: Path | None = typer.Option(
+        None, "--dune-owners", exists=True, dir_okay=False, readable=True
+    ),
+    ofac: Path | None = typer.Option(
+        None, "--ofac", exists=True, dir_okay=False, readable=True
+    ),
+    output: Path = typer.Option(Path("data/labels/labels.db"), "--output"),
+) -> None:
+    """Build an evidence-preserving local label database from curated snapshots."""
+    inputs = (
+        (dune_cex, MultiSourceLabelRegistry.import_dune_cex_csv),
+        (dune_owners, MultiSourceLabelRegistry.import_dune_owner_csv),
+        (ofac, MultiSourceLabelRegistry.import_ofac_digital_currency_csv),
+    )
+    registries = tuple(importer(path) for path, importer in inputs if path)
+    if not registries:
+        raise typer.BadParameter(
+            "Provide at least one of --dune-cex, --dune-owners, or --ofac"
+        )
+    registry = MultiSourceLabelRegistry.combine(*registries)
+    registry.write_sqlite(output)
+    typer.echo(f"Label records: {len(registry.records)}")
+    typer.echo(f"Snapshots: {len(registry.snapshots)}")
+    typer.echo(f"Registry: {output}")
 
 
 @app.command("investigate-file")
