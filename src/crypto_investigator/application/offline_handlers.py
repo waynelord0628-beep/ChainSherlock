@@ -367,6 +367,10 @@ class OfflineStepHandler:
             scope=scope,
             available_edges=tuple(edges),
             cancelled=lambda: token.is_cancelled,
+            manual_stop_addresses=tuple(
+                str(item)
+                for item in parameters.get("manual_stop_addresses", ())
+            ),
         )
         output = _output_dir(context)
         result_path = _write_json(output / "trace_result.json", result.to_dict())

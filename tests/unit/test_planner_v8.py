@@ -389,6 +389,42 @@ def test_non_trace_goal_does_not_create_trace_step(
     assert all(step.step_type is not StepType.TRACE_FUNDS for step in plan.steps)
 
 
+def test_trace_step_uses_bounded_case_controls(
+    settings: Settings, descriptors: tuple[ProviderDescriptor, ...]
+) -> None:
+    case = CaseRecord(
+        case_id=new_case_id(),
+        title="Synthetic trace controls",
+        metadata={
+            "trace_settings": {
+                "max_depth": 5,
+                "max_nodes": 240,
+                "min_material_amount": "12.500000",
+                "direction": "forward",
+                "manual_stop_addresses": [
+                    "0x" + "b" * 40,
+                    "0x" + "a" * 40,
+                ],
+            }
+        },
+    )
+    plan = make_plan(
+        settings,
+        descriptors,
+        goal(GoalType.TRACE_FUNDS, ETHEREUM),
+        case=case,
+    )
+    trace = next(step for step in plan.steps if step.step_type is StepType.TRACE_FUNDS)
+    assert trace.parameters["max_depth"] == 5
+    assert trace.parameters["max_nodes"] == 240
+    assert trace.parameters["min_material_amount"] == "12.500000"
+    assert trace.parameters["direction"] == "forward"
+    assert trace.parameters["manual_stop_addresses"] == [
+        "0x" + "a" * 40,
+        "0x" + "b" * 40,
+    ]
+
+
 def test_provider_is_selected_from_public_descriptor(
     settings: Settings, descriptors: tuple[ProviderDescriptor, ...]
 ) -> None:

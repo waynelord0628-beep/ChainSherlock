@@ -448,6 +448,42 @@ def test_depth_five_product_scenario_preserves_flow_patterns_and_vasp_stop():
     )
 
 
+def test_manual_stop_is_reached_and_prevents_further_traversal():
+    edges = (
+        _edge(201, "SEED", "MANUAL-STOP", "100"),
+        _edge(202, "MANUAL-STOP", "SHOULD-NOT-BE-VISITED", "90"),
+    )
+    result, checkpoint = investigate_fund_trace(
+        run_id="SYNTHETIC-MANUAL-STOP",
+        seed=TraceSeed(
+            SeedType.ADDRESS,
+            "SEED",
+            "tron",
+            "USDT",
+            ("SYNTHETIC-EVIDENCE",),
+        ),
+        scope=TraceScope(
+            "synthetic",
+            5,
+            20,
+            20,
+            Decimal("1"),
+            ("USDT",),
+            direction=TraceDirection.FORWARD,
+        ),
+        available_edges=edges,
+        manual_stop_addresses=("MANUAL-STOP",),
+    )
+    assert checkpoint is None
+    assert any(
+        item.condition is StopConditionType.MANUAL_STOP and item.reached
+        for item in result.stop_conditions
+    )
+    assert "SHOULD-NOT-BE-VISITED" not in {
+        item.address for item in result.nodes
+    }
+
+
 def test_provider_collection_checkpoint_resumes_cursor_without_refetching():
     calls = []
 

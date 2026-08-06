@@ -264,6 +264,26 @@ def test_result_displays_multihop_trace_summary(window) -> None:
     assert "下車點候選：2" in html
 
 
+def test_wizard_serializes_bounded_trace_controls(wizard) -> None:
+    wizard.trace_depth.setValue(5)
+    wizard.trace_max_nodes.setValue(240)
+    wizard.trace_materiality.setValue(12.5)
+    wizard.trace_direction.setCurrentIndex(1)
+    wizard.trace_manual_stops.setText(
+        "0x" + "a" * 40 + ", " + "0x" + "b" * 40
+    )
+    settings = wizard.payload()["metadata"]["trace_settings"]
+    assert settings == {
+        "max_depth": 5,
+        "max_nodes": 240,
+        "min_material_amount": "12.5",
+        "direction": "forward",
+        "manual_stop_addresses": ["0x" + "a" * 40, "0x" + "b" * 40],
+        "allocation_method": "fifo",
+        "checkpoint_enabled": True,
+    }
+
+
 def test_candidate_and_confirmed_visual_distinction() -> None:
     assert "#302A52" in LIGHT_THEME
     assert "#123C3B" in LIGHT_THEME

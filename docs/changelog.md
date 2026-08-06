@@ -11,6 +11,8 @@
   through Case Execution.
 - Expose multi-hop tracing as an optional Case Wizard goal and validate a synthetic
   depth-5 aggregation/dispersion/return-flow/VASP-stop scenario.
+- Add bounded analyst controls for trace depth, nodes, materiality, direction and
+  evidence-visible manual stops.
 
 ## Unreleased – First-Hop final report tuning
 

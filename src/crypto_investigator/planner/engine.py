@@ -3,6 +3,7 @@ from __future__ import annotations
 import hashlib
 import json
 from datetime import datetime
+from decimal import Decimal, InvalidOperation
 from pathlib import PurePosixPath
 from typing import Iterable
 
@@ -326,6 +327,32 @@ class DeterministicPlanner:
             )
 
         if GoalType.TRACE_FUNDS in goal_types:
+            trace_settings = dict(case.metadata.get("trace_settings", {}))
+            trace_depth = min(5, max(1, int(trace_settings.get("max_depth", 3))))
+            trace_nodes = min(
+                500, max(10, int(trace_settings.get("max_nodes", 100)))
+            )
+            try:
+                materiality_value = Decimal(
+                    str(trace_settings.get("min_material_amount", "0"))
+                )
+                if not materiality_value.is_finite() or materiality_value < 0:
+                    materiality_value = Decimal("0")
+            except (InvalidOperation, ValueError):
+                materiality_value = Decimal("0")
+            trace_materiality = str(materiality_value)
+            trace_direction = str(
+                trace_settings.get("direction", "bidirectional")
+            )
+            if trace_direction not in {"forward", "backward", "bidirectional"}:
+                trace_direction = "bidirectional"
+            manual_stops = sorted(
+                {
+                    str(item).strip()
+                    for item in trace_settings.get("manual_stop_addresses", [])
+                    if str(item).strip()
+                }
+            )
             for identifier in detected:
                 if identifier.kind is not IdentifierKind.ADDRESS:
                     continue
@@ -347,10 +374,11 @@ class DeterministicPlanner:
                     assets=target_assets,
                     prerequisites=[analysis.step_id],
                     parameters={
-                        "max_depth": 3,
-                        "max_nodes": 100,
-                        "min_material_amount": "0",
-                        "direction": "bidirectional",
+                        "max_depth": trace_depth,
+                        "max_nodes": trace_nodes,
+                        "min_material_amount": trace_materiality,
+                        "direction": trace_direction,
+                        "manual_stop_addresses": manual_stops,
                         "checkpoint_enabled": True,
                         "allocation_method": "fifo",
                         **(

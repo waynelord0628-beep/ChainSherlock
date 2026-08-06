@@ -17,6 +17,8 @@ from PySide6.QtWidgets import (
     QMessageBox,
     QPlainTextEdit,
     QPushButton,
+    QDoubleSpinBox,
+    QSpinBox,
     QStackedWidget,
     QVBoxLayout,
     QWidget,
@@ -179,6 +181,27 @@ class CaseWizard(QDialog):
         form.addRow("", self.scope_inclusive_end)
         form.addRow("Quick Preview max pages", self.scope_max_pages)
         form.addRow("Quick Preview max records", self.scope_max_records)
+        self.trace_depth = QSpinBox()
+        self.trace_depth.setRange(1, 5)
+        self.trace_depth.setValue(3)
+        self.trace_max_nodes = QSpinBox()
+        self.trace_max_nodes.setRange(10, 500)
+        self.trace_max_nodes.setValue(100)
+        self.trace_materiality = QDoubleSpinBox()
+        self.trace_materiality.setRange(0, 1_000_000_000)
+        self.trace_materiality.setDecimals(8)
+        self.trace_materiality.setValue(1)
+        self.trace_direction = QComboBox()
+        self.trace_direction.addItem("向前及向後", "bidirectional")
+        self.trace_direction.addItem("僅向前", "forward")
+        self.trace_direction.addItem("僅向後", "backward")
+        self.trace_manual_stops = QLineEdit()
+        self.trace_manual_stops.setPlaceholderText("地址以逗號分隔（選填）")
+        form.addRow("多層追蹤深度", self.trace_depth)
+        form.addRow("多層追蹤節點上限", self.trace_max_nodes)
+        form.addRow("最低重要金額", self.trace_materiality)
+        form.addRow("追蹤方向", self.trace_direction)
+        form.addRow("人工停止地址", self.trace_manual_stops)
         layout.addLayout(form)
         self.scope_guidance = QLabel(objectName="muted")
         self.scope_guidance.setWordWrap(True)
@@ -337,6 +360,19 @@ class CaseWizard(QDialog):
                     self.amount_edit.text().strip() if confirmed else None
                 ),
                 "analysis_scope": analysis_scope,
+                "trace_settings": {
+                    "max_depth": self.trace_depth.value(),
+                    "max_nodes": self.trace_max_nodes.value(),
+                    "min_material_amount": str(self.trace_materiality.value()),
+                    "direction": self.trace_direction.currentData(),
+                    "manual_stop_addresses": [
+                        item.strip()
+                        for item in self.trace_manual_stops.text().split(",")
+                        if item.strip()
+                    ],
+                    "allocation_method": "fifo",
+                    "checkpoint_enabled": True,
+                },
             },
             "attachments": list(self.attachments),
             "goals": [

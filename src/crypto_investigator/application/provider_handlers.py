@@ -303,6 +303,10 @@ class ProviderTraceStepHandler:
             scope=scope,
             available_edges=collected.edges,
             cancelled=lambda: cancellation_token.is_cancelled,
+            manual_stop_addresses=tuple(
+                str(item)
+                for item in parameters.get("manual_stop_addresses", ())
+            ),
         )
         if collected.status is not TraceRunStatus.COMPLETED:
             traced = replace(

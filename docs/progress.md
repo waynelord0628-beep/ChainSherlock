@@ -418,6 +418,15 @@ V3 contains no Provider, blockchain API, graph rendering, report, Word/PDF, AI, 
   trusted Local Label VASP stopping and evidence-backed transaction hashes.
 - The Case Wizard now exposes multi-hop fund tracing as an explicit opt-in goal.
 
+## V8 Multi-hop Analyst Controls
+
+- Case Wizard exposes trace depth (1-5), node budget, materiality, direction and
+  analyst-defined stop addresses.
+- Planner clamps trace controls to safe product bounds and preserves deterministic
+  ordering for manual stops.
+- Offline and Provider execution apply manual stops as reached trace conditions.
+- Targeted validation: 195 passed.
+
 ## V8 Multi-hop Fund Tracing（開發驗收）
 
 - 已完成公開 Trace contracts、同資產 FIFO、雙向 1～5 層 traversal、
