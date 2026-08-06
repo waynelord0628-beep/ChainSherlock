@@ -69,7 +69,7 @@ async def collect_multihop_edges(
         if scope.direction is TraceDirection.BIDIRECTIONAL
         else (scope.direction,)
     )
-    assets = scope.asset_filters or ((seed.asset,) if seed.asset else ())
+    assets = scope.asset_filters or ((seed.asset,) if seed.asset else ("*",))
     frontier = (
         [
             (hop, address, asset, TraceDirection(direction))
@@ -155,14 +155,19 @@ async def collect_multihop_edges(
         converted = records_to_trace_edges(collected.records)
         rejected += converted.rejected_count
         for edge in converted.edges:
-            if edge.asset != asset or edge.amount < scope.min_material_amount:
+            if (
+                asset != "*"
+                and edge.asset != asset
+                or edge.amount < scope.min_material_amount
+            ):
                 continue
             edge_map.setdefault(edge.edge_id, edge)
 
         relevant = tuple(
             edge
             for edge in converted.edges
-            if edge.asset == asset and edge.amount >= scope.min_material_amount
+            if (asset == "*" or edge.asset == asset)
+            and edge.amount >= scope.min_material_amount
         )
         next_items = []
         for edge in relevant:
@@ -175,7 +180,23 @@ async def collect_multihop_edges(
                 status = TraceRunStatus.PARTIAL
                 limitations.append("Configured max_nodes safety limit was reached.")
                 break
-            frontier.append((hop + 1, next_address, asset, direction))
+            next_asset = (
+                next(
+                    edge.asset
+                    for edge in relevant
+                    if (
+                        direction is TraceDirection.FORWARD
+                        and edge.to_address == next_address
+                    )
+                    or (
+                        direction is TraceDirection.BACKWARD
+                        and edge.from_address == next_address
+                    )
+                )
+                if asset == "*"
+                else asset
+            )
+            frontier.append((hop + 1, next_address, next_asset, direction))
 
     needs_checkpoint = (
         status in {TraceRunStatus.PARTIAL, TraceRunStatus.CANCELLED}

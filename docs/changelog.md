@@ -13,6 +13,9 @@
   depth-5 aggregation/dispersion/return-flow/VASP-stop scenario.
 - Add bounded analyst controls for trace depth, nodes, materiality, direction and
   evidence-visible manual stops.
+- Fix asset discovery for multi-hop Provider collection when no asset filter is selected.
+- Validate capability cursor resume against bounded live TronGrid pages without
+  persisting credentials or request payloads.
 
 ## Unreleased – First-Hop final report tuning
 

@@ -427,6 +427,15 @@ V3 contains no Provider, blockchain API, graph rendering, report, Word/PDF, AI, 
 - Offline and Provider execution apply manual stops as reached trace conditions.
 - Targeted validation: 195 passed.
 
+## V8 Live Provider Resume Gate
+
+- A bounded TronGrid validation fetched two capabilities and saved both cursors.
+- Resume used the saved cursors, preserved 182 prior edges and added 180 new edges.
+- Total validation result: 362 distinct edges, four provider pages, zero safe errors.
+- Fixed an empty-frontier defect: an unspecified asset filter now discovers and then
+  separates Provider-returned assets instead of completing with zero queries.
+- Live artifacts remain local and are excluded from Git.
+
 ## V8 Multi-hop Fund Tracing（開發驗收）
 
 - 已完成公開 Trace contracts、同資產 FIFO、雙向 1～5 層 traversal、

@@ -599,6 +599,82 @@ def test_provider_collection_checkpoint_resumes_cursor_without_refetching():
     ]
 
 
+def test_provider_collection_without_asset_filter_keeps_discovered_assets():
+    records = (
+        ProviderRawRecord(
+            Chain.TRON,
+            "synthetic-provider",
+            "token_transfer",
+            "SYNTHETIC-DISCOVERY-USDT",
+            timestamp=NOW,
+            from_address="SEED",
+            to_address="USDT-HOP",
+            asset_symbol="USDT",
+            amount_raw="2000000",
+            decimals=6,
+            success=True,
+        ),
+        ProviderRawRecord(
+            Chain.TRON,
+            "synthetic-provider",
+            "normal_transaction",
+            "SYNTHETIC-DISCOVERY-TRX",
+            timestamp=NOW,
+            from_address="SEED",
+            to_address="TRX-HOP",
+            asset_symbol="TRX",
+            amount_raw="3000000",
+            decimals=6,
+            success=True,
+            transaction_type="native_transfer",
+            metadata={"contract_type": "TransferContract"},
+        ),
+    )
+    calls = []
+
+    async def fetch(address, start_cursors, completed_capabilities):
+        calls.append(address)
+        return CollectionResult(
+            records if address == "SEED" else (),
+            (
+                ProviderResult(
+                    "synthetic-provider",
+                    Chain.TRON,
+                    ProviderCapability.TOKEN_TRANSFERS,
+                    records if address == "SEED" else (),
+                    Completeness.COMPLETE,
+                    pages_fetched=1,
+                ),
+            ),
+            (),
+        )
+
+    result = asyncio.run(
+        collect_multihop_edges(
+            seed=TraceSeed(
+                SeedType.ADDRESS,
+                "SEED",
+                "tron",
+                None,
+                ("SYNTHETIC-EVIDENCE",),
+            ),
+            scope=TraceScope(
+                "synthetic",
+                1,
+                10,
+                20,
+                Decimal("0"),
+                (),
+                direction=TraceDirection.FORWARD,
+            ),
+            fetch_address=fetch,
+            max_address_queries=1,
+        )
+    )
+    assert calls == ["SEED"]
+    assert {item.asset for item in result.edges} == {"TRX", "USDT"}
+
+
 def test_trace_graph_preserves_assets_hops_and_off_ramp_category():
     result, _ = investigate_fund_trace(
         run_id="SYNTHETIC-GRAPH",
