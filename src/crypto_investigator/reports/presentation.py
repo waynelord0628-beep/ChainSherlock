@@ -494,7 +494,10 @@ def address_registry_rows(document):
     target = document.metadata.target_address
     if target:
         all_addresses.add(target)
-    if document.metadata.report_type == "deterministic_multihop_trace":
+    if document.metadata.report_type in {
+        "deterministic_multihop_trace",
+        "deterministic_multihop_casebook",
+    }:
         chain = (document.metadata.chain or "").casefold()
         if chain == "tron":
             all_addresses = {

@@ -40,6 +40,7 @@ def compose_multihop_report(
         _off_ramp_section(result),
         _next_steps_section(result),
         _limitations_section(result),
+        _glossary_section(),
         _technical_appendix(result),
     )
     limitation_texts = tuple(
@@ -154,7 +155,8 @@ def _scope_section(result: TraceResult) -> ReportSection:
         "調查目的、範圍與方法",
         3,
         (
-            "本報告以交易級 Trace Edge 建立多層關聯，分層呈現鏈上事實、FIFO 分配結果、"
+            "本報告以交易級 Trace Edge（具交易雜湊支持的地址間轉帳關係）建立多層關聯；"
+            "Hop（層級）代表資金每經過一個地址的追蹤深度。報告分層呈現鏈上事實、FIFO 分配結果、"
             "規則式模式及下車點候選。所有候選均保留信心與限制，不以排行拼接資金路徑。",
             "分支、節點、交易與重要性門檻屬安全控制；觸發任一上限時，報告必須標記為部分完成。",
         ),
@@ -271,7 +273,8 @@ def _allocation_section(result: TraceResult) -> ReportSection:
         "FIFO 資金分配",
         6,
         (
-            "FIFO 依時間先後將既有流入 Lot 配對至後續流出，提供一致且可重現的分析路徑；"
+            "FIFO（先進先出）依時間先後將既有流入批次配對至後續流出，"
+            "提供一致且可重現的分析路徑；"
             "它是鑑識分配方法，不代表鏈上或法律上已證明同一筆資金的實體歸屬。",
         ),
         (
@@ -381,6 +384,8 @@ def _off_ramp_section(result: TraceResult) -> ReportSection:
         "服務端點與下車點候選",
         8,
         (
+            "下車點（Off-ramp）是資金可能兌換、提領，或進入交易所、託管商等服務的節點；"
+            "未經可信標籤或外部資料確認者，只能列為候選。",
             "具可信人工、Local Label 或 Provider Label 的服務端點，才可作為較強的停止條件；"
             "本次未標籤終端候選僅表示有界追蹤內未見後續重大流出。",
             "候選地址仍須查核標籤來源、帳戶歸屬、後續層交易及可調閱資料，"
@@ -439,6 +444,41 @@ def _limitations_section(result: TraceResult) -> ReportSection:
     )
 
 
+def _glossary_section() -> ReportSection:
+    rows = (
+        ("Provider（資料供應服務）", "向區塊鏈節點或索引服務取得交易資料的來源，例如 TronGrid。"),
+        ("Provider incomplete", "資料供應服務尚未完整回傳該分支；不代表該地址沒有後續活動。"),
+        ("FIFO（先進先出）", "依時間順序將較早流入配對至後續流出；屬分析分配方法，不是同一筆資金的直接證明。"),
+        ("Hop（層級）", "資金每經過一個地址計為一層；第 1 層即調查標的直接往來地址。"),
+        ("Trace Edge（追蹤邊）", "由真實交易雜湊支持的一筆地址間資產轉移關係。"),
+        ("Checkpoint（進度點）", "分批追蹤時保存的完成進度，可從中斷處續跑而不重抓既有頁面。"),
+        ("Candidate（候選）", "符合部分規則或特徵但尚未確認的結果，不可當成確定事實。"),
+        ("Off-ramp（下車點）", "資金可能兌換、提領，或進入交易所、託管商等服務的節點。"),
+        ("VASP（虛擬資產服務商）", "提供虛擬資產交換、移轉或保管等服務的機構。"),
+        ("Materiality threshold（重要性門檻）", "將不影響主要判讀的微額交易移出主分析；原始紀錄仍保留且可恢復。"),
+        ("Graph truncation（圖譜截斷）", "圖譜因節點或邊數安全上限而只呈現部分關係，不等於 Provider 資料不完整。"),
+        ("Address clustering（地址群組候選）", "依共同交易特徵建立的關聯候選，不代表已確認由同一人控制。"),
+        ("Deterministic analysis（規則式分析）", "相同輸入與規則會得到相同結果的可重現分析。"),
+    )
+    return ReportSection(
+        "glossary",
+        "名詞與判讀說明",
+        11,
+        (
+            "本節以白話說明報告中的技術術語。除已確認的鏈上交易事實外，"
+            "「候選」「可能」與「疑似」均表示仍需外部標籤、調閱資料或人工證據查核。",
+        ),
+        (
+            ReportTable(
+                "trace-glossary-table",
+                "報告名詞表",
+                ("名詞", "白話說明"),
+                rows,
+            ),
+        ),
+    )
+
+
 def _technical_appendix(result: TraceResult) -> ReportSection:
     rows = tuple(
         (
@@ -453,7 +493,7 @@ def _technical_appendix(result: TraceResult) -> ReportSection:
     return ReportSection(
         "technical_appendix",
         "技術附錄：交易與證據索引",
-        11,
+        12,
         (
             "完整結構化 TraceResult、原始精度、全部地址與關聯欄位另存於 report_data.json；"
             "本附錄列出交易級 Edge 與證據參照，以供重算及交叉查核。",

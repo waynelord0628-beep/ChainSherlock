@@ -24,7 +24,10 @@ from crypto_investigator.reports.typography import (
 class DocxReportExporter:
     @staticmethod
     def _report_subtitle(document: ReportDocument) -> str:
-        if document.metadata.report_type == "deterministic_multihop_trace":
+        if document.metadata.report_type in {
+            "deterministic_multihop_trace",
+            "deterministic_multihop_casebook",
+        }:
             return "Evidence-based Multi-hop Fund Tracing and Off-ramp Candidate Analysis"
         return (
             "TRX Sub-Asset Analysis and Counterparty Overview"

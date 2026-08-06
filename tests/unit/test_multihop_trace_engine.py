@@ -236,6 +236,20 @@ def test_multihop_report_uses_bounded_tables_and_exports_offline(tmp_path):
     assert document.title == "多層資金追蹤與下車點候選分析報告"
     assert any(section.section_id == "hop_summary" for section in document.sections)
     assert any(section.section_id == "off_ramp_candidates" for section in document.sections)
+    glossary = next(
+        section for section in document.sections if section.section_id == "glossary"
+    )
+    glossary_text = " ".join(
+        cell for table in glossary.tables for row in table.rows for cell in row
+    )
+    assert "Provider incomplete" in glossary_text
+    assert "不代表該地址沒有後續活動" in glossary_text
+    assert "FIFO（先進先出）" in glossary_text
+    assert "Off-ramp（下車點）" in glossary_text
+    assert "VASP（虛擬資產服務商）" in glossary_text
+    assert "Graph truncation（圖譜截斷）" in glossary_text
+    assert document.sections[-2].section_id == "glossary"
+    assert document.sections[-1].section_id == "technical_appendix"
     assert "不代表已取得每個相關地址的無界完整歷史" in document.conclusion.text
     assert max(
         len(table.columns)
