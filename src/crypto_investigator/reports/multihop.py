@@ -606,7 +606,7 @@ def _stop_summary(value: str) -> str:
 
 
 def _limitation_text(value: str) -> str:
-    if value == "trongrid/token_transfers pagination incomplete":
+    if value.rstrip(".") == "trongrid/token_transfers pagination incomplete":
         return "TronGrid token_transfers 分頁未完整。"
     if value.startswith("Per-node provider frontier cap "):
         parts = value.removesuffix(".").split()

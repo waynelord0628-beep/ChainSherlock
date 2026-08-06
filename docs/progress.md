@@ -451,3 +451,10 @@ V3 contains no Provider, blockchain API, graph rendering, report, Word/PDF, AI, 
   候選 Edge；引擎保留 12 條與 Seed 可連通的 Edge、12 個節點並辨識 1 個
   分散候選。因每 capability 僅取 1 頁且查詢預算到頂，結果正確標記 partial。
 - 本次真實驗收未產生或提交案件 artifact，API Key 未寫入檔案或 Git。
+- 已完成 5 層重要資產 benchmark：73 條可驗證交易邊、39 個地址節點、
+  42 筆 FIFO 切片、10 項規則式模式與 5 個未標籤終端候選。
+- 新增每節點分支上限，依金額保留主要分支，避免高 fan-out 地址耗盡節點預算。
+- 未標籤終端僅以低信心候選呈現，不會升級為已確認交易所或下車點。
+- 多層報告已改為專業調查敘事，四格式離線匯出成功；PDF 逐頁驗收為 12 頁，
+  無空白尾頁、表格溢位或 Tx Hash 誤入 Address Registry。
+- 完整回歸：1,561 passed、1 skipped；`pip check` 無相依性錯誤。
