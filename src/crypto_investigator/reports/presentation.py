@@ -494,6 +494,20 @@ def address_registry_rows(document):
     target = document.metadata.target_address
     if target:
         all_addresses.add(target)
+    if document.metadata.report_type == "deterministic_multihop_trace":
+        chain = (document.metadata.chain or "").casefold()
+        if chain == "tron":
+            all_addresses = {
+                value
+                for value in all_addresses
+                if len(value) == 34 and value.startswith("T")
+            }
+        elif chain in {"ethereum", "evm"}:
+            all_addresses = {
+                value
+                for value in all_addresses
+                if len(value) == 42 and value.startswith("0x")
+            }
     ordered = []
 
     def add(address):

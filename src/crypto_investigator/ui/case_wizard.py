@@ -187,6 +187,9 @@ class CaseWizard(QDialog):
         self.trace_max_nodes = QSpinBox()
         self.trace_max_nodes.setRange(10, 500)
         self.trace_max_nodes.setValue(100)
+        self.trace_branch_limit = QSpinBox()
+        self.trace_branch_limit.setRange(1, 50)
+        self.trace_branch_limit.setValue(10)
         self.trace_materiality = QDoubleSpinBox()
         self.trace_materiality.setRange(0, 1_000_000_000)
         self.trace_materiality.setDecimals(8)
@@ -199,6 +202,7 @@ class CaseWizard(QDialog):
         self.trace_manual_stops.setPlaceholderText("地址以逗號分隔（選填）")
         form.addRow("多層追蹤深度", self.trace_depth)
         form.addRow("多層追蹤節點上限", self.trace_max_nodes)
+        form.addRow("每節點分支上限", self.trace_branch_limit)
         form.addRow("最低重要金額", self.trace_materiality)
         form.addRow("追蹤方向", self.trace_direction)
         form.addRow("人工停止地址", self.trace_manual_stops)
@@ -363,6 +367,7 @@ class CaseWizard(QDialog):
                 "trace_settings": {
                     "max_depth": self.trace_depth.value(),
                     "max_nodes": self.trace_max_nodes.value(),
+                    "max_edges_per_node": self.trace_branch_limit.value(),
                     "min_material_amount": str(self.trace_materiality.value()),
                     "direction": self.trace_direction.currentData(),
                     "manual_stop_addresses": [

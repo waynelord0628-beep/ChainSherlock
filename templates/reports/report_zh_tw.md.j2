@@ -2,7 +2,7 @@
 {% if section.section_id == "cover" %}
 # {{ document.title }}
 
-## {% if document.metadata.principal_asset_coverage == "missing" %}TRX Sub-Asset Analysis and Counterparty Overview{% else %}Address Profile and First-Hop Fund Flow Analysis{% endif %}
+## {% if document.metadata.report_type == "deterministic_multihop_trace" %}Evidence-based Multi-hop Fund Tracing and Off-ramp Candidate Analysis{% elif document.metadata.principal_asset_coverage == "missing" %}TRX Sub-Asset Analysis and Counterparty Overview{% else %}Address Profile and First-Hop Fund Flow Analysis{% endif %}
 
 {% for block in section.content_blocks %}{{ block }}
 

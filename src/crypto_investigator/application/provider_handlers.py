@@ -278,6 +278,7 @@ class ProviderTraceStepHandler:
             direction=TraceDirection(
                 str(parameters.get("direction", "bidirectional"))
             ),
+            max_edges_per_node=int(parameters.get("max_edges_per_node", 20)),
         )
         seed = TraceSeed(
             SeedType.ADDRESS,

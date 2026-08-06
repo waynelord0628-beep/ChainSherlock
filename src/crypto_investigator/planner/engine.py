@@ -332,6 +332,9 @@ class DeterministicPlanner:
             trace_nodes = min(
                 500, max(10, int(trace_settings.get("max_nodes", 100)))
             )
+            trace_branches = min(
+                50, max(1, int(trace_settings.get("max_edges_per_node", 10)))
+            )
             try:
                 materiality_value = Decimal(
                     str(trace_settings.get("min_material_amount", "0"))
@@ -376,6 +379,7 @@ class DeterministicPlanner:
                     parameters={
                         "max_depth": trace_depth,
                         "max_nodes": trace_nodes,
+                        "max_edges_per_node": trace_branches,
                         "min_material_amount": trace_materiality,
                         "direction": trace_direction,
                         "manual_stop_addresses": manual_stops,

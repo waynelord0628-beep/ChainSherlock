@@ -267,6 +267,7 @@ def test_result_displays_multihop_trace_summary(window) -> None:
 def test_wizard_serializes_bounded_trace_controls(wizard) -> None:
     wizard.trace_depth.setValue(5)
     wizard.trace_max_nodes.setValue(240)
+    wizard.trace_branch_limit.setValue(7)
     wizard.trace_materiality.setValue(12.5)
     wizard.trace_direction.setCurrentIndex(1)
     wizard.trace_manual_stops.setText(
@@ -276,6 +277,7 @@ def test_wizard_serializes_bounded_trace_controls(wizard) -> None:
     assert settings == {
         "max_depth": 5,
         "max_nodes": 240,
+        "max_edges_per_node": 7,
         "min_material_amount": "12.5",
         "direction": "forward",
         "manual_stop_addresses": ["0x" + "a" * 40, "0x" + "b" * 40],

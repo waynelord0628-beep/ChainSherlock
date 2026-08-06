@@ -19,7 +19,11 @@ from crypto_investigator.domain.fund_tracing import (
     TraceSeed,
 )
 from crypto_investigator.domain.multihop_tracing import trace_multihop
-from crypto_investigator.domain.off_ramp import LabelLookup, detect_off_ramps
+from crypto_investigator.domain.off_ramp import (
+    LabelLookup,
+    detect_behavioral_endpoints,
+    detect_off_ramps,
+)
 
 
 class EmptyLabelLookup:
@@ -89,11 +93,17 @@ def investigate_fund_trace(
         edges=traced.edges,
         labels=label_lookup,
     )
+    behavioral_endpoints = detect_behavioral_endpoints(
+        edges=traced.edges,
+        excluded_addresses=frozenset(
+            {seed.value, *(item.address for item in off_ramps)}
+        ),
+    )
     result = replace(
         traced,
         allocations=tuple(allocations),
         patterns=patterns,
-        off_ramp_candidates=off_ramps,
+        off_ramp_candidates=(*off_ramps, *behavioral_endpoints),
         stop_conditions=_unique_stops(
             (
                 *traced.stop_conditions,

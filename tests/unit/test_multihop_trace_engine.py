@@ -233,6 +233,10 @@ def test_multihop_report_uses_bounded_tables_and_exports_offline(tmp_path):
     )
     document = compose_multihop_report(result)
     assert document.metadata.report_type == "deterministic_multihop_trace"
+    assert document.title == "多層資金追蹤與下車點候選分析報告"
+    assert any(section.section_id == "hop_summary" for section in document.sections)
+    assert any(section.section_id == "off_ramp_candidates" for section in document.sections)
+    assert "不代表已取得每個相關地址的無界完整歷史" in document.conclusion.text
     assert max(
         len(table.columns)
         for section in document.sections
@@ -484,6 +488,80 @@ def test_manual_stop_is_reached_and_prevents_further_traversal():
     }
 
 
+def test_per_node_branch_cap_keeps_largest_edges_and_records_limitation():
+    edges = tuple(
+        _edge(300 + index, "SEED", f"HOP-{index}", str(index))
+        for index in range(1, 8)
+    )
+    result, checkpoint = investigate_fund_trace(
+        run_id="SYNTHETIC-BRANCH-CAP",
+        seed=TraceSeed(
+            SeedType.ADDRESS,
+            "SEED",
+            "tron",
+            "USDT",
+            ("SYNTHETIC-EVIDENCE",),
+        ),
+        scope=TraceScope(
+            "synthetic",
+            1,
+            20,
+            20,
+            Decimal("0"),
+            ("USDT",),
+            direction=TraceDirection.FORWARD,
+            max_edges_per_node=3,
+        ),
+        available_edges=edges,
+    )
+    assert checkpoint is None
+    assert [item.amount for item in result.edges] == [
+        Decimal("7"),
+        Decimal("6"),
+        Decimal("5"),
+    ]
+    assert any(
+        "Per-node edge cap 3 reached" in item.reason
+        for item in result.stop_conditions
+    )
+
+
+def test_unlabeled_terminal_is_low_confidence_candidate_not_confirmed_off_ramp():
+    result, _ = investigate_fund_trace(
+        run_id="SYNTHETIC-UNLABELED-ENDPOINT",
+        seed=TraceSeed(
+            SeedType.ADDRESS,
+            "SEED",
+            "tron",
+            "USDT",
+            ("SYNTHETIC-EVIDENCE",),
+        ),
+        scope=TraceScope(
+            "synthetic",
+            2,
+            20,
+            20,
+            Decimal("1"),
+            ("USDT",),
+            direction=TraceDirection.FORWARD,
+        ),
+        available_edges=(_edge(401, "SEED", "UNLABELED-ENDPOINT", "500"),),
+    )
+    candidate = next(
+        item
+        for item in result.off_ramp_candidates
+        if item.address == "UNLABELED-ENDPOINT"
+    )
+    assert candidate.category == "unlabeled_terminal_candidate"
+    assert candidate.confidence == Decimal("0.30")
+    assert candidate.label is None
+    assert "unconfirmed" in " ".join(candidate.limitations).lower()
+    assert all(
+        item.condition is not StopConditionType.CONFIRMED_EXCHANGE_OR_VASP
+        for item in result.stop_conditions
+    )
+
+
 def test_provider_collection_checkpoint_resumes_cursor_without_refetching():
     calls = []
 
@@ -673,6 +751,71 @@ def test_provider_collection_without_asset_filter_keeps_discovered_assets():
     )
     assert calls == ["SEED"]
     assert {item.asset for item in result.edges} == {"TRX", "USDT"}
+
+
+def test_provider_frontier_cap_uses_largest_material_edges():
+    seed_records = tuple(
+        ProviderRawRecord(
+            Chain.TRON,
+            "synthetic-provider",
+            "token_transfer",
+            f"SYNTHETIC-PRIORITY-{index}",
+            timestamp=NOW,
+            from_address="SEED",
+            to_address=f"HOP-{index}",
+            asset_symbol="USDT",
+            amount_raw=str(index * 1_000_000),
+            decimals=6,
+            success=True,
+        )
+        for index in range(1, 6)
+    )
+    calls = []
+
+    async def fetch(address, start_cursors, completed_capabilities):
+        calls.append(address)
+        records = seed_records if address == "SEED" else ()
+        return CollectionResult(
+            records,
+            (
+                ProviderResult(
+                    "synthetic-provider",
+                    Chain.TRON,
+                    ProviderCapability.TOKEN_TRANSFERS,
+                    records,
+                    Completeness.COMPLETE,
+                    pages_fetched=1,
+                ),
+            ),
+            (),
+        )
+
+    result = asyncio.run(
+        collect_multihop_edges(
+            seed=TraceSeed(
+                SeedType.ADDRESS,
+                "SEED",
+                "tron",
+                "USDT",
+                ("SYNTHETIC-EVIDENCE",),
+            ),
+            scope=TraceScope(
+                "synthetic",
+                2,
+                20,
+                20,
+                Decimal("0"),
+                ("USDT",),
+                direction=TraceDirection.FORWARD,
+                max_edges_per_node=2,
+            ),
+            fetch_address=fetch,
+            max_address_queries=3,
+        )
+    )
+    assert calls == ["SEED", "HOP-4", "HOP-5"]
+    assert result.status is TraceRunStatus.PARTIAL
+    assert any("provider frontier cap 2" in item for item in result.limitations)
 
 
 def test_trace_graph_preserves_assets_hops_and_off_ramp_category():

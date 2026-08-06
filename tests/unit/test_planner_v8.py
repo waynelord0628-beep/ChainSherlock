@@ -399,6 +399,7 @@ def test_trace_step_uses_bounded_case_controls(
             "trace_settings": {
                 "max_depth": 5,
                 "max_nodes": 240,
+                "max_edges_per_node": 7,
                 "min_material_amount": "12.500000",
                 "direction": "forward",
                 "manual_stop_addresses": [
@@ -417,6 +418,7 @@ def test_trace_step_uses_bounded_case_controls(
     trace = next(step for step in plan.steps if step.step_type is StepType.TRACE_FUNDS)
     assert trace.parameters["max_depth"] == 5
     assert trace.parameters["max_nodes"] == 240
+    assert trace.parameters["max_edges_per_node"] == 7
     assert trace.parameters["min_material_amount"] == "12.500000"
     assert trace.parameters["direction"] == "forward"
     assert trace.parameters["manual_stop_addresses"] == [

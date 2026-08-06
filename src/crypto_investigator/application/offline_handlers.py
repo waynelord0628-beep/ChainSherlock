@@ -354,6 +354,7 @@ class OfflineStepHandler:
             direction=TraceDirection(
                 str(parameters.get("direction", "bidirectional"))
             ),
+            max_edges_per_node=int(parameters.get("max_edges_per_node", 20)),
         )
         result, checkpoint = investigate_fund_trace(
             run_id=f"{context.execution.execution_id}:{step.step_id}",

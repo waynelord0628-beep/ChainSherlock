@@ -144,12 +144,15 @@ class TraceScope(SerializableTraceContract):
     date_to: datetime | None = None
     direction: TraceDirection = TraceDirection.BIDIRECTIONAL
     timezone: str = "Asia/Taipei"
+    max_edges_per_node: int = 20
 
     def __post_init__(self) -> None:
         if self.max_depth < 1:
             raise ValueError("max_depth must be at least 1")
         if self.max_nodes < 1 or self.max_records < 1:
             raise ValueError("trace safety limits must be positive")
+        if self.max_edges_per_node < 1:
+            raise ValueError("max_edges_per_node must be positive")
         if self.min_material_amount < 0:
             raise ValueError("min_material_amount cannot be negative")
         if self.date_from and self.date_to and self.date_from > self.date_to:

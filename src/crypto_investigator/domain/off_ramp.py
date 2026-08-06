@@ -99,6 +99,65 @@ def detect_off_ramps(
     return tuple(candidates), tuple(stops)
 
 
+def detect_behavioral_endpoints(
+    *,
+    edges: tuple[TraceEdge, ...],
+    excluded_addresses: frozenset[str] = frozenset(),
+    limit: int = 10,
+) -> tuple[OffRampCandidate, ...]:
+    """Return low-confidence endpoint candidates without asserting identity."""
+
+    incoming: dict[str, list[TraceEdge]] = defaultdict(list)
+    outgoing: dict[str, list[TraceEdge]] = defaultdict(list)
+    for edge in edges:
+        incoming[edge.to_address].append(edge)
+        outgoing[edge.from_address].append(edge)
+    ranked = []
+    for address, receipts in incoming.items():
+        if address in excluded_addresses or outgoing.get(address):
+            continue
+        by_asset: dict[str, list[TraceEdge]] = defaultdict(list)
+        for edge in receipts:
+            by_asset[edge.asset].append(edge)
+        for asset, related in by_asset.items():
+            total = sum((edge.amount for edge in related), Decimal("0"))
+            ranked.append((total, address, asset, related))
+    output = []
+    for total, address, asset, related in sorted(
+        ranked, key=lambda item: (-item[0], item[1], item[2])
+    )[: max(0, limit)]:
+        evidence = tuple(
+            dict.fromkeys(ref for edge in related for ref in edge.evidence_refs)
+        )
+        output.append(
+            OffRampCandidate(
+                address=address,
+                label=None,
+                label_source=None,
+                asset=asset,
+                received_amount=total,
+                transaction_count=len(related),
+                first_receipt=min(edge.timestamp for edge in related),
+                last_receipt=max(edge.timestamp for edge in related),
+                subsequent_behavior=(
+                    "No material outgoing edge was observed within the bounded trace."
+                ),
+                confidence=Decimal("0.30"),
+                evidence_refs=evidence,
+                recommended_action=(
+                    "Continue the next hop and verify Local Labels before treating "
+                    "this endpoint as a service or off-ramp."
+                ),
+                limitations=(
+                    "Behavioral endpoint only; identity and off-ramp status are unconfirmed.",
+                    "Provider pagination, materiality, depth, or branch limits may hide outgoing activity.",
+                ),
+                category="unlabeled_terminal_candidate",
+            )
+        )
+    return tuple(output)
+
+
 def _stop_type(category: str) -> StopConditionType:
     return {
         "exchange": StopConditionType.CONFIRMED_EXCHANGE_OR_VASP,

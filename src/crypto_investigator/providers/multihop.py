@@ -175,7 +175,15 @@ async def collect_multihop_edges(
                 next_items.append((edge.amount, edge.to_address))
             elif direction is TraceDirection.BACKWARD and edge.to_address == address:
                 next_items.append((edge.amount, edge.from_address))
-        for _, next_address in sorted(next_items, key=lambda item: (-item[0], item[1])):
+        ordered_next = sorted(next_items, key=lambda item: (-item[0], item[1]))
+        if len(ordered_next) > scope.max_edges_per_node:
+            status = TraceRunStatus.PARTIAL
+            limitations.append(
+                f"Per-node provider frontier cap {scope.max_edges_per_node} "
+                f"was reached at hop {hop}."
+            )
+            ordered_next = ordered_next[: scope.max_edges_per_node]
+        for _, next_address in ordered_next:
             if len({item[1] for item in frontier} | set(fetched_addresses)) >= scope.max_nodes:
                 status = TraceRunStatus.PARTIAL
                 limitations.append("Configured max_nodes safety limit was reached.")

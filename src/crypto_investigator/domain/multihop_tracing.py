@@ -82,6 +82,19 @@ def trace_multihop(
             break
 
         candidates = _matching_edges(item, edges)
+        if len(candidates) > scope.max_edges_per_node:
+            stops.append(
+                StopCondition(
+                    condition=StopConditionType.MANUAL_STOP,
+                    reason=(
+                        f"Per-node edge cap {scope.max_edges_per_node} reached "
+                        f"at {item.address}; lower-priority edges were not expanded"
+                    ),
+                    evidence_refs=item.evidence_refs,
+                    reached=True,
+                )
+            )
+            candidates = candidates[: scope.max_edges_per_node]
         for edge in candidates:
             if edge.transaction_hash in visited_transactions:
                 continue
