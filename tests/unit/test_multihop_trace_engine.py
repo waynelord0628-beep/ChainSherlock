@@ -319,7 +319,6 @@ def test_provider_collection_is_budgeted_and_marks_partial():
             ),
         ),
     }
-
     query_calls = []
 
     async def fetch(address, start_cursors, completed_capabilities):
@@ -371,6 +370,82 @@ def test_provider_collection_is_budgeted_and_marks_partial():
         "SYNTHETIC-TX-1",
         "SYNTHETIC-TX-2",
     }
+
+
+def test_depth_five_product_scenario_preserves_flow_patterns_and_vasp_stop():
+    @dataclass(frozen=True)
+    class Label:
+        address: str
+        label: str
+        category: str
+        source: str
+        verification_status: str
+
+    class Labels:
+        def check(self, chain, address):
+            if address == "VASP-ENDPOINT":
+                return (
+                    Label(
+                        address,
+                        "Synthetic VASP",
+                        "vasp",
+                        "synthetic-local-label",
+                        "trusted_local",
+                    ),
+                )
+            return ()
+
+    edges = (
+        _edge(101, "SOURCE-A", "SEED", "120"),
+        _edge(102, "SOURCE-B", "SEED", "80"),
+        _edge(103, "SEED", "HOP-1", "180"),
+        _edge(104, "HOP-1", "HOP-2", "170"),
+        _edge(105, "HOP-2", "BRANCH-A", "60"),
+        _edge(106, "HOP-2", "BRANCH-B", "55"),
+        _edge(107, "HOP-2", "BRANCH-C", "45"),
+        _edge(108, "BRANCH-A", "SEED", "10"),
+        _edge(109, "BRANCH-B", "VASP-ENDPOINT", "50"),
+        _edge(110, "BRANCH-C", "REVENUE-SHARE", "20"),
+    )
+    result, checkpoint = investigate_fund_trace(
+        run_id="SYNTHETIC-DEPTH-FIVE",
+        seed=TraceSeed(
+            SeedType.ADDRESS,
+            "SEED",
+            "tron",
+            "USDT",
+            ("SYNTHETIC-EVIDENCE",),
+        ),
+        scope=TraceScope(
+            "synthetic_full_history",
+            5,
+            50,
+            100,
+            Decimal("1"),
+            ("USDT",),
+            direction=TraceDirection.BIDIRECTIONAL,
+        ),
+        available_edges=edges,
+        labels=Labels(),
+    )
+    assert checkpoint is None
+    assert result.status is TraceRunStatus.COMPLETED
+    assert {item.pattern_type for item in result.patterns} >= {
+        FlowPatternType.AGGREGATION,
+        FlowPatternType.DISPERSION,
+        FlowPatternType.RETURN_FLOW,
+    }
+    assert result.off_ramp_candidates[0].address == "VASP-ENDPOINT"
+    assert result.off_ramp_candidates[0].label == "Synthetic VASP"
+    assert any(
+        item.condition is StopConditionType.CONFIRMED_EXCHANGE_OR_VASP
+        and item.reached
+        for item in result.stop_conditions
+    )
+    assert all(
+        item.transaction_hash.startswith("SYNTHETIC-TX-")
+        for item in result.edges
+    )
 
 
 def test_provider_collection_checkpoint_resumes_cursor_without_refetching():

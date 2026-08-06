@@ -9,6 +9,8 @@
 - Add an explicit confirmed `TRACE_FUNDS` planner step.
 - Persist evidence-backed trace result, trace graph and optional checkpoint artifacts
   through Case Execution.
+- Expose multi-hop tracing as an optional Case Wizard goal and validate a synthetic
+  depth-5 aggregation/dispersion/return-flow/VASP-stop scenario.
 
 ## Unreleased – First-Hop final report tuning
 

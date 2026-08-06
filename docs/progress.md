@@ -412,8 +412,11 @@ V3 contains no Provider, blockchain API, graph rendering, report, Word/PDF, AI, 
   provider cursor checkpoints for resume.
 - Targeted validation: Planner 77 passed; Execution/Provider integration 101 passed.
 - Desktop/Case Result targeted validation: 371 passed.
-- Full regression: 1,552 passed, 1 skipped; `pip check` reports no broken requirements.
+- Full regression: 1,554 passed, 1 skipped; `pip check` reports no broken requirements.
 - No Provider or AI calls were made during this integration milestone.
+- Depth-5 synthetic product scenario validates aggregation, dispersion, return flow,
+  trusted Local Label VASP stopping and evidence-backed transaction hashes.
+- The Case Wizard now exposes multi-hop fund tracing as an explicit opt-in goal.
 
 ## V8 Multi-hop Fund Tracing（開發驗收）
 

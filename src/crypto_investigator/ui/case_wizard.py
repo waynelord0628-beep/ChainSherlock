@@ -31,6 +31,7 @@ DEFAULT_GOALS = (
     "detect_batch_distribution",
     "detect_funding_transition",
     "identify_service_candidates",
+    "trace_funds",
     "generate_investigation_report",
 )
 
