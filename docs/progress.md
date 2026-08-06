@@ -464,6 +464,21 @@ V3 contains no Provider, blockchain API, graph rendering, report, Word/PDF, AI, 
   separates Provider-returned assets instead of completing with zero queries.
 - Live artifacts remain local and are excluded from Git.
 
+## V8 Multi-hop fund-conservation validation
+
+- Added deterministic path amount states: known, unknown, unavailable, and
+  evidence-backed zero-value event.
+- Added first-hop branch conservation with Decimal tolerance. Shared caps and
+  bottleneck upper bounds are excluded from attributable totals.
+- Added deterministic P1-P4 investigation-priority scoring. The score represents
+  investigative usefulness, never criminality or risk.
+- Added auditable CSV/JSON contracts for paths, candidates, allocations, graph,
+  and audit records.
+- Added separate human-readable and technical multi-hop report composition.
+- Existing local artifacts were validated with zero Provider and zero AI calls.
+- Targeted tests: 23 passed. Full regression: 1,614 passed, 1 skipped.
+- `pip check`: no broken requirements.
+
 ## V8 Multi-hop Fund Tracing（開發驗收）
 
 - 已完成公開 Trace contracts、同資產 FIFO、雙向 1～5 層 traversal、

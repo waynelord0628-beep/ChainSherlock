@@ -539,3 +539,16 @@ Allocation Slice 只配對同資產、先收到且尚未耗用的 Lot；不得�
 行為態樣只能產生候選。只有 `manual_confirmed`、`trusted_local` 或
 `provider_label` 的服務類 Label 能形成停止條件；未驗證 Label 保留候選、
 限制與建議查證事項。
+
+## ADR-054: Multi-hop amounts use conservative accounting semantics
+
+Only exclusive allocations supported by non-shared evidence are eligible for
+attributable totals. Shared transaction groups and path bottlenecks are disclosed
+as upper bounds and never added to totals. Missing legacy edge evidence is
+`unavailable_amount`, not a zero-value transaction.
+
+## ADR-055: Candidate ranking is investigation priority, not risk
+
+P1-P4 ranks order follow-up work using materiality, activity, topology, evidence
+quality, label confidence, hop depth, and Provider completeness. The rank cannot
+confirm a VASP, service, controller, beneficiary, criminality, or risk.

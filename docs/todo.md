@@ -205,6 +205,15 @@ Future work must be approved and delivered one milestone at a time.
 - 不開始 V9 或 Windows 打包，等待下一個 Prompt。
 ## Multi-hop tracing remaining
 
+After the validated accounting milestone:
+
+- Preserve exclusive allocation provenance during new trace collection so fewer
+  legacy branches remain unclassified.
+- Add analyst review persistence for P1-P4 overrides with append-only audit records.
+- Add trusted label provenance review before any endpoint is presented as verified.
+- Keep real case addresses, Provider responses, generated reports, and credentials
+  outside Git.
+
 Completed in the current V8 integration:
 
 - Capability cursor checkpoint and first-page-free resume.

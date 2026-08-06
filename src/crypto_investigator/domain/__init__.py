@@ -32,6 +32,13 @@ from crypto_investigator.domain.flow_patterns import (
 from crypto_investigator.domain.multihop_tracing import trace_multihop
 from crypto_investigator.domain.off_ramp import detect_off_ramps
 from crypto_investigator.domain.fund_trace_engine import investigate_fund_trace
+from crypto_investigator.domain.investigation_priority import (
+    InvestigationPriority,
+    PrioritySignals,
+    PriorityTier,
+    rank_investigation_priorities,
+    score_investigation_priority,
+)
 from crypto_investigator.domain.metadata import Metadata
 from crypto_investigator.domain.scope import (
     AnalysisScope,
@@ -45,6 +52,16 @@ from crypto_investigator.domain.transaction import (
     Direction,
     Transaction,
     TransactionType,
+)
+from crypto_investigator.domain.trace_accounting import (
+    AmountStatus,
+    BranchConservation,
+    PathAllocation,
+    PathAllocationType,
+    StopClassification,
+    classify_legacy_path_amount,
+    reconcile_branch,
+    reconcile_case,
 )
 
 __all__ = [
@@ -65,13 +82,23 @@ __all__ = [
     "detect_flow_patterns",
     "detect_off_ramps",
     "InvestigationCase",
+    "InvestigationPriority",
     "investigate_fund_trace",
     "Metadata",
     "OffRampCandidate",
     "PaginationPolicy",
+    "PathAllocation",
+    "PathAllocationType",
+    "PrioritySignals",
+    "PriorityTier",
+    "rank_investigation_priorities",
+    "reconcile_branch",
+    "reconcile_case",
+    "score_investigation_priority",
     "ScopeType",
     "SeedType",
     "StopCondition",
+    "StopClassification",
     "StopConditionType",
     "TimeScopeResult",
     "Transaction",
@@ -85,5 +112,8 @@ __all__ = [
     "TraceRunStatus",
     "TraceScope",
     "TraceSeed",
+    "AmountStatus",
+    "BranchConservation",
+    "classify_legacy_path_amount",
     "trace_multihop",
 ]

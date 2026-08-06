@@ -298,6 +298,15 @@
 - Added explicit partial migration for legacy artifacts with saved periods.
 # Unreleased
 
+## Multi-hop trace accounting and report validation
+
+- Prevented legacy missing amounts from being rendered as confirmed `0.00`.
+- Added exclusive, shared-cap, bottleneck-bound, and unallocated path semantics.
+- Added branch-level and case-level conservation without cross-asset totals.
+- Added deterministic investigation-priority scoring and P1 task-card contracts.
+- Added separate main-report and technical-appendix composition.
+- Added safe technical exports for paths, candidates, allocations, graph, and audit.
+
 - 修正正式報告地址索引位置、全域中英數混排字體、PDF／DOCX 頁碼及 HTML 字體語意 class。
 - 新增安全字型 fallback metadata，不保存本機字型路徑或字型檔。
 - 地址污染、dusting 與相似地址分析改為專用 Goal 明確啟用，普通 First-Hop 報告不再產生空白或誤導章節。
