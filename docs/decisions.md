@@ -552,3 +552,22 @@ as upper bounds and never added to totals. Missing legacy edge evidence is
 P1-P4 ranks order follow-up work using materiality, activity, topology, evidence
 quality, label confidence, hop depth, and Provider completeness. The rank cannot
 confirm a VASP, service, controller, beneficiary, criminality, or risk.
+
+## ADR-056: Multi-hop provenance requires complete transaction histories
+
+An address-level outgoing aggregate cannot establish provenance. A branch may
+advance only when the same-asset incoming and outgoing transactions for the
+current address are complete, timestamped and evidence-backed. Incomplete
+pagination creates a stop, never an inferred continuation.
+
+## ADR-057: FIFO allocations share one global transaction capacity
+
+All tracked lots reaching the same address are allocated together. The sum of
+allocation slices assigned to an outgoing transaction may never exceed that
+transaction's amount. This prevents converged paths from reusing the same funds.
+
+## ADR-058: A traced endpoint is not an off-ramp without trusted evidence
+
+Rapid transfer, aggregation, dispersion or high activity can prioritize follow-up
+work, but cannot confirm a service, VASP or off-ramp. Confirmation requires a
+trusted label or other analyst-reviewed evidence.

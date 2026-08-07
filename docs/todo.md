@@ -213,6 +213,12 @@ After the validated accounting milestone:
 - Add trusted label provenance review before any endpoint is presented as verified.
 - Keep real case addresses, Provider responses, generated reports, and credentials
   outside Git.
+- Integrate transaction-level FIFO provenance into the Case Execution product
+  path after its live validation contract is stabilized.
+- Add resumable normalized-edge caching so repeated validation does not re-fetch
+  already complete address histories.
+- Add trusted, on-demand terminal label resolution before extending a high-value
+  branch beyond five hops.
 
 Completed in the current V8 integration:
 

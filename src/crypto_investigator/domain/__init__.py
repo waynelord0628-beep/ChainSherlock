@@ -30,6 +30,12 @@ from crypto_investigator.domain.flow_patterns import (
     detect_flow_patterns,
 )
 from crypto_investigator.domain.multihop_tracing import trace_multihop
+from crypto_investigator.domain.lot_provenance import (
+    ProvenanceResult,
+    ProvenanceSlice,
+    ProvenanceStop,
+    trace_fifo_provenance,
+)
 from crypto_investigator.domain.off_ramp import detect_off_ramps
 from crypto_investigator.domain.fund_trace_engine import investigate_fund_trace
 from crypto_investigator.domain.investigation_priority import (
@@ -91,6 +97,9 @@ __all__ = [
     "PathAllocationType",
     "PrioritySignals",
     "PriorityTier",
+    "ProvenanceResult",
+    "ProvenanceSlice",
+    "ProvenanceStop",
     "rank_investigation_priorities",
     "reconcile_branch",
     "reconcile_case",
@@ -116,4 +125,5 @@ __all__ = [
     "BranchConservation",
     "classify_legacy_path_amount",
     "trace_multihop",
+    "trace_fifo_provenance",
 ]

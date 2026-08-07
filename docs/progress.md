@@ -479,6 +479,23 @@ V3 contains no Provider, blockchain API, graph rendering, report, Word/PDF, AI, 
 - Targeted tests: 23 passed. Full regression: 1,614 passed, 1 skipped.
 - `pip check`: no broken requirements.
 
+## V8 Transaction-level FIFO provenance validation
+
+- Added a transaction-level FIFO provenance engine with timestamp ordering,
+  same-asset isolation, evidence propagation and global outgoing-edge capacity.
+- Non-finite, non-positive, timezone-naive and implausibly large amounts are
+  rejected before allocation.
+- Incomplete Provider histories stop a branch instead of falling back to
+  address-level aggregate totals.
+- A live, local-only TronGrid validation completed five hops on prioritized USDT
+  branches. Every queried address reached the Provider pagination end.
+- Three evidence-backed follow-up lines were identified: two rapid whole-amount
+  continuations and one split-flow continuation.
+- No endpoint was promoted to a VASP or off-ramp because the trusted local label
+  registry did not match the terminal addresses.
+- Real addresses, transaction hashes and validation artifacts remain under the
+  ignored `work/` directory and are not committed.
+
 ## V8 Multi-hop Fund Tracing（開發驗收）
 
 - 已完成公開 Trace contracts、同資產 FIFO、雙向 1～5 層 traversal、
